@@ -17,9 +17,10 @@ from PySide6.QtGui import QAction, QKeySequence
 from localmind import __app_name__, __version__
 from localmind.config import get_settings_manager, get_settings, save_settings
 from localmind.ui.file_browser import FileBrowserPanel
-from localmind.ui.progress_panel import ProgressPanel
+from localmind.ui.progress_panel import ProgressPanel, ProcessingStage
 from localmind.ui.results_viewer import ResultsViewer
 from localmind.ui.settings_dialog import SettingsDialog
+from localmind.workers import ProcessingOrchestrator, ProcessingResult
 
 
 class MainWindow(QMainWindow):
@@ -35,11 +36,15 @@ class MainWindow(QMainWindow):
         self._current_file: Optional[Path] = None
         self._recent_files: List[str] = []
 
+        # Processing orchestrator
+        self._orchestrator = ProcessingOrchestrator(self)
+
         self._setup_ui()
         self._setup_menu_bar()
         self._setup_toolbar()
         self._setup_status_bar()
         self._connect_signals()
+        self._configure_orchestrator()
 
     def _setup_ui(self) -> None:
         """Set up the main UI layout."""
@@ -180,8 +185,27 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         """Connect signals."""
+        # File browser signals
         self._file_browser.file_selected.connect(self._on_file_selected)
         self._file_browser.file_double_clicked.connect(self._on_file_double_clicked)
+
+        # Orchestrator signals
+        self._orchestrator.stage_started.connect(self._on_stage_started)
+        self._orchestrator.stage_progress.connect(self._on_stage_progress)
+        self._orchestrator.stage_completed.connect(self._on_stage_completed)
+        self._orchestrator.stage_error.connect(self._on_stage_error)
+        self._orchestrator.processing_complete.connect(self._on_processing_complete)
+        self._orchestrator.processing_error.connect(self._on_processing_error)
+
+    def _configure_orchestrator(self) -> None:
+        """Configure the processing orchestrator from settings."""
+        settings = get_settings()
+        self._orchestrator.configure(
+            whisper_model=settings.transcription.whisper_model,
+            language=settings.transcription.language if settings.transcription.language != "auto" else None,
+            use_gpu=settings.transcription.use_gpu,
+            dual_channel=True,
+        )
 
     @Slot()
     def _on_open_file(self) -> None:
@@ -209,14 +233,95 @@ class MainWindow(QMainWindow):
         if not self._current_file:
             QMessageBox.information(self, "No File", "Please select an audio file first.")
             return
+
+        if self._orchestrator.is_processing:
+            QMessageBox.information(self, "Processing", "Processing is already in progress.")
+            return
+
+        # Clear previous results
+        self._results_viewer.clear()
+        self._progress_panel.reset()
+
+        # Start processing
         self._status_label.setText(f"Processing: {self._current_file.name}")
         self._progress_panel.start_full_process()
-        # TODO: Start processing worker
+        self.processing_started.emit()
+
+        self._orchestrator.start(str(self._current_file))
 
     @Slot()
     def _on_stop(self) -> None:
+        self._orchestrator.stop()
         self._progress_panel.stop()
         self._status_label.setText("Stopped")
+
+    @Slot(str)
+    def _on_stage_started(self, stage: str) -> None:
+        """Handle stage start."""
+        stage_map = {
+            "transcription": "Transcribing audio...",
+            "merge": "Merging transcript...",
+            "audit": "Auditing quality...",
+        }
+        message = stage_map.get(stage, f"Processing {stage}...")
+        self._status_label.setText(message)
+
+    @Slot(str, int, str)
+    def _on_stage_progress(self, stage: str, percent: int, message: str) -> None:
+        """Handle stage progress update."""
+        if stage == "transcription":
+            self._progress_panel.update_transcription_progress(percent)
+        elif stage == "merge":
+            self._progress_panel.update_merge_progress(percent)
+        elif stage == "audit":
+            self._progress_panel.update_audit_progress(percent)
+
+        if message:
+            self._status_label.setText(message)
+
+    @Slot(str)
+    def _on_stage_completed(self, stage: str) -> None:
+        """Handle stage completion."""
+        if stage == "transcription":
+            self._progress_panel.complete_transcription()
+        elif stage == "merge":
+            self._progress_panel.complete_merge()
+        elif stage == "audit":
+            self._progress_panel.complete_audit()
+
+    @Slot(str, str)
+    def _on_stage_error(self, stage: str, error: str) -> None:
+        """Handle stage error."""
+        stage_enum = {
+            "transcription": ProcessingStage.TRANSCRIBING,
+            "merge": ProcessingStage.MERGING,
+            "audit": ProcessingStage.AUDITING,
+        }.get(stage, ProcessingStage.ERROR)
+
+        self._progress_panel.set_error(stage_enum, error)
+
+    @Slot(object)
+    def _on_processing_complete(self, result: ProcessingResult) -> None:
+        """Handle processing completion."""
+        self._progress_panel.complete_all()
+        self._status_label.setText("Processing complete")
+        self.processing_finished.emit()
+
+        # Load results into viewer
+        if result.audit:
+            self._results_viewer.load_results(result.to_dict())
+
+        # Auto-export if configured
+        settings = get_settings()
+        if settings.output.auto_export_json and settings.output.output_directory:
+            output_path = Path(settings.output.output_directory) / f"{self._current_file.stem}_result.json"
+            self._results_viewer.export_json(str(output_path))
+
+    @Slot(str)
+    def _on_processing_error(self, error: str) -> None:
+        """Handle processing error."""
+        self._status_label.setText(f"Error: {error}")
+        QMessageBox.critical(self, "Processing Error", f"An error occurred:\n\n{error}")
 
     @Slot()
     def _on_export_json(self) -> None:
@@ -244,6 +349,7 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             settings = get_settings()
             self._provider_label.setText(f"LLM: {settings.llm.provider.value.title()}")
+            self._configure_orchestrator()
 
     @Slot()
     def _on_about(self) -> None:
@@ -271,6 +377,10 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         """Save window state on close."""
+        # Stop any running processing
+        if self._orchestrator.is_processing:
+            self._orchestrator.stop()
+
         settings = get_settings()
         settings.app.window_width = self.width()
         settings.app.window_height = self.height()
