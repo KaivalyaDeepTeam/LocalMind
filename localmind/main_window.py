@@ -20,7 +20,9 @@ from localmind.ui.file_browser import FileBrowserPanel
 from localmind.ui.progress_panel import ProgressPanel, ProcessingStage
 from localmind.ui.results_viewer import ResultsViewer
 from localmind.ui.settings_dialog import SettingsDialog
+from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
+from localmind.config import get_profile_manager
 
 
 class MainWindow(QMainWindow):
@@ -200,11 +202,26 @@ class MainWindow(QMainWindow):
     def _configure_orchestrator(self) -> None:
         """Configure the processing orchestrator from settings."""
         settings = get_settings()
+
+        # Get scoring parameters from profile
+        profile_manager = get_profile_manager()
+        profile = profile_manager.get_current_profile()
+        scoring_parameters = [
+            {
+                "name": p.name,
+                "max_score": p.max_score,
+                "weight": p.weight,
+                "description": p.description,
+            }
+            for p in profile.get_enabled_parameters()
+        ]
+
         self._orchestrator.configure(
             whisper_model=settings.transcription.whisper_model,
             language=settings.transcription.language if settings.transcription.language != "auto" else None,
             use_gpu=settings.transcription.use_gpu,
             dual_channel=True,
+            scoring_parameters=scoring_parameters,
         )
 
     @Slot()
@@ -341,7 +358,28 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_edit_scoring(self) -> None:
-        QMessageBox.information(self, "Coming Soon", "Scoring editor coming soon.")
+        """Open the scoring parameters editor."""
+        dialog = ScoringEditorDialog(self)
+        dialog.profile_saved.connect(self._on_scoring_profile_saved)
+        dialog.exec()
+
+    @Slot(str)
+    def _on_scoring_profile_saved(self, profile_name: str) -> None:
+        """Handle scoring profile save."""
+        # Update orchestrator with new parameters
+        profile_manager = get_profile_manager()
+        profile = profile_manager.get_current_profile()
+        parameters = [
+            {
+                "name": p.name,
+                "max_score": p.max_score,
+                "weight": p.weight,
+                "description": p.description,
+            }
+            for p in profile.get_enabled_parameters()
+        ]
+        self._orchestrator.configure(scoring_parameters=parameters)
+        self._status_label.setText(f"Scoring profile '{profile_name}' loaded")
 
     @Slot()
     def _on_open_settings(self) -> None:
