@@ -6,6 +6,7 @@ from localmind.ui.results_viewer import ResultsViewer
 from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.report_preview import ReportPreviewDialog
+from localmind.ui.setup_wizard import SetupWizard
 
 __all__ = [
     "FileBrowserPanel",
@@ -15,4 +16,5 @@ __all__ = [
     "SettingsDialog",
     "ScoringEditorDialog",
     "ReportPreviewDialog",
+    "SetupWizard",
 ]

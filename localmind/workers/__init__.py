@@ -15,6 +15,15 @@ from localmind.workers.audit_worker import (
     DEFAULT_PARAMETERS,
 )
 from localmind.workers.orchestrator import ProcessingOrchestrator, ProcessingResult
+from localmind.workers.model_download_worker import (
+    ModelDownloadWorker,
+    ModelInfo,
+    ModelType,
+    SetupWizardData,
+    AVAILABLE_MODELS,
+    get_models_directory,
+    is_model_downloaded,
+)
 
 __all__ = [
     # Base
@@ -37,4 +46,12 @@ __all__ = [
     # Orchestrator
     "ProcessingOrchestrator",
     "ProcessingResult",
+    # Model Download
+    "ModelDownloadWorker",
+    "ModelInfo",
+    "ModelType",
+    "SetupWizardData",
+    "AVAILABLE_MODELS",
+    "get_models_directory",
+    "is_model_downloaded",
 ]

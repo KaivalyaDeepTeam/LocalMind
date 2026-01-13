@@ -21,6 +21,7 @@ from localmind.ui.progress_panel import ProgressPanel, ProcessingStage
 from localmind.ui.results_viewer import ResultsViewer
 from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
+from localmind.ui.setup_wizard import SetupWizard
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
 from localmind.config import get_profile_manager
 
@@ -401,17 +402,18 @@ class MainWindow(QMainWindow):
         )
 
     def show_first_run_wizard(self) -> None:
-        """Show first-run setup."""
+        """Show first-run setup wizard."""
         settings = get_settings()
-        if not settings.app.whisper_models_downloaded:
-            result = QMessageBox.question(
-                self, "Welcome to LocalMind",
-                "Download AI models (4.5 GB) to get started?\n\n"
-                "This is required for transcription.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if result == QMessageBox.StandardButton.Yes:
-                pass  # TODO: Start download
+        if not settings.app.first_run_complete:
+            wizard = SetupWizard(self)
+            wizard.setup_complete.connect(self._on_setup_complete)
+            wizard.exec()
+
+    @Slot()
+    def _on_setup_complete(self) -> None:
+        """Handle setup wizard completion."""
+        self._status_label.setText("Setup complete - ready to process audio")
+        self._configure_orchestrator()
 
     def closeEvent(self, event) -> None:
         """Save window state on close."""

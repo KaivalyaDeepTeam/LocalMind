@@ -1,0 +1,22 @@
+Package: localmind
+Version: 1.0.0
+Section: audio
+Priority: optional
+Architecture: amd64
+Depends: libgtk-3-0 (>= 3.22), libglib2.0-0 (>= 2.50), libc6 (>= 2.17)
+Recommends: libcudart11.0, libnvidia-ml1
+Suggests: nvidia-cuda-toolkit
+Installed-Size: 500000
+Maintainer: Kaivalya Anand Pandey <kaivalyaanandpandey666@gmail.com>
+Homepage: https://github.com/KaivalyaDeepTeam/LocalMind
+Description: Free, open-source AI for audio transcription and quality auditing
+ LocalMind is a desktop application that provides:
+ .
+  - Local audio transcription using Whisper models
+  - Quality auditing with customizable scoring parameters
+  - Support for multiple LLM backends (local, OpenAI, Anthropic)
+  - Professional PDF report generation
+  - 100% offline operation after model download
+ .
+ Perfect for call centers, quality assurance teams, and anyone needing
+ to transcribe and analyze audio conversations.

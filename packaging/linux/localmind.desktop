@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LocalMind
+GenericName=Audio Transcription
+Comment=Free, open-source AI for audio transcription and quality auditing
+Exec=/opt/localmind/LocalMind %F
+Icon=/opt/localmind/icon.png
+Terminal=false
+Categories=Audio;AudioVideo;Utility;
+MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;audio/x-m4a;audio/webm;
+Keywords=audio;transcription;whisper;ai;quality;audit;
+StartupWMClass=LocalMind
+StartupNotify=true
