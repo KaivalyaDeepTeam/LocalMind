@@ -330,8 +330,40 @@ class ResultsViewer(QWidget):
             QMessageBox.warning(self, "No Results", "No results to export.")
             return
 
-        # TODO: Implement PDF export with WeasyPrint
-        QMessageBox.information(self, "Coming Soon", "PDF export coming soon.")
+        try:
+            from localmind.reports import PDFReportGenerator, ReportOptions
+
+            options = ReportOptions(
+                include_transcript=True,
+                include_chart=True,
+                include_scores=True,
+            )
+            generator = PDFReportGenerator(options)
+
+            if not generator.can_generate():
+                QMessageBox.warning(
+                    self, "Missing Dependencies",
+                    "PDF export requires Jinja2 and WeasyPrint.\n\n"
+                    "Install with: pip install jinja2 weasyprint"
+                )
+                return
+
+            # Get file name from results or use default
+            file_name = self._results.get("file_name", "audio_file")
+            generator.generate_pdf(self._results, filepath, file_name)
+
+            QMessageBox.information(
+                self, "Export Complete",
+                f"PDF report exported to:\n{filepath}"
+            )
+
+        except ImportError as e:
+            QMessageBox.warning(
+                self, "Missing Dependencies",
+                f"PDF export requires additional packages:\n\n{e}"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export PDF:\n\n{e}")
 
     def get_results(self) -> Optional[Dict[str, Any]]:
         """Get the current results."""

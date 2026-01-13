@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Quality Audit Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @top-center {
+                content: "Call Quality Audit Report";
+                font-size: 10pt;
+                color: #666;
+            }
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2196F3;
+        }
+
+        .header h1 {
+            font-size: 24pt;
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 12pt;
+            color: #666;
+        }
+
+        .header .date {
+            font-size: 10pt;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .score-summary {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 15px 25px;
+        }
+
+        .score-box .label {
+            font-size: 10pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-box .value {
+            font-size: 36pt;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .score-box .max {
+            font-size: 10pt;
+            color: #888;
+        }
+
+        .score-excellent { color: #4CAF50; }
+        .score-good { color: #8BC34A; }
+        .score-average { color: #FF9800; }
+        .score-poor { color: #F44336; }
+
+        .section {
+            margin: 25px 0;
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            font-size: 14pt;
+            color: #1976D2;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .section h3 {
+            font-size: 12pt;
+            color: #333;
+            margin: 15px 0 10px 0;
+        }
+
+        /* Score Details Table */
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .score-table th,
+        .score-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .score-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #555;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+
+        .score-table tr:hover {
+            background: #fafafa;
+        }
+
+        .score-table .score-cell {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .score-table .weight-cell {
+            text-align: center;
+            color: #666;
+        }
+
+        /* Score Bar */
+        .score-bar {
+            width: 100px;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .bar-excellent { background: #4CAF50; }
+        .bar-good { background: #8BC34A; }
+        .bar-average { background: #FF9800; }
+        .bar-poor { background: #F44336; }
+
+        /* Feedback Lists */
+        .feedback-list {
+            margin: 10px 0 10px 20px;
+        }
+
+        .feedback-list li {
+            margin: 8px 0;
+            padding-left: 10px;
+        }
+
+        .strengths-list li::marker {
+            color: #4CAF50;
+            content: "✓ ";
+        }
+
+        .improvements-list li::marker {
+            color: #FF9800;
+            content: "→ ";
+        }
+
+        /* Transcript Section */
+        .transcript {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            line-height: 1.8;
+            max-height: none;
+            page-break-inside: auto;
+        }
+
+        .transcript-line {
+            margin: 5px 0;
+        }
+
+        .speaker-agent {
+            color: #1976D2;
+            font-weight: bold;
+        }
+
+        .speaker-customer {
+            color: #7B1FA2;
+            font-weight: bold;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: #E3F2FD;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+        }
+
+        .summary-box p {
+            margin: 0;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 9pt;
+            color: #888;
+        }
+
+        .footer .logo {
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        /* Chart placeholder */
+        .chart-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Print-specific */
+        @media print {
+            .section {
+                page-break-inside: avoid;
+            }
+            .transcript {
+                page-break-inside: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Call Quality Audit Report</h1>
+        <div class="subtitle">{{ file_name }}</div>
+        <div class="date">Generated: {{ generated_date }}</div>
+    </div>
+
+    <div class="score-summary">
+        <div class="score-box">
+            <div class="label">Overall Score</div>
+            <div class="value {{ overall_score_class }}">{{ overall_score }}</div>
+            <div class="max">out of {{ max_score }}</div>
+        </div>
+        <div class="score-box">
+            <div class="label">Compliance</div>
+            <div class="value {{ compliance_score_class }}">{{ compliance_score }}%</div>
+            <div class="max">compliance rate</div>
+        </div>
+        <div class="score-box">
+            <div class="label">Quality</div>
+            <div class="value {{ quality_score_class }}">{{ quality_score }}%</div>
+            <div class="max">quality rating</div>
+        </div>
+    </div>
+
+    {% if chart_image %}
+    <div class="section">
+        <h2>Score Breakdown</h2>
+        <div class="chart-container">
+            <img src="{{ chart_image }}" alt="Score Chart">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h2>Detailed Scores</h2>
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Score</th>
+                    <th>Max</th>
+                    <th>Weight</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for param in parameters %}
+                <tr>
+                    <td>{{ param.name }}</td>
+                    <td class="score-cell">{{ param.score }}</td>
+                    <td class="score-cell">{{ param.max }}</td>
+                    <td class="weight-cell">{{ param.weight }}x</td>
+                    <td>
+                        <div class="score-bar">
+                            <div class="score-bar-fill {{ param.bar_class }}" style="width: {{ param.percentage }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>AI Assessment</h2>
+
+        {% if summary %}
+        <div class="summary-box">
+            <p>{{ summary }}</p>
+        </div>
+        {% endif %}
+
+        {% if strengths %}
+        <h3>Strengths</h3>
+        <ul class="feedback-list strengths-list">
+            {% for item in strengths %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if improvements %}
+        <h3>Areas for Improvement</h3>
+        <ul class="feedback-list improvements-list">
+            {% for item in improvements %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    {% if include_transcript and transcript_lines %}
+    <div class="section">
+        <h2>Full Transcript</h2>
+        <div class="transcript">
+            {% for line in transcript_lines %}
+            <div class="transcript-line">
+                {% if line.speaker == 'Agent' %}
+                <span class="speaker-agent">[Agent]</span>
+                {% elif line.speaker == 'Customer' %}
+                <span class="speaker-customer">[Customer]</span>
+                {% else %}
+                <span>[{{ line.speaker }}]</span>
+                {% endif %}
+                {{ line.text }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Generated by <span class="logo">LocalMind</span> - Free, Open-Source AI Call Auditing</p>
+        <p>https://github.com/KaivalyaDeepTeam/LocalMind</p>
+    </div>
+</body>
+</html>
