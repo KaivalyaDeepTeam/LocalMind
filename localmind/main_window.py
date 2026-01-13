@@ -24,6 +24,7 @@ from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.setup_wizard import SetupWizard
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
 from localmind.config import get_profile_manager
+from localmind.utils import get_error_handler, ErrorContext, ErrorMessages
 
 
 class MainWindow(QMainWindow):
@@ -41,6 +42,10 @@ class MainWindow(QMainWindow):
 
         # Processing orchestrator
         self._orchestrator = ProcessingOrchestrator(self)
+
+        # Initialize error handler with this window as parent
+        self._error_handler = get_error_handler()
+        self._error_handler.set_parent_widget(self)
 
         self._setup_ui()
         self._setup_menu_bar()
@@ -97,10 +102,12 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         export_json = QAction("Export as &JSON...", self)
+        export_json.setShortcut("Ctrl+Shift+J")
         export_json.triggered.connect(self._on_export_json)
         file_menu.addAction(export_json)
 
         export_pdf = QAction("Export as &PDF...", self)
+        export_pdf.setShortcut("Ctrl+Shift+P")
         export_pdf.triggered.connect(self._on_export_pdf)
         file_menu.addAction(export_pdf)
 
@@ -115,6 +122,7 @@ class MainWindow(QMainWindow):
         edit_menu = menubar.addMenu("&Edit")
 
         scoring_action = QAction("&Scoring Parameters...", self)
+        scoring_action.setShortcut("Ctrl+Shift+S")
         scoring_action.triggered.connect(self._on_edit_scoring)
         edit_menu.addAction(scoring_action)
 
@@ -142,6 +150,13 @@ class MainWindow(QMainWindow):
 
         # Help menu
         help_menu = menubar.addMenu("&Help")
+
+        shortcuts_action = QAction("&Keyboard Shortcuts", self)
+        shortcuts_action.setShortcut("Ctrl+/")
+        shortcuts_action.triggered.connect(self._on_show_shortcuts)
+        help_menu.addAction(shortcuts_action)
+
+        help_menu.addSeparator()
 
         about_action = QAction("&About LocalMind", self)
         about_action.triggered.connect(self._on_about)
@@ -339,7 +354,12 @@ class MainWindow(QMainWindow):
     def _on_processing_error(self, error: str) -> None:
         """Handle processing error."""
         self._status_label.setText(f"Error: {error}")
-        QMessageBox.critical(self, "Processing Error", f"An error occurred:\n\n{error}")
+        self._error_handler.handle_error(
+            Exception(error),
+            title="Processing Error",
+            message=f"An error occurred during processing:\n\n{error}",
+            show_dialog=True,
+        )
 
     @Slot()
     def _on_export_json(self) -> None:
@@ -389,6 +409,25 @@ class MainWindow(QMainWindow):
             settings = get_settings()
             self._provider_label.setText(f"LLM: {settings.llm.provider.value.title()}")
             self._configure_orchestrator()
+
+    @Slot()
+    def _on_show_shortcuts(self) -> None:
+        """Show keyboard shortcuts dialog."""
+        shortcuts_html = """
+        <h3>Keyboard Shortcuts</h3>
+        <table style="margin: 10px;">
+            <tr><td><b>Ctrl+O</b></td><td>Open audio file</td></tr>
+            <tr><td><b>Ctrl+Return</b></td><td>Process audio</td></tr>
+            <tr><td><b>Escape</b></td><td>Stop processing</td></tr>
+            <tr><td><b>Ctrl+Shift+J</b></td><td>Export as JSON</td></tr>
+            <tr><td><b>Ctrl+Shift+P</b></td><td>Export as PDF</td></tr>
+            <tr><td><b>Ctrl+Shift+S</b></td><td>Edit scoring parameters</td></tr>
+            <tr><td><b>Ctrl+,</b></td><td>Open settings</td></tr>
+            <tr><td><b>Ctrl+/</b></td><td>Show shortcuts</td></tr>
+            <tr><td><b>Ctrl+Q</b></td><td>Quit application</td></tr>
+        </table>
+        """
+        QMessageBox.information(self, "Keyboard Shortcuts", shortcuts_html)
 
     @Slot()
     def _on_about(self) -> None:

@@ -1,0 +1,177 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "localmind"
+version = "1.0.0"
+description = "Free, open-source AI for local audio transcription and quality auditing"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Kaivalya Anand Pandey", email = "kaivalyaanandpandey666@gmail.com"}
+]
+maintainers = [
+    {name = "Kaivalya Anand Pandey", email = "kaivalyaanandpandey666@gmail.com"}
+]
+keywords = [
+    "ai",
+    "audio",
+    "transcription",
+    "quality-auditing",
+    "whisper",
+    "llm",
+    "offline",
+    "local",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.6.0",
+    "librosa>=0.10.2",
+    "soundfile>=0.12.1",
+    "scipy>=1.14.0",
+    "numpy>=1.26.0,<2.0.0",
+    "torch>=2.5.0",
+    "torchaudio>=2.5.0",
+    "transformers>=4.47.0",
+    "huggingface_hub>=0.27.0",
+    "llama-cpp-python>=0.2.0",
+    "openai>=1.58.0",
+    "anthropic>=0.40.0",
+    "weasyprint>=61.0",
+    "matplotlib>=3.8.0",
+    "Jinja2>=3.1.0",
+    "rich>=13.9.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "pytest-qt>=4.4.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pyinstaller>=6.11.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/KaivalyaDeepTeam/LocalMind"
+Documentation = "https://github.com/KaivalyaDeepTeam/LocalMind#readme"
+Repository = "https://github.com/KaivalyaDeepTeam/LocalMind"
+Issues = "https://github.com/KaivalyaDeepTeam/LocalMind/issues"
+
+[project.gui-scripts]
+localmind = "localmind.app:main"
+
+[project.scripts]
+localmind-cli = "localmind.app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["localmind*"]
+
+[tool.setuptools.package-data]
+localmind = [
+    "reports/templates/*.html",
+    "reports/templates/*.css",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "build",
+    "dist",
+    ".venv",
+]
+
+[tool.coverage.run]
+source = ["localmind"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
