@@ -30,12 +30,13 @@ def mock_settings(temp_dir: Path, monkeypatch):
     """Create mock settings with temporary directory."""
     from localmind.config.settings import SettingsManager, UserSettings
 
-    # Create a settings manager with temp directory
-    manager = SettingsManager(config_dir=temp_dir)
+    # Create a settings manager and override its paths
+    manager = SettingsManager()
+    manager._config_dir = temp_dir
+    manager._config_file = temp_dir / "settings.json"
 
-    # Patch the global settings manager
+    # Patch only the settings module level variable
     monkeypatch.setattr("localmind.config.settings._settings_manager", manager)
-    monkeypatch.setattr("localmind.config._settings_manager", manager)
 
     return manager
 

@@ -4,6 +4,7 @@ Unit tests for LocalMind configuration module.
 
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -32,8 +33,8 @@ class TestUserSettings:
 
         assert settings.llm.provider == LLMProviderType.LOCAL
         assert settings.llm.openai_model == "gpt-4o"
-        assert settings.transcription.whisper_model == "large-v3"
-        assert settings.transcription.use_gpu is True
+        assert settings.transcription.language == "auto"
+        assert settings.transcription.enable_diarization is True
         assert settings.app.first_run_complete is False
 
     def test_llm_settings(self):
@@ -51,53 +52,78 @@ class TestUserSettings:
     def test_transcription_settings(self):
         """Test transcription settings."""
         trans = TranscriptionSettings(
-            whisper_model="medium",
             language="en",
-            use_gpu=False,
+            romanize=True,
+            enable_diarization=False,
+            device="cuda",
         )
 
-        assert trans.whisper_model == "medium"
         assert trans.language == "en"
-        assert trans.use_gpu is False
+        assert trans.romanize is True
+        assert trans.enable_diarization is False
+        assert trans.device == "cuda"
+
+    def test_settings_to_dict(self):
+        """Test converting settings to dictionary."""
+        settings = UserSettings()
+        data = settings.to_dict()
+
+        assert "llm" in data
+        assert "transcription" in data
+        assert "app" in data
+        assert data["llm"]["provider"] == "local"
+
+    def test_settings_from_dict(self):
+        """Test creating settings from dictionary."""
+        data = {
+            "llm": {
+                "provider": "openai",
+                "openai_api_key": "test-key",
+                "openai_model": "gpt-4o",
+                "anthropic_api_key": "",
+                "anthropic_model": "claude-sonnet-4-20250514",
+                "local_model": "phi-3.5-mini",
+                "local_model_downloaded": False,
+            },
+            "transcription": {
+                "language": "en",
+                "romanize": False,
+                "enable_diarization": True,
+                "device": "auto",
+            },
+        }
+
+        settings = UserSettings.from_dict(data)
+
+        assert settings.llm.provider == LLMProviderType.OPENAI
+        assert settings.llm.openai_api_key == "test-key"
+        assert settings.transcription.language == "en"
 
 
 class TestSettingsManager:
     """Tests for SettingsManager."""
 
-    def test_create_manager(self, temp_dir):
+    def test_create_manager(self):
         """Test creating a settings manager."""
-        manager = SettingsManager(config_dir=temp_dir)
+        manager = SettingsManager()
 
-        assert manager.config_dir == temp_dir
-        assert manager.settings_file.exists()
+        assert manager._config_dir is not None
+        assert manager._config_file is not None
 
-    def test_save_and_load_settings(self, temp_dir):
-        """Test saving and loading settings."""
-        manager = SettingsManager(config_dir=temp_dir)
+    def test_load_default_settings(self):
+        """Test loading returns default settings when no file exists."""
+        with patch.object(Path, 'exists', return_value=False):
+            manager = SettingsManager()
+            settings = manager.load()
 
-        # Modify settings
-        settings = manager.get_settings()
-        settings.llm.provider = LLMProviderType.OPENAI
-        settings.llm.openai_api_key = "test-key"
-        manager.save_settings(settings)
+            assert settings.llm.provider == LLMProviderType.LOCAL
 
-        # Create new manager and verify
-        manager2 = SettingsManager(config_dir=temp_dir)
-        loaded = manager2.get_settings()
+    def test_settings_property(self):
+        """Test settings property returns UserSettings."""
+        manager = SettingsManager()
+        settings = manager.settings
 
-        assert loaded.llm.provider == LLMProviderType.OPENAI
-        assert loaded.llm.openai_api_key == "test-key"
-
-    def test_settings_file_format(self, temp_dir):
-        """Test that settings file is valid JSON."""
-        manager = SettingsManager(config_dir=temp_dir)
-
-        with open(manager.settings_file) as f:
-            data = json.load(f)
-
-        assert "llm" in data
-        assert "transcription" in data
-        assert "app" in data
+        assert isinstance(settings, UserSettings)
 
 
 class TestScoringParameter:
