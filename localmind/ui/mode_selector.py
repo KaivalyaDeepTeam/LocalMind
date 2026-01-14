@@ -9,7 +9,7 @@ from enum import Enum
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QComboBox, QStackedWidget, QLineEdit,
+    QFrame, QComboBox, QStackedWidget, QLineEdit, QCheckBox,
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QFont
@@ -394,6 +394,26 @@ class ModeSelector(QWidget):
 
         layout.addWidget(self._settings_stack)
 
+        # Scoring toggle
+        scoring_frame = QFrame()
+        scoring_frame.setObjectName("scoringToggleFrame")
+        scoring_layout = QVBoxLayout(scoring_frame)
+        scoring_layout.setContentsMargins(12, 12, 12, 12)
+        scoring_layout.setSpacing(8)
+
+        self._scoring_checkbox = QCheckBox("Enable Quality Scoring")
+        self._scoring_checkbox.setObjectName("scoringCheckbox")
+        self._scoring_checkbox.setChecked(False)  # Default to transcription-only
+        self._scoring_checkbox.stateChanged.connect(self._on_scoring_changed)
+        scoring_layout.addWidget(self._scoring_checkbox)
+
+        scoring_hint = QLabel("Transcription only when unchecked. Scoring requires LLM.")
+        scoring_hint.setObjectName("scoringHint")
+        scoring_hint.setWordWrap(True)
+        scoring_layout.addWidget(scoring_hint)
+
+        layout.addWidget(scoring_frame)
+
         # Show online by default
         self._settings_stack.setCurrentIndex(0)
 
@@ -405,6 +425,10 @@ class ModeSelector(QWidget):
             self._settings_stack.setCurrentIndex(1)
 
         self.mode_changed.emit(mode)
+
+    @Slot(int)
+    def _on_scoring_changed(self, state: int) -> None:
+        self.settings_changed.emit()
 
     def get_mode(self) -> ProcessingMode:
         return self._mode_toggle.get_mode()
@@ -432,3 +456,11 @@ class ModeSelector(QWidget):
 
     def set_api_key(self, key: str) -> None:
         self._provider_selector.set_api_key(key)
+
+    def is_scoring_enabled(self) -> bool:
+        """Check if quality scoring is enabled."""
+        return self._scoring_checkbox.isChecked()
+
+    def set_scoring_enabled(self, enabled: bool) -> None:
+        """Set scoring enabled state."""
+        self._scoring_checkbox.setChecked(enabled)

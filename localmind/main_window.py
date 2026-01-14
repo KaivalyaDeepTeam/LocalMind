@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
             dual_channel=True,
             use_hindi_stt=use_hindi_stt,
             scoring_parameters=scoring_parameters,
-            transcription_only=True,  # TODO: Add UI toggle - set False for full scoring
+            transcription_only=not self._mode_selector.is_scoring_enabled(),
         )
 
     @Slot()
@@ -410,13 +410,6 @@ class MainWindow(QMainWindow):
 
         # Build display data
         display_data = result.to_dict()
-
-        # Debug: print what we're getting
-        print(f"[DEBUG] Transcription result: {result.transcription is not None}")
-        if result.transcription:
-            print(f"[DEBUG] Text length: {len(result.transcription.text)}")
-            print(f"[DEBUG] Segments count: {len(result.transcription.segments) if result.transcription.segments else 0}")
-            print(f"[DEBUG] Language: {result.transcription.language}")
 
         # For transcription-only mode, format the data for the viewer
         if result.transcription and not result.audit:

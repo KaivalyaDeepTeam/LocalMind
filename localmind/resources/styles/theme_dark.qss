@@ -1285,3 +1285,40 @@ QPushButton#recentFileBtn:hover {
     border-color: #6366F1;
     color: #A5B4FC;
 }
+
+/* === Scoring Toggle === */
+QFrame#scoringToggleFrame {
+    background-color: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+QCheckBox#scoringCheckbox {
+    font-size: 14px;
+    font-weight: 500;
+    color: #F1F5F9;
+    spacing: 8px;
+}
+
+QCheckBox#scoringCheckbox::indicator {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #475569;
+    border-radius: 4px;
+    background-color: #0F172A;
+}
+
+QCheckBox#scoringCheckbox::indicator:checked {
+    background-color: #6366F1;
+    border-color: #6366F1;
+}
+
+QCheckBox#scoringCheckbox::indicator:hover {
+    border-color: #6366F1;
+}
+
+QLabel#scoringHint {
+    font-size: 12px;
+    color: #94A3B8;
+}
