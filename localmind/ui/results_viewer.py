@@ -2,23 +2,192 @@
 LocalMind Results Viewer
 
 Displays audit results with transcript, scores, and feedback.
+Features animated circular score gauges and modern UI.
 """
 
 import json
+import math
 from pathlib import Path
 from typing import Optional, Dict, Any
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QTextEdit,
     QTableWidget, QTableWidgetItem, QLabel, QHeaderView, QFrame,
-    QScrollArea, QSplitter, QMessageBox,
+    QScrollArea, QSplitter, QMessageBox, QPushButton, QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtCore import (
+    Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve, Property,
+    QRectF, QPointF,
+)
+from PySide6.QtGui import (
+    QColor, QPainter, QPen, QFont, QBrush, QPainterPath,
+    QLinearGradient, QConicalGradient,
+)
+
+
+class CircularScoreGauge(QWidget):
+    """
+    Animated circular gauge showing a score with arc visualization.
+
+    Features:
+    - Animated arc drawing (0 to score%)
+    - Color gradient based on score
+    - Inner text with score and grade letter
+    - Smooth animation on value change
+    """
+
+    def __init__(
+        self,
+        label: str = "",
+        size: int = 120,
+        parent: Optional[QWidget] = None,
+    ):
+        super().__init__(parent)
+        self._label = label
+        self._size = size
+        self._score: float = 0.0
+        self._animated_score: float = 0.0
+        self._max_score: float = 100.0
+
+        # Animation
+        self._animation = QPropertyAnimation(self, b"animatedScore")
+        self._animation.setDuration(800)
+        self._animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        self.setMinimumSize(size, size + 30)
+        self.setMaximumSize(size + 40, size + 50)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+    def get_animated_score(self) -> float:
+        return self._animated_score
+
+    def set_animated_score(self, value: float) -> None:
+        self._animated_score = value
+        self.update()
+
+    animatedScore = Property(float, get_animated_score, set_animated_score)
+
+    def set_score(self, score: float, max_score: float = 100.0) -> None:
+        """Set the score with animation."""
+        self._score = score
+        self._max_score = max_score
+
+        # Animate to new value
+        self._animation.stop()
+        self._animation.setStartValue(self._animated_score)
+        self._animation.setEndValue(score)
+        self._animation.start()
+
+    def set_score_instant(self, score: float, max_score: float = 100.0) -> None:
+        """Set score without animation."""
+        self._score = score
+        self._max_score = max_score
+        self._animated_score = score
+        self.update()
+
+    def _get_color_for_score(self, pct: float) -> QColor:
+        """Get color based on score percentage."""
+        if pct >= 80:
+            return QColor("#059669")  # Emerald-600
+        elif pct >= 60:
+            return QColor("#D97706")  # Amber-600
+        else:
+            return QColor("#DC2626")  # Red-600
+
+    def _get_grade(self, pct: float) -> str:
+        """Get letter grade for percentage."""
+        if pct >= 90:
+            return "A"
+        elif pct >= 80:
+            return "B"
+        elif pct >= 70:
+            return "C"
+        elif pct >= 60:
+            return "D"
+        else:
+            return "F"
+
+    def paintEvent(self, event) -> None:
+        """Paint the circular gauge."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Calculate dimensions
+        width = self.width()
+        height = self.height()
+        gauge_size = min(width, height - 30) - 10
+        center_x = width / 2
+        center_y = (height - 30) / 2 + 5
+
+        # Draw background arc
+        pen = QPen(QColor("#E2E8F0"), 8)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+
+        rect = QRectF(
+            center_x - gauge_size / 2,
+            center_y - gauge_size / 2,
+            gauge_size,
+            gauge_size,
+        )
+
+        # Background arc (270 degrees, starting from bottom-left)
+        start_angle = 225 * 16  # Qt uses 1/16th of a degree
+        span_angle = -270 * 16
+
+        painter.drawArc(rect, start_angle, span_angle)
+
+        # Draw progress arc
+        pct = (self._animated_score / self._max_score) * 100 if self._max_score > 0 else 0
+        color = self._get_color_for_score(pct)
+
+        pen = QPen(color, 8)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+
+        progress_span = int(-270 * 16 * (pct / 100))
+        painter.drawArc(rect, start_angle, progress_span)
+
+        # Draw center text (score)
+        painter.setPen(QColor("#0F172A"))
+        font = QFont("", 22, QFont.Weight.Bold)
+        painter.setFont(font)
+
+        score_text = f"{self._animated_score:.0f}"
+        text_rect = QRectF(
+            center_x - gauge_size / 2,
+            center_y - 15,
+            gauge_size,
+            30,
+        )
+        painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, score_text)
+
+        # Draw grade letter below score
+        grade = self._get_grade(pct)
+        font = QFont("", 12, QFont.Weight.Medium)
+        painter.setFont(font)
+        painter.setPen(color)
+
+        grade_rect = QRectF(
+            center_x - gauge_size / 2,
+            center_y + 10,
+            gauge_size,
+            20,
+        )
+        painter.drawText(grade_rect, Qt.AlignmentFlag.AlignCenter, grade)
+
+        # Draw label at bottom
+        if self._label:
+            painter.setPen(QColor("#64748B"))
+            font = QFont("", 11, QFont.Weight.Medium)
+            painter.setFont(font)
+
+            label_rect = QRectF(0, height - 25, width, 20)
+            painter.drawText(label_rect, Qt.AlignmentFlag.AlignCenter, self._label)
 
 
 class ScoreGaugeWidget(QFrame):
-    """Widget showing a score with visual gauge."""
+    """Widget showing a score with visual gauge (legacy compatibility)."""
 
     def __init__(self, label: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -29,35 +198,22 @@ class ScoreGaugeWidget(QFrame):
 
     def _setup_ui(self) -> None:
         """Set up the UI."""
+        self.setObjectName("scoreGaugeCard")
         self.setFrameShape(QFrame.Shape.StyledPanel)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(4)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(8)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self._label_widget = QLabel(self._label)
-        self._label_widget.setStyleSheet("font-weight: bold;")
-        layout.addWidget(self._label_widget)
-
-        self._score_label = QLabel("--")
-        self._score_label.setStyleSheet("font-size: 24px; font-weight: bold;")
-        layout.addWidget(self._score_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        # Circular gauge
+        self._gauge = CircularScoreGauge(self._label, size=100)
+        layout.addWidget(self._gauge, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def set_score(self, score: float, max_score: float = 100.0) -> None:
         """Set the score value."""
         self._score = score
         self._max_score = max_score
-        self._score_label.setText(f"{score:.1f}")
-
-        # Color based on percentage
-        pct = (score / max_score) * 100 if max_score > 0 else 0
-        if pct >= 80:
-            color = "#4CAF50"  # Green
-        elif pct >= 60:
-            color = "#FF9800"  # Orange
-        else:
-            color = "#F44336"  # Red
-
-        self._score_label.setStyleSheet(f"font-size: 24px; font-weight: bold; color: {color};")
+        self._gauge.set_score(score, max_score)
 
 
 class TranscriptViewer(QWidget):
@@ -74,7 +230,7 @@ class TranscriptViewer(QWidget):
 
         self._text_edit = QTextEdit()
         self._text_edit.setReadOnly(True)
-        self._text_edit.setStyleSheet("font-family: monospace;")
+        self._text_edit.setObjectName("transcriptViewer")
         layout.addWidget(self._text_edit)
 
     def set_transcript(self, transcript: str) -> None:
@@ -90,13 +246,21 @@ class TranscriptViewer(QWidget):
             start = seg.get("start", 0)
             end = seg.get("end", 0)
 
-            color = "#2196F3" if speaker == "Agent" else "#9C27B0"
+            # Use theme-aware colors
+            speaker_class = "agent" if speaker.lower() == "agent" else "customer"
             html.append(
-                f'<p><span style="color: {color}; font-weight: bold;">'
+                f'<p style="margin: 8px 0;">'
+                f'<span class="{speaker_class}" style="font-weight: 600;">'
                 f'[{start:.1f}s - {end:.1f}s] {speaker}:</span> {text}</p>'
             )
 
-        self._text_edit.setHtml("".join(html))
+        self._text_edit.setHtml(
+            '<style>'
+            '.agent { color: #4F46E5; }'
+            '.customer { color: #7C3AED; }'
+            '</style>'
+            + "".join(html)
+        )
 
     def clear(self) -> None:
         """Clear the transcript."""
@@ -116,6 +280,7 @@ class ScoreDetailsTable(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self._table = QTableWidget()
+        self._table.setObjectName("scoreDetailsTable")
         self._table.setColumnCount(4)
         self._table.setHorizontalHeaderLabels(["Parameter", "Score", "Max", "Weight"])
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -123,6 +288,8 @@ class ScoreDetailsTable(QWidget):
         self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self._table.setAlternatingRowColors(True)
+        self._table.setShowGrid(False)
+        self._table.verticalHeader().setVisible(False)
         layout.addWidget(self._table)
 
     def set_scores(self, scores: Dict[str, Any]) -> None:
@@ -174,6 +341,7 @@ class FeedbackViewer(QWidget):
 
         self._text_edit = QTextEdit()
         self._text_edit.setReadOnly(True)
+        self._text_edit.setObjectName("feedbackViewer")
         layout.addWidget(self._text_edit)
 
     def set_feedback(self, feedback: str) -> None:
@@ -182,7 +350,7 @@ class FeedbackViewer(QWidget):
 
     def set_structured_feedback(self, feedback: Dict[str, Any]) -> None:
         """Set structured feedback with sections."""
-        html = []
+        html = ['<style>h3 { color: #4F46E5; margin-top: 16px; } li { margin: 4px 0; }</style>']
 
         if "summary" in feedback:
             html.append(f"<h3>Summary</h3><p>{feedback['summary']}</p>")
@@ -212,6 +380,39 @@ class FeedbackViewer(QWidget):
         self._text_edit.clear()
 
 
+class EmptyStateWidget(QWidget):
+    """Widget shown when no results are loaded."""
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        """Set up the UI."""
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Icon placeholder (text-based)
+        icon_label = QLabel("📊")
+        icon_label.setStyleSheet("font-size: 48px;")
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(icon_label)
+
+        # Title
+        title = QLabel("No Results Yet")
+        title.setObjectName("emptyStateTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet("font-size: 18px; font-weight: 600; color: #64748B;")
+        layout.addWidget(title)
+
+        # Description
+        desc = QLabel("Process an audio file to see results here")
+        desc.setObjectName("emptyStateDesc")
+        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        desc.setStyleSheet("font-size: 13px; color: #94A3B8;")
+        layout.addWidget(desc)
+
+
 class ResultsViewer(QWidget):
     """Main results viewer with tabs for different views."""
 
@@ -226,9 +427,15 @@ class ResultsViewer(QWidget):
         """Set up the UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
 
         # Score summary at top
-        scores_layout = QHBoxLayout()
+        self._scores_container = QFrame()
+        self._scores_container.setObjectName("scoresContainer")
+        scores_layout = QHBoxLayout(self._scores_container)
+        scores_layout.setContentsMargins(0, 0, 0, 0)
+        scores_layout.setSpacing(16)
+
         self._overall_gauge = ScoreGaugeWidget("Overall Score")
         scores_layout.addWidget(self._overall_gauge)
 
@@ -238,10 +445,13 @@ class ResultsViewer(QWidget):
         self._quality_gauge = ScoreGaugeWidget("Quality")
         scores_layout.addWidget(self._quality_gauge)
 
-        layout.addLayout(scores_layout)
+        scores_layout.addStretch()
+
+        layout.addWidget(self._scores_container)
 
         # Tab widget for detailed views
         self._tabs = QTabWidget()
+        self._tabs.setObjectName("resultsTabWidget")
 
         # Transcript tab
         self._transcript_viewer = TranscriptViewer()
@@ -258,14 +468,28 @@ class ResultsViewer(QWidget):
         # Raw JSON tab
         self._raw_json = QTextEdit()
         self._raw_json.setReadOnly(True)
-        self._raw_json.setStyleSheet("font-family: monospace; font-size: 11px;")
+        self._raw_json.setObjectName("rawJsonViewer")
         self._tabs.addTab(self._raw_json, "Raw JSON")
 
         layout.addWidget(self._tabs)
 
+        # Empty state (shown when no results)
+        self._empty_state = EmptyStateWidget()
+        layout.addWidget(self._empty_state)
+
+        # Initially show empty state
+        self._update_visibility(has_results=False)
+
+    def _update_visibility(self, has_results: bool) -> None:
+        """Update visibility of components based on results state."""
+        self._scores_container.setVisible(has_results)
+        self._tabs.setVisible(has_results)
+        self._empty_state.setVisible(not has_results)
+
     def load_results(self, results: Dict[str, Any]) -> None:
         """Load audit results."""
         self._results = results
+        self._update_visibility(has_results=True)
 
         # Update gauges
         overall = results.get("overall_score", 0)
@@ -304,6 +528,7 @@ class ResultsViewer(QWidget):
     def clear(self) -> None:
         """Clear all results."""
         self._results = None
+        self._update_visibility(has_results=False)
         self._overall_gauge.set_score(0)
         self._compliance_gauge.set_score(0)
         self._quality_gauge.set_score(0)
@@ -311,6 +536,10 @@ class ResultsViewer(QWidget):
         self._scores_table.clear()
         self._feedback_viewer.clear()
         self._raw_json.clear()
+
+    def setCurrentIndex(self, index: int) -> None:
+        """Set the current tab index."""
+        self._tabs.setCurrentIndex(index)
 
     def export_json(self, filepath: str) -> None:
         """Export results to JSON file."""

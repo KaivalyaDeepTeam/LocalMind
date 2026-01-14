@@ -616,3 +616,211 @@ QLabel[grade="F"] {
     border-radius: 12px;
     font-weight: 600;
 }
+
+/* === Progress Panel === */
+
+/* Stage widget container */
+QFrame#stageWidget {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    padding: 0;
+}
+
+QFrame#stageWidget:hover {
+    border-color: #64748B;
+}
+
+/* Stage number indicator */
+QLabel#stageIndicator {
+    background-color: #334155;
+    color: #94A3B8;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+QLabel#stageIndicator[state="active"] {
+    background-color: #818CF8;
+    color: #0F172A;
+}
+
+QLabel#stageIndicator[state="complete"] {
+    background-color: #34D399;
+    color: #0F172A;
+}
+
+QLabel#stageIndicator[state="error"] {
+    background-color: #F87171;
+    color: #0F172A;
+}
+
+/* Stage name */
+QLabel#stageName {
+    color: #F8FAFC;
+    font-weight: 500;
+}
+
+/* Stage status */
+QLabel#stageStatus {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QLabel#stageStatus[state="waiting"] {
+    color: #64748B;
+}
+
+QLabel#stageStatus[state="active"] {
+    color: #818CF8;
+}
+
+QLabel#stageStatus[state="complete"] {
+    color: #34D399;
+}
+
+QLabel#stageStatus[state="error"] {
+    color: #F87171;
+}
+
+/* Stage time */
+QLabel#stageTime {
+    color: #94A3B8;
+    font-size: 12px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Progress header */
+QLabel#progressHeader {
+    color: #F8FAFC;
+}
+
+/* Total time */
+QLabel#totalTime {
+    color: #94A3B8;
+    font-size: 13px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Overall status */
+QLabel#overallStatus {
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+QLabel#overallStatus[state="idle"] {
+    background-color: #334155;
+    color: #94A3B8;
+}
+
+QLabel#overallStatus[state="active"] {
+    background-color: #312E81;
+    color: #A5B4FC;
+}
+
+QLabel#overallStatus[state="complete"] {
+    background-color: #064E3B;
+    color: #6EE7B7;
+}
+
+QLabel#overallStatus[state="error"] {
+    background-color: #7F1D1D;
+    color: #FECACA;
+}
+
+QLabel#overallStatus[state="warning"] {
+    background-color: #78350F;
+    color: #FDE68A;
+}
+
+/* Stage log panel */
+QTextEdit#stageLogPanel {
+    background-color: #0F172A;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    color: #94A3B8;
+    font-size: 11px;
+    padding: 8px;
+}
+
+/* Expand button */
+QPushButton#expandButton {
+    background-color: transparent;
+    color: #94A3B8;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QPushButton#expandButton:hover {
+    color: #818CF8;
+}
+
+/* === Results Viewer === */
+
+/* Score gauge card */
+QFrame#scoreGaugeCard {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    min-width: 140px;
+    max-width: 180px;
+}
+
+QFrame#scoreGaugeCard:hover {
+    border-color: #64748B;
+}
+
+/* Scores container */
+QFrame#scoresContainer {
+    background-color: transparent;
+}
+
+/* Transcript viewer */
+QTextEdit#transcriptViewer {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #F8FAFC;
+}
+
+/* Feedback viewer */
+QTextEdit#feedbackViewer {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: #F8FAFC;
+}
+
+/* Raw JSON viewer */
+QTextEdit#rawJsonViewer {
+    background-color: #0F172A;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 11px;
+    color: #94A3B8;
+}
+
+/* Score details table */
+QTableWidget#scoreDetailsTable {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 8px;
+}
+
+/* Results tab widget */
+QTabWidget#resultsTabWidget::pane {
+    background-color: #1E293B;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    border-top-left-radius: 0;
+}

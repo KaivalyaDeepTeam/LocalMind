@@ -1,0 +1,81 @@
+# LocalMind AppImage Builder Configuration
+# Build with: appimage-builder --recipe packaging/linux/AppImageBuilder.yml
+
+version: 1
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: ai.localmind.LocalMind
+    name: LocalMind
+    icon: localmind
+    version: !ENV ${VERSION:-1.0.0}
+    exec: usr/bin/localmind
+    exec_args: $@
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse
+        key_url: http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C
+
+    include:
+      - libgtk-3-0
+      - libglib2.0-0
+      - libpango-1.0-0
+      - libcairo2
+      - libgdk-pixbuf2.0-0
+      - libatk1.0-0
+      - libxcb-xinerama0
+      - libxcb-icccm4
+      - libxcb-image0
+      - libxcb-keysyms1
+      - libxcb-render-util0
+      - libxcb-shape0
+      - libxkbcommon-x11-0
+      - libdbus-1-3
+      - libegl1
+      - libgl1
+      - libxcomposite1
+      - libxdamage1
+      - libxrandr2
+      - libfontconfig1
+      - libfreetype6
+      - libpulse0
+      - libasound2
+
+  files:
+    include:
+      - usr/lib/x86_64-linux-gnu/libQt*.so*
+      - usr/lib/x86_64-linux-gnu/libxcb*.so*
+
+    exclude:
+      - usr/share/doc
+      - usr/share/man
+      - usr/share/info
+      - usr/share/locale
+
+  runtime:
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      QT_QPA_PLATFORM: xcb
+      QT_PLUGIN_PATH: "$APPDIR/usr/lib/x86_64-linux-gnu/qt5/plugins"
+
+  test:
+    fedora-30:
+      image: appimagecrafters/tests-env:fedora-30
+      command: ./AppRun --version
+    debian-stable:
+      image: appimagecrafters/tests-env:debian-stable
+      command: ./AppRun --version
+    ubuntu-focal:
+      image: appimagecrafters/tests-env:ubuntu-focal
+      command: ./AppRun --version
+
+AppImage:
+  arch: x86_64
+  update-information: gh-releases-zsync|KaivalyaDeepTeam|LocalMind|latest|LocalMind-*x86_64.AppImage.zsync
+  sign-key: None
+
+  comp: gzip

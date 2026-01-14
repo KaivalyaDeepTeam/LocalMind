@@ -688,3 +688,209 @@ QLabel[grade="F"] {
     border-radius: 12px;
     font-weight: 600;
 }
+
+/* === Progress Panel === */
+
+/* Stage widget container */
+QFrame#stageWidget {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 0;
+}
+
+QFrame#stageWidget:hover {
+    border-color: #CBD5E1;
+}
+
+/* Stage number indicator */
+QLabel#stageIndicator {
+    background-color: #F1F5F9;
+    color: #64748B;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+QLabel#stageIndicator[state="active"] {
+    background-color: #4F46E5;
+    color: #FFFFFF;
+}
+
+QLabel#stageIndicator[state="complete"] {
+    background-color: #059669;
+    color: #FFFFFF;
+}
+
+QLabel#stageIndicator[state="error"] {
+    background-color: #DC2626;
+    color: #FFFFFF;
+}
+
+/* Stage name */
+QLabel#stageName {
+    color: #0F172A;
+    font-weight: 500;
+}
+
+/* Stage status */
+QLabel#stageStatus {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QLabel#stageStatus[state="waiting"] {
+    color: #94A3B8;
+}
+
+QLabel#stageStatus[state="active"] {
+    color: #4F46E5;
+}
+
+QLabel#stageStatus[state="complete"] {
+    color: #059669;
+}
+
+QLabel#stageStatus[state="error"] {
+    color: #DC2626;
+}
+
+/* Stage time */
+QLabel#stageTime {
+    color: #64748B;
+    font-size: 12px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Progress header */
+QLabel#progressHeader {
+    color: #0F172A;
+}
+
+/* Total time */
+QLabel#totalTime {
+    color: #64748B;
+    font-size: 13px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Overall status */
+QLabel#overallStatus {
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+QLabel#overallStatus[state="idle"] {
+    background-color: #F1F5F9;
+    color: #64748B;
+}
+
+QLabel#overallStatus[state="active"] {
+    background-color: #EEF2FF;
+    color: #4F46E5;
+}
+
+QLabel#overallStatus[state="complete"] {
+    background-color: #D1FAE5;
+    color: #059669;
+}
+
+QLabel#overallStatus[state="error"] {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+QLabel#overallStatus[state="warning"] {
+    background-color: #FEF3C7;
+    color: #D97706;
+}
+
+/* Stage log panel */
+QTextEdit#stageLogPanel {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    color: #475569;
+    font-size: 11px;
+    padding: 8px;
+}
+
+/* Expand button */
+QPushButton#expandButton {
+    background-color: transparent;
+    color: #64748B;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QPushButton#expandButton:hover {
+    color: #4F46E5;
+}
+
+/* === Results Viewer === */
+
+/* Score gauge card */
+QFrame#scoreGaugeCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    min-width: 140px;
+    max-width: 180px;
+}
+
+QFrame#scoreGaugeCard:hover {
+    border-color: #CBD5E1;
+}
+
+/* Scores container */
+QFrame#scoresContainer {
+    background-color: transparent;
+}
+
+/* Transcript viewer */
+QTextEdit#transcriptViewer {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Feedback viewer */
+QTextEdit#feedbackViewer {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+}
+
+/* Raw JSON viewer */
+QTextEdit#rawJsonViewer {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 11px;
+    color: #475569;
+}
+
+/* Score details table */
+QTableWidget#scoreDetailsTable {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+}
+
+/* Results tab widget */
+QTabWidget#resultsTabWidget::pane {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    border-top-left-radius: 0;
+}

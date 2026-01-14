@@ -199,7 +199,7 @@ def build_windows(create_installer: bool = True, version: str = DEFAULT_VERSION)
     print("\nWindows build complete!")
 
 
-def build_linux(create_deb: bool = True, version: str = DEFAULT_VERSION):
+def build_linux(create_deb: bool = True, create_appimage: bool = True, version: str = DEFAULT_VERSION):
     """Build Linux package."""
     print("\n=== Building Linux Package ===\n")
 
@@ -277,7 +277,110 @@ MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;
         else:
             print("  Warning: .deb creation failed")
 
+    if create_appimage:
+        print("\nCreating AppImage...")
+        build_appimage(version)
+
     print("\nLinux build complete!")
+
+
+def build_appimage(version: str = DEFAULT_VERSION):
+    """Build AppImage using appimagetool or appimage-builder."""
+    appimage_file = DIST_DIR / f"LocalMind-{version}-x86_64.AppImage"
+
+    # Check for appimage-builder
+    if shutil.which("appimage-builder"):
+        print("  Using appimage-builder...")
+        recipe_file = PACKAGING_DIR / "linux" / "AppImageBuilder.yml"
+
+        if recipe_file.exists():
+            env = os.environ.copy()
+            env["VERSION"] = version
+            subprocess.run(
+                ["appimage-builder", "--recipe", str(recipe_file), "--skip-test"],
+                cwd=PROJECT_ROOT,
+                env=env,
+            )
+        else:
+            print(f"  Warning: AppImageBuilder.yml not found at {recipe_file}")
+            return
+
+    # Fallback: Create AppImage manually using appimagetool
+    elif shutil.which("appimagetool"):
+        print("  Using appimagetool...")
+
+        # Create AppDir structure
+        appdir = BUILD_DIR / "AppDir"
+        if appdir.exists():
+            shutil.rmtree(appdir)
+        appdir.mkdir(parents=True)
+
+        # Create directory structure
+        (appdir / "usr" / "bin").mkdir(parents=True)
+        (appdir / "usr" / "share" / "applications").mkdir(parents=True)
+        (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(parents=True)
+
+        # Copy application files
+        app_src = DIST_DIR / APP_NAME
+        app_dst = appdir / "usr" / "bin"
+        for item in app_src.iterdir():
+            if item.is_file():
+                shutil.copy2(item, app_dst)
+            else:
+                shutil.copytree(item, app_dst / item.name, dirs_exist_ok=True)
+
+        # Create AppRun script
+        apprun_content = f"""#!/bin/bash
+APPDIR="$(dirname "$(readlink -f "$0")")"
+export PATH="$APPDIR/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$APPDIR/usr/lib:$LD_LIBRARY_PATH"
+exec "$APPDIR/usr/bin/{APP_NAME}" "$@"
+"""
+        apprun_file = appdir / "AppRun"
+        apprun_file.write_text(apprun_content)
+        apprun_file.chmod(0o755)
+
+        # Copy desktop file
+        desktop_src = PACKAGING_DIR / "linux" / "localmind.desktop"
+        if desktop_src.exists():
+            desktop_content = desktop_src.read_text()
+            # Update Exec path for AppImage
+            desktop_content = desktop_content.replace(
+                "Exec=/opt/localmind/LocalMind",
+                "Exec=localmind"
+            )
+            desktop_content = desktop_content.replace(
+                "Icon=/opt/localmind/icon.png",
+                "Icon=localmind"
+            )
+            (appdir / "localmind.desktop").write_text(desktop_content)
+            (appdir / "usr" / "share" / "applications" / "localmind.desktop").write_text(desktop_content)
+
+        # Copy icon (use placeholder if not exists)
+        icon_src = PACKAGING_DIR / "linux" / "icon.png"
+        if icon_src.exists():
+            shutil.copy2(icon_src, appdir / "localmind.png")
+            shutil.copy2(icon_src, appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "localmind.png")
+        else:
+            print("  Warning: icon.png not found, AppImage may not have an icon")
+
+        # Build AppImage
+        run_command([
+            "appimagetool",
+            "--no-appstream",
+            str(appdir),
+            str(appimage_file),
+        ], check=False)
+    else:
+        print("  Warning: Neither appimage-builder nor appimagetool found")
+        print("  Install with: pip install appimage-builder")
+        print("  Or download appimagetool from https://github.com/AppImage/AppImageKit")
+        return
+
+    if appimage_file.exists():
+        print(f"  AppImage created: {appimage_file}")
+    else:
+        print("  Warning: AppImage creation failed")
 
 
 def main():
@@ -292,6 +395,14 @@ def main():
     parser.add_argument("--clean", action="store_true", help="Clean before building")
     parser.add_argument("--no-dmg", action="store_true", help="Skip DMG creation")
     parser.add_argument("--no-installer", action="store_true", help="Skip installer creation")
+    parser.add_argument("--no-appimage", action="store_true", help="Skip AppImage creation")
+    parser.add_argument("--no-deb", action="store_true", help="Skip .deb creation")
+    parser.add_argument(
+        "--format",
+        choices=["deb", "appimage", "all"],
+        default="all",
+        help="Linux package format (default: all)",
+    )
     parser.add_argument("--version", default=None, help="Version number")
 
     args = parser.parse_args()
@@ -333,7 +444,16 @@ def main():
         if not sys.platform.startswith("linux"):
             print("Error: Linux builds must be done on Linux")
             sys.exit(1)
-        build_linux(create_deb=not args.no_installer, version=version)
+
+        # Determine which formats to build
+        create_deb = args.format in ["deb", "all"] and not args.no_deb
+        create_appimage = args.format in ["appimage", "all"] and not args.no_appimage
+
+        build_linux(
+            create_deb=create_deb,
+            create_appimage=create_appimage,
+            version=version,
+        )
 
     print(f"\n{'='*50}")
     print(f"  Build Complete!")
