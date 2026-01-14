@@ -179,9 +179,16 @@ class ToastNotification(QFrame):
         close_btn.clicked.connect(self._start_hide_animation)
         layout.addWidget(close_btn)
 
-        # Responsive width with min/max constraints
+        # Responsive width based on parent size
         self.setMinimumWidth(280)
-        self.setMaximumWidth(450)
+        # Calculate max width as percentage of parent (max 450px)
+        if self.parent():
+            parent_width = self.parent().width()
+            # Use 40% of parent width, capped between 280-450px
+            responsive_max = min(450, max(280, int(parent_width * 0.4)))
+            self.setMaximumWidth(responsive_max)
+        else:
+            self.setMaximumWidth(450)
         self.adjustSize()
 
     def _setup_animations(self) -> None:

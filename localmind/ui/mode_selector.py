@@ -414,8 +414,8 @@ class ModeSelector(QWidget):
 
         layout.addWidget(scoring_frame)
 
-        # Show online by default
-        self._settings_stack.setCurrentIndex(0)
+        # Show offline settings by default (matches default mode)
+        self._settings_stack.setCurrentIndex(1)
 
     @Slot(ProcessingMode)
     def _on_mode_changed(self, mode: ProcessingMode) -> None:

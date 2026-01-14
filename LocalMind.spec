@@ -93,8 +93,8 @@ app = BUNDLE(
     info_plist={
         'CFBundleName': 'LocalMind',
         'CFBundleDisplayName': 'LocalMind',
-        'CFBundleVersion': '0.1.0',
-        'CFBundleShortVersionString': '0.1.0',
+        'CFBundleVersion': '1.1.0',
+        'CFBundleShortVersionString': '1.1.0',
         'NSHighResolutionCapable': True,
         'NSRequiresAquaSystemAppearance': False,
         'LSMinimumSystemVersion': '10.15',

@@ -88,6 +88,7 @@ QPushButton:disabled {
 
 /* Primary/Accent Button */
 QPushButton[accent="true"],
+QPushButton[primary="true"],
 QPushButton#processButton {
     background-color: #6366F1;
     color: #FFFFFF;
@@ -95,11 +96,13 @@ QPushButton#processButton {
 }
 
 QPushButton[accent="true"]:hover,
+QPushButton[primary="true"]:hover,
 QPushButton#processButton:hover {
     background-color: #818CF8;
 }
 
 QPushButton[accent="true"]:pressed,
+QPushButton[primary="true"]:pressed,
 QPushButton#processButton:pressed {
     background-color: #4F46E5;
 }
