@@ -18,12 +18,13 @@ from localmind import __app_name__, __version__
 from localmind.config import get_settings_manager, get_settings, save_settings
 from localmind.ui.file_browser import FileBrowserPanel
 from localmind.ui.progress_panel import ProgressPanel, ProcessingStage
-from localmind.ui.results_viewer import ResultsViewer
+from localmind.ui.results_viewer import ResultsViewer, CircularScoreGauge
 from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.setup_wizard import SetupWizard
 from localmind.ui.toast import ToastManager, ToastType, init_toast_manager
 from localmind.ui.mode_selector import ModeSelector, ProcessingMode
+from localmind.ui.loading_indicator import SpinnerWidget, InlineLoadingIndicator
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
 from localmind.config import get_profile_manager
 from localmind.utils import get_error_handler, ErrorContext, ErrorMessages
@@ -51,6 +52,10 @@ class MainWindow(QMainWindow):
 
         # Initialize toast notification manager
         self._toast_manager = init_toast_manager(self)
+
+        # Apply colorblind mode from settings
+        settings = get_settings()
+        CircularScoreGauge.set_colorblind_mode(settings.app.colorblind_mode)
 
         self._setup_ui()
         self._setup_menu_bar()
@@ -221,6 +226,11 @@ class MainWindow(QMainWindow):
         self._status_bar = QStatusBar()
         self.setStatusBar(self._status_bar)
 
+        # Processing spinner (hidden by default)
+        self._status_spinner = SpinnerWidget(16)
+        self._status_spinner.hide()
+        self._status_bar.addWidget(self._status_spinner)
+
         self._status_label = QLabel("Ready")
         self._status_bar.addWidget(self._status_label, stretch=1)
 
@@ -345,6 +355,9 @@ class MainWindow(QMainWindow):
         else:
             self._status_label.setText(f"Processing: {self._current_file.name}")
 
+        # Show status spinner
+        self._status_spinner.start()
+
         self._progress_panel.start_full_process()
         self.processing_started.emit()
 
@@ -354,6 +367,7 @@ class MainWindow(QMainWindow):
     def _on_stop(self) -> None:
         self._orchestrator.stop()
         self._progress_panel.stop()
+        self._status_spinner.stop()
         self._status_label.setText("Stopped")
 
     @Slot(str)
@@ -405,6 +419,7 @@ class MainWindow(QMainWindow):
     def _on_processing_complete(self, result: ProcessingResult) -> None:
         """Handle processing completion."""
         self._progress_panel.complete_all()
+        self._status_spinner.stop()
         self._status_label.setText("Processing complete")
         self.processing_finished.emit()
 
@@ -484,6 +499,7 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_processing_error(self, error: str) -> None:
         """Handle processing error."""
+        self._status_spinner.stop()
         self._status_label.setText(f"Error: {error}")
 
         # Show error toast

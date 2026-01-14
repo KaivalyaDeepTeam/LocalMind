@@ -81,7 +81,35 @@ class CircularScoreGauge(QWidget):
     - Color gradient based on score
     - Inner text with score and grade letter
     - Smooth animation on value change
+    - Colorblind-friendly mode
     """
+
+    # Standard colors (red-orange-green)
+    COLORS_STANDARD = {
+        "high": "#059669",    # Green - Emerald-600
+        "medium": "#D97706",  # Orange - Amber-600
+        "low": "#DC2626",     # Red
+    }
+
+    # Colorblind-friendly colors (blue-purple-orange)
+    COLORS_COLORBLIND = {
+        "high": "#2563EB",    # Blue
+        "medium": "#7C3AED",  # Purple
+        "low": "#EA580C",     # Orange (instead of red)
+    }
+
+    # Class-level colorblind mode setting
+    _colorblind_mode = False
+
+    @classmethod
+    def set_colorblind_mode(cls, enabled: bool) -> None:
+        """Set colorblind mode for all score gauges."""
+        cls._colorblind_mode = enabled
+
+    @classmethod
+    def is_colorblind_mode(cls) -> bool:
+        """Check if colorblind mode is enabled."""
+        return cls._colorblind_mode
 
     def __init__(
         self,
@@ -133,13 +161,14 @@ class CircularScoreGauge(QWidget):
         self.update()
 
     def _get_color_for_score(self, pct: float) -> QColor:
-        """Get color based on score percentage."""
+        """Get color based on score percentage (colorblind-aware)."""
+        colors = self.COLORS_COLORBLIND if self._colorblind_mode else self.COLORS_STANDARD
         if pct >= 80:
-            return QColor("#059669")  # Emerald-600
+            return QColor(colors["high"])
         elif pct >= 60:
-            return QColor("#D97706")  # Amber-600
+            return QColor(colors["medium"])
         else:
-            return QColor("#DC2626")  # Red-600
+            return QColor(colors["low"])
 
     def _get_grade(self, pct: float) -> str:
         """Get letter grade for percentage."""

@@ -67,6 +67,7 @@ class OutputSettings:
 class AppSettings:
     """Application settings."""
     theme: str = "system"
+    colorblind_mode: bool = False  # Use colorblind-friendly colors
     check_updates: bool = True
     first_run_complete: bool = False
     whisper_models_downloaded: bool = False
@@ -133,6 +134,7 @@ class UserSettings:
             app_data = data["app"].copy()
             # Add defaults for new fields
             app_data.setdefault("recent_files", [])
+            app_data.setdefault("colorblind_mode", False)
             settings.app = AppSettings(**app_data)
 
         return settings

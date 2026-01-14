@@ -278,12 +278,19 @@ class ScoringEditorDialog(QDialog):
         toolbar.addSeparator()
 
         import_action = QAction("Import", self)
+        import_action.setToolTip("Import scoring profile from JSON file")
         import_action.triggered.connect(self._on_import_profile)
         toolbar.addAction(import_action)
 
         export_action = QAction("Export", self)
+        export_action.setToolTip("Export scoring profile to JSON file")
         export_action.triggered.connect(self._on_export_profile)
         toolbar.addAction(export_action)
+
+        format_help_action = QAction("Format Help", self)
+        format_help_action.setToolTip("View JSON export format documentation")
+        format_help_action.triggered.connect(self._on_show_format_help)
+        toolbar.addAction(format_help_action)
 
         toolbar.addSeparator()
 
@@ -630,6 +637,52 @@ class ScoringEditorDialog(QDialog):
                 QMessageBox.information(self, "Success", "Profile exported successfully.")
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to export: {e}")
+
+    @Slot()
+    def _on_show_format_help(self) -> None:
+        """Show JSON export format documentation."""
+        help_text = """
+        <h3>Scoring Profile JSON Format</h3>
+
+        <p>Scoring profiles are exported as JSON files with the following structure:</p>
+
+        <pre style="background: #f5f5f5; padding: 10px; font-family: monospace; font-size: 11px;">
+{
+  "name": "my_profile",
+  "description": "Custom scoring profile",
+  "parameters": [
+    {
+      "name": "greeting",
+      "display_name": "Greeting",
+      "description": "Agent greets customer properly",
+      "category": "compliance",
+      "max_score": 10.0,
+      "weight": 1.5,
+      "enabled": true
+    }
+  ]
+}
+        </pre>
+
+        <h4>Field Descriptions:</h4>
+        <ul>
+            <li><b>name</b>: Internal identifier (lowercase, underscores)</li>
+            <li><b>display_name</b>: Human-readable name shown in UI</li>
+            <li><b>description</b>: What this parameter measures</li>
+            <li><b>category</b>: "compliance", "quality", or "efficiency"</li>
+            <li><b>max_score</b>: Maximum points (typically 10)</li>
+            <li><b>weight</b>: Importance multiplier (0.1 to 3.0)</li>
+            <li><b>enabled</b>: Whether to include in scoring</li>
+        </ul>
+
+        <h4>Tips:</h4>
+        <ul>
+            <li>Higher weight = more impact on final score</li>
+            <li>Disabled parameters are saved but not used</li>
+            <li>Categories help organize parameters in reports</li>
+        </ul>
+        """
+        QMessageBox.information(self, "Export Format Help", help_text)
 
     @Slot()
     def _on_reset_profile(self) -> None:

@@ -12,11 +12,12 @@ from PySide6.QtWidgets import (
     QCheckBox, QLabel, QPushButton, QGroupBox, QMessageBox,
     QDialogButtonBox, QFileDialog,
 )
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot, QThread, QObject
 
 from localmind.config import (
     get_settings, save_settings, UserSettings, LLMProviderType,
 )
+from localmind.ui.loading_indicator import LoadingButton, InlineLoadingIndicator
 
 
 class LLMSettingsTab(QWidget):
@@ -80,7 +81,7 @@ class LLMSettingsTab(QWidget):
         self._openai_model.addItem("gpt-4-turbo", "gpt-4-turbo")
         openai_layout.addRow("Model:", self._openai_model)
 
-        self._openai_test_btn = QPushButton("Test Connection")
+        self._openai_test_btn = LoadingButton("Test Connection")
         self._openai_test_btn.clicked.connect(self._test_openai)
         self._openai_status = QLabel("")
         openai_test_row = QHBoxLayout()
@@ -106,7 +107,7 @@ class LLMSettingsTab(QWidget):
         self._anthropic_model.addItem("claude-3-haiku-20240307", "claude-3-haiku-20240307")
         anthropic_layout.addRow("Model:", self._anthropic_model)
 
-        self._anthropic_test_btn = QPushButton("Test Connection")
+        self._anthropic_test_btn = LoadingButton("Test Connection")
         self._anthropic_test_btn.clicked.connect(self._test_anthropic)
         self._anthropic_status = QLabel("")
         anthropic_test_row = QHBoxLayout()
@@ -177,40 +178,38 @@ class LLMSettingsTab(QWidget):
         """Test OpenAI API connection."""
         api_key = self._openai_key.text().strip()
         if not api_key:
-            self._openai_status.setText("❌ No API key")
+            self._openai_status.setText("No API key")
             self._openai_status.setStyleSheet("color: #DC2626;")
             return
 
-        self._openai_status.setText("Testing...")
-        self._openai_status.setStyleSheet("color: #6B7280;")
-        self._openai_test_btn.setEnabled(False)
+        self._openai_status.setText("")
+        self._openai_test_btn.set_loading(True, "Testing")
 
         try:
             import openai
             client = openai.OpenAI(api_key=api_key)
             # Make a minimal API call to test the key
             client.models.list()
-            self._openai_status.setText("✓ Connected")
+            self._openai_status.setText("Connected")
             self._openai_status.setStyleSheet("color: #059669;")
         except Exception as e:
             error_msg = str(e)[:50] + "..." if len(str(e)) > 50 else str(e)
-            self._openai_status.setText(f"❌ {error_msg}")
+            self._openai_status.setText(f"{error_msg}")
             self._openai_status.setStyleSheet("color: #DC2626;")
         finally:
-            self._openai_test_btn.setEnabled(True)
+            self._openai_test_btn.set_loading(False)
 
     @Slot()
     def _test_anthropic(self) -> None:
         """Test Anthropic API connection."""
         api_key = self._anthropic_key.text().strip()
         if not api_key:
-            self._anthropic_status.setText("❌ No API key")
+            self._anthropic_status.setText("No API key")
             self._anthropic_status.setStyleSheet("color: #DC2626;")
             return
 
-        self._anthropic_status.setText("Testing...")
-        self._anthropic_status.setStyleSheet("color: #6B7280;")
-        self._anthropic_test_btn.setEnabled(False)
+        self._anthropic_status.setText("")
+        self._anthropic_test_btn.set_loading(True, "Testing")
 
         try:
             import anthropic
@@ -221,14 +220,14 @@ class LLMSettingsTab(QWidget):
                 max_tokens=1,
                 messages=[{"role": "user", "content": "Hi"}]
             )
-            self._anthropic_status.setText("✓ Connected")
+            self._anthropic_status.setText("Connected")
             self._anthropic_status.setStyleSheet("color: #059669;")
         except Exception as e:
             error_msg = str(e)[:50] + "..." if len(str(e)) > 50 else str(e)
-            self._anthropic_status.setText(f"❌ {error_msg}")
+            self._anthropic_status.setText(f"{error_msg}")
             self._anthropic_status.setStyleSheet("color: #DC2626;")
         finally:
-            self._anthropic_test_btn.setEnabled(True)
+            self._anthropic_test_btn.set_loading(False)
 
 
 class TranscriptionSettingsTab(QWidget):
@@ -418,6 +417,24 @@ class AppearanceSettingsTab(QWidget):
         theme_layout.addRow("", theme_note)
 
         layout.addWidget(theme_group)
+
+        # Accessibility settings
+        accessibility_group = QGroupBox("Accessibility")
+        accessibility_layout = QFormLayout(accessibility_group)
+
+        self._colorblind_checkbox = QCheckBox("Colorblind-friendly mode")
+        self._colorblind_checkbox.setToolTip(
+            "Use blue-purple-orange colors instead of green-yellow-red\n"
+            "for better visibility with red-green color blindness"
+        )
+        self._colorblind_checkbox.stateChanged.connect(self._on_colorblind_changed)
+        accessibility_layout.addRow("", self._colorblind_checkbox)
+
+        colorblind_note = QLabel("Uses blue/purple/orange colors for score gauges")
+        colorblind_note.setStyleSheet("color: #6B7280; font-size: 11px;")
+        accessibility_layout.addRow("", colorblind_note)
+
+        layout.addWidget(accessibility_group)
         layout.addStretch()
 
     def _load_settings(self) -> None:
@@ -425,10 +442,12 @@ class AppearanceSettingsTab(QWidget):
         idx = self._theme_combo.findData(self._settings.app.theme)
         if idx >= 0:
             self._theme_combo.setCurrentIndex(idx)
+        self._colorblind_checkbox.setChecked(self._settings.app.colorblind_mode)
 
     def save_settings(self) -> None:
         """Save settings from UI."""
         self._settings.app.theme = self._theme_combo.currentData()
+        self._settings.app.colorblind_mode = self._colorblind_checkbox.isChecked()
 
     @Slot()
     def _on_theme_changed(self) -> None:
@@ -438,6 +457,13 @@ class AppearanceSettingsTab(QWidget):
         manager = get_theme_manager()
         if manager:
             manager.set_theme(theme)
+
+    @Slot()
+    def _on_colorblind_changed(self) -> None:
+        """Apply colorblind mode immediately when changed."""
+        from localmind.ui.results_viewer import CircularScoreGauge
+        enabled = self._colorblind_checkbox.isChecked()
+        CircularScoreGauge.set_colorblind_mode(enabled)
 
 
 class SettingsDialog(QDialog):
