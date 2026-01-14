@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, QCoreApplication
 from localmind import __app_name__, __version__
 from localmind.main_window import MainWindow
 from localmind.config.settings import get_settings_manager, get_settings
+from localmind.ui.theme_manager import init_theme_manager
 
 
 def setup_application() -> QApplication:
@@ -29,10 +30,13 @@ def setup_application() -> QApplication:
 
     app = QApplication(sys.argv)
 
-    # Set application style
+    # Use Fusion style for consistent cross-platform appearance
+    app.setStyle("Fusion")
+
+    # Initialize theme manager and apply user's theme preference
+    theme_manager = init_theme_manager(app)
     settings = get_settings()
-    if settings.app.theme in ("dark", "light"):
-        app.setStyle("Fusion")
+    theme_manager.set_theme(settings.app.theme)
 
     return app
 
