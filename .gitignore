@@ -1,0 +1,61 @@
+# Build outputs
+build/
+dist/
+*.app
+*.dmg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test and coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Uploaded files (user data)
+uploads/
+samples/
+
+# API and worker folders (separate services)
+api/
+worker/
+src/
+
+# Test folders that shouldn't be committed
+tests/__pycache__/
+tests/api/
+tests/integration/__pycache__/
+tests/unit/__pycache__/
