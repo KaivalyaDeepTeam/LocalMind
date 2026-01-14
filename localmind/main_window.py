@@ -432,11 +432,21 @@ class MainWindow(QMainWindow):
             display_data["max_score"] = 100
 
         # Load results into viewer
-        if display_data.get("transcript") or result.audit:
+        has_transcript = display_data.get("transcript") and len(display_data.get("transcript", "").strip()) > 0
+
+        if has_transcript or result.audit:
             self._results_viewer.load_results(display_data)
             # Force show the Transcript tab for transcription-only mode
             if not result.audit:
                 self._results_viewer.setCurrentIndex(0)
+        elif result.transcription is not None:
+            # Transcription completed but returned empty - likely model limitation
+            self._toast_manager.show_warning(
+                "Transcription returned empty. Try a larger model (e.g., 'small' or 'medium') for better results with non-English audio.",
+                duration=8000,
+            )
+            self._status_label.setText("Transcription empty - try larger model")
+            return
 
         # Show success toast
         if result.audit:

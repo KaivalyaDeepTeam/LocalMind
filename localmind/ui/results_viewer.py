@@ -632,7 +632,7 @@ class ResultsViewer(QWidget):
                 self._feedback_viewer.set_feedback(results["feedback"])
 
         # Update raw JSON
-        self._raw_json.setPlainText(json.dumps(results, indent=2))
+        self._raw_json.setPlainText(json.dumps(results, indent=2, ensure_ascii=False))
 
         self.results_loaded.emit(results)
 
