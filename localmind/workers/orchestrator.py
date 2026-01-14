@@ -14,6 +14,9 @@ from localmind.workers.base import WorkerState
 from localmind.workers.transcription_worker import (
     TranscriptionWorker, DualChannelTranscriptionWorker, TranscriptionResult,
 )
+from localmind.workers.hindi_transcription_worker import (
+    HindiSTTWorker, DualChannelHindiSTTWorker,
+)
 from localmind.workers.merge_worker import MergeWorker, MergeResult
 from localmind.workers.audit_worker import AuditWorker, AuditResult
 
@@ -78,6 +81,7 @@ class ProcessingOrchestrator(QObject):
         self._language: Optional[str] = None
         self._use_gpu = True
         self._dual_channel = True
+        self._use_hindi_stt = False  # Use HindiSTT for Hindi-English
         self._parameters: Optional[List[Dict[str, Any]]] = None
 
     @property
@@ -91,6 +95,7 @@ class ProcessingOrchestrator(QObject):
         language: Optional[str] = None,
         use_gpu: bool = True,
         dual_channel: bool = True,
+        use_hindi_stt: bool = False,
         scoring_parameters: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         """Configure processing settings.
@@ -100,12 +105,14 @@ class ProcessingOrchestrator(QObject):
             language: Language code or None for auto-detect.
             use_gpu: Whether to use GPU acceleration.
             dual_channel: Whether to process as dual-channel audio.
+            use_hindi_stt: Use HindiSTT model for Hindi-English transcription.
             scoring_parameters: Custom scoring parameters.
         """
         self._whisper_model = whisper_model
         self._language = language
         self._use_gpu = use_gpu
         self._dual_channel = dual_channel
+        self._use_hindi_stt = use_hindi_stt
         self._parameters = scoring_parameters
 
     def start(self, audio_path: str) -> None:
@@ -151,20 +158,35 @@ class ProcessingOrchestrator(QObject):
         """Start the transcription stage."""
         self.stage_started.emit("transcription")
 
-        if self._dual_channel:
-            self._transcription_worker = DualChannelTranscriptionWorker(
-                audio_path=str(self._audio_path),
-                model_name=self._whisper_model,
-                language=self._language,
-                use_gpu=self._use_gpu,
-            )
+        # Choose worker based on Hindi mode
+        if self._use_hindi_stt:
+            # Use HindiSTT for Hindi-English (Hinglish) transcription
+            if self._dual_channel:
+                self._transcription_worker = DualChannelHindiSTTWorker(
+                    audio_path=str(self._audio_path),
+                    use_gpu=self._use_gpu,
+                )
+            else:
+                self._transcription_worker = HindiSTTWorker(
+                    audio_path=str(self._audio_path),
+                    use_gpu=self._use_gpu,
+                )
         else:
-            self._transcription_worker = TranscriptionWorker(
-                audio_path=str(self._audio_path),
-                model_name=self._whisper_model,
-                language=self._language,
-                use_gpu=self._use_gpu,
-            )
+            # Use standard Whisper
+            if self._dual_channel:
+                self._transcription_worker = DualChannelTranscriptionWorker(
+                    audio_path=str(self._audio_path),
+                    model_name=self._whisper_model,
+                    language=self._language,
+                    use_gpu=self._use_gpu,
+                )
+            else:
+                self._transcription_worker = TranscriptionWorker(
+                    audio_path=str(self._audio_path),
+                    model_name=self._whisper_model,
+                    language=self._language,
+                    use_gpu=self._use_gpu,
+                )
 
         self._transcription_worker.progress.connect(
             lambda p, m: self.stage_progress.emit("transcription", p, m)

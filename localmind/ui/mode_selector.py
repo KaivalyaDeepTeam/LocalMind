@@ -241,6 +241,11 @@ class OfflineSettings(QFrame):
 
     settings_changed = Signal()
 
+    LANGUAGE_MODES = [
+        ("english", "🇬🇧 English (Whisper)"),
+        ("hindi-english", "🇮🇳 Hindi-English (HindiSTT)"),
+    ]
+
     WHISPER_MODELS = [
         ("tiny", "Tiny (39 MB) - Fastest"),
         ("base", "Base (141 MB) - Fast"),
@@ -258,7 +263,7 @@ class OfflineSettings(QFrame):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(16)
+        layout.setSpacing(12)
 
         # Info label
         info = QLabel("🔒 100% Private - No data leaves your device")
@@ -266,36 +271,81 @@ class OfflineSettings(QFrame):
         info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(info)
 
-        # Whisper model selection
-        model_row = QHBoxLayout()
-        model_label = QLabel("Whisper Model")
+        # Language Mode selection
+        lang_row = QHBoxLayout()
+        lang_label = QLabel("Language")
+        lang_label.setObjectName("fieldLabel")
+        lang_row.addWidget(lang_label)
+
+        self._language_combo = QComboBox()
+        self._language_combo.setObjectName("languageCombo")
+        for lang_id, lang_name in self.LANGUAGE_MODES:
+            self._language_combo.addItem(lang_name, lang_id)
+        self._language_combo.currentIndexChanged.connect(self._on_language_changed)
+        lang_row.addWidget(self._language_combo, stretch=1)
+
+        layout.addLayout(lang_row)
+
+        # Whisper model selection (only shown for English mode)
+        self._whisper_row = QHBoxLayout()
+        model_label = QLabel("Model")
         model_label.setObjectName("fieldLabel")
-        model_row.addWidget(model_label)
+        self._whisper_row.addWidget(model_label)
 
         self._model_combo = QComboBox()
         self._model_combo.setObjectName("whisperModelCombo")
         for model_id, model_name in self.WHISPER_MODELS:
             self._model_combo.addItem(model_name, model_id)
 
-        # Default to base for faster testing
-        self._model_combo.setCurrentIndex(1)
+        # Default to large-v3 for best accuracy
+        self._model_combo.setCurrentIndex(4)
         self._model_combo.currentIndexChanged.connect(lambda: self.settings_changed.emit())
-        model_row.addWidget(self._model_combo, stretch=1)
+        self._whisper_row.addWidget(self._model_combo, stretch=1)
 
-        layout.addLayout(model_row)
+        # Create a widget to hold the row so we can show/hide it
+        self._whisper_container = QWidget()
+        whisper_layout = QHBoxLayout(self._whisper_container)
+        whisper_layout.setContentsMargins(0, 0, 0, 0)
+        whisper_layout.addLayout(self._whisper_row)
+        layout.addWidget(self._whisper_container)
+
+        # Hindi-English info (only shown for Hindi mode)
+        self._hindi_info = QLabel("Uses HindiSTT model (Romanized output)\nOptimized for Indian call centers")
+        self._hindi_info.setObjectName("hindiInfo")
+        self._hindi_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._hindi_info.setVisible(False)
+        layout.addWidget(self._hindi_info)
 
         # Download status
         self._status_label = QLabel("Model will be downloaded on first use")
         self._status_label.setObjectName("downloadStatus")
         layout.addWidget(self._status_label)
 
+    def _on_language_changed(self) -> None:
+        """Handle language mode change."""
+        is_hindi = self._language_combo.currentData() == "hindi-english"
+        self._whisper_container.setVisible(not is_hindi)
+        self._hindi_info.setVisible(is_hindi)
+        self.settings_changed.emit()
+
+    def get_language_mode(self) -> str:
+        return self._language_combo.currentData() or "english"
+
     def get_whisper_model(self) -> str:
-        return self._model_combo.currentData() or "base"
+        return self._model_combo.currentData() or "large-v3"
+
+    def set_language_mode(self, mode: str) -> None:
+        idx = self._language_combo.findData(mode)
+        if idx >= 0:
+            self._language_combo.setCurrentIndex(idx)
 
     def set_whisper_model(self, model: str) -> None:
         idx = self._model_combo.findData(model)
         if idx >= 0:
             self._model_combo.setCurrentIndex(idx)
+
+    def is_hindi_mode(self) -> bool:
+        return self._language_combo.currentData() == "hindi-english"
 
 
 class ModeSelector(QWidget):
@@ -364,6 +414,12 @@ class ModeSelector(QWidget):
 
     def get_whisper_model(self) -> str:
         return self._offline_settings.get_whisper_model()
+
+    def get_language_mode(self) -> str:
+        return self._offline_settings.get_language_mode()
+
+    def is_hindi_mode(self) -> bool:
+        return self._offline_settings.is_hindi_mode()
 
     def set_mode(self, mode: ProcessingMode) -> None:
         self._mode_toggle.set_mode(mode)

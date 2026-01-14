@@ -20,6 +20,7 @@ class DropZone(QFrame):
     """Drag and drop zone for audio files."""
 
     file_dropped = Signal(str)
+    files_dropped = Signal(list)  # For batch processing
 
     AUDIO_EXTENSIONS = {'.wav', '.mp3', '.m4a', '.ogg', '.flac', '.webm', '.aac', '.wma', '.opus'}
 
@@ -84,22 +85,33 @@ class DropZone(QFrame):
         self.style().unpolish(self)
         self.style().polish(self)
 
+        # Collect all valid audio files
+        files = []
         for url in event.mimeData().urls():
             if url.isLocalFile():
                 path = Path(url.toLocalFile())
                 if path.suffix.lower() in self.AUDIO_EXTENSIONS:
-                    self.file_dropped.emit(str(path))
-                    return
+                    files.append(str(path))
+
+        # Emit first file (for single file processing)
+        if files:
+            self.file_dropped.emit(files[0])
+            # Also emit all files for batch processing
+            if hasattr(self, 'files_dropped'):
+                self.files_dropped.emit(files)
 
     def mousePressEvent(self, event) -> None:
-        # Open file dialog on click
-        filepath, _ = QFileDialog.getOpenFileName(
-            self, "Select Audio File",
+        # Open file dialog on click - supports multiple selection
+        filepaths, _ = QFileDialog.getOpenFileNames(
+            self, "Select Audio Files",
             str(Path.home()),
             "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
         )
-        if filepath:
-            self.file_dropped.emit(filepath)
+        if filepaths:
+            self.file_dropped.emit(filepaths[0])
+            # Emit all files for batch processing
+            if len(filepaths) > 1 and hasattr(self, 'files_dropped'):
+                self.files_dropped.emit(filepaths)
 
 
 class QuickAccessItem(QFrame):
@@ -185,11 +197,13 @@ class FileBrowserPanel(QWidget):
     file_selected = Signal(str)
     file_double_clicked = Signal(str)
     process_clicked = Signal()
+    batch_process_clicked = Signal(list)  # For batch processing
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._recent_files: List[str] = []
         self._current_file: Optional[str] = None
+        self._batch_queue: List[str] = []
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -221,13 +235,53 @@ class FileBrowserPanel(QWidget):
         file_row.addWidget(self._selected_file_label, stretch=1)
         selected_layout.addLayout(file_row)
 
-        # Process button
-        self._process_btn = QPushButton("Process Audio")
+        # Process buttons row
+        btn_row = QHBoxLayout()
+
+        self._process_btn = QPushButton("Process")
         self._process_btn.setObjectName("processButton")
         self._process_btn.clicked.connect(self._on_process_clicked)
-        selected_layout.addWidget(self._process_btn)
+        btn_row.addWidget(self._process_btn)
+
+        self._add_to_queue_btn = QPushButton("Add to Queue")
+        self._add_to_queue_btn.setObjectName("queueButton")
+        self._add_to_queue_btn.clicked.connect(self._on_add_to_queue)
+        btn_row.addWidget(self._add_to_queue_btn)
+
+        selected_layout.addLayout(btn_row)
 
         layout.addWidget(self._selected_container)
+
+        # Batch Queue section
+        self._queue_header = QLabel("Batch Queue")
+        self._queue_header.setObjectName("sectionHeader")
+        self._queue_header.setVisible(False)
+        layout.addWidget(self._queue_header)
+
+        self._queue_container = QFrame()
+        self._queue_container.setObjectName("batchQueueContainer")
+        self._queue_container.setVisible(False)
+        queue_layout = QVBoxLayout(self._queue_container)
+        queue_layout.setContentsMargins(12, 12, 12, 12)
+        queue_layout.setSpacing(8)
+
+        self._queue_list = QListWidget()
+        self._queue_list.setObjectName("batchQueueList")
+        self._queue_list.setMaximumHeight(120)
+        queue_layout.addWidget(self._queue_list)
+
+        queue_btn_row = QHBoxLayout()
+        self._process_queue_btn = QPushButton("Process All")
+        self._process_queue_btn.setObjectName("processButton")
+        self._process_queue_btn.clicked.connect(self._on_process_queue)
+        queue_btn_row.addWidget(self._process_queue_btn)
+
+        self._clear_queue_btn = QPushButton("Clear")
+        self._clear_queue_btn.clicked.connect(self._on_clear_queue)
+        queue_btn_row.addWidget(self._clear_queue_btn)
+
+        queue_layout.addLayout(queue_btn_row)
+        layout.addWidget(self._queue_container)
 
         # Quick Access section
         quick_access_header = QLabel("Quick Access")
@@ -296,6 +350,58 @@ class FileBrowserPanel(QWidget):
         if self._current_file:
             self.file_double_clicked.emit(self._current_file)
             self.process_clicked.emit()
+
+    @Slot()
+    def _on_add_to_queue(self) -> None:
+        """Add current file to batch queue."""
+        if self._current_file and self._current_file not in self._batch_queue:
+            self._batch_queue.append(self._current_file)
+            self._update_queue_ui()
+
+    @Slot()
+    def _on_process_queue(self) -> None:
+        """Process all files in the queue."""
+        if self._batch_queue:
+            self.batch_process_clicked.emit(self._batch_queue.copy())
+
+    @Slot()
+    def _on_clear_queue(self) -> None:
+        """Clear the batch queue."""
+        self._batch_queue.clear()
+        self._update_queue_ui()
+
+    def _update_queue_ui(self) -> None:
+        """Update the batch queue display."""
+        self._queue_list.clear()
+        for filepath in self._batch_queue:
+            filename = Path(filepath).name
+            self._queue_list.addItem(f"🎵 {filename}")
+
+        has_queue = len(self._batch_queue) > 0
+        self._queue_header.setVisible(has_queue)
+        self._queue_container.setVisible(has_queue)
+
+    def add_files_to_queue(self, filepaths: List[str]) -> None:
+        """Add multiple files to the batch queue."""
+        for filepath in filepaths:
+            if filepath not in self._batch_queue:
+                self._batch_queue.append(filepath)
+        self._update_queue_ui()
+
+    def get_queue(self) -> List[str]:
+        """Get the current batch queue."""
+        return self._batch_queue.copy()
+
+    def clear_queue(self) -> None:
+        """Clear the batch queue."""
+        self._batch_queue.clear()
+        self._update_queue_ui()
+
+    def remove_from_queue(self, filepath: str) -> None:
+        """Remove a file from the queue."""
+        if filepath in self._batch_queue:
+            self._batch_queue.remove(filepath)
+            self._update_queue_ui()
 
     def _set_selected_file(self, filepath: str) -> None:
         """Update the selected file display."""

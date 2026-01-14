@@ -238,7 +238,7 @@ class MainWindow(QMainWindow):
         self._orchestrator.processing_error.connect(self._on_processing_error)
 
     def _configure_orchestrator(self) -> None:
-        """Configure the processing orchestrator from settings."""
+        """Configure the processing orchestrator from settings and mode selector."""
         settings = get_settings()
 
         # Get scoring parameters from profile
@@ -254,11 +254,20 @@ class MainWindow(QMainWindow):
             for p in profile.get_enabled_parameters()
         ]
 
+        # Check if Hindi mode is enabled from mode selector
+        use_hindi_stt = False
+        if self._mode_selector.get_mode() == ProcessingMode.OFFLINE:
+            use_hindi_stt = self._mode_selector.is_hindi_mode()
+
+        # Get whisper model from mode selector (for offline mode)
+        whisper_model = self._mode_selector.get_whisper_model()
+
         self._orchestrator.configure(
-            whisper_model=settings.transcription.whisper_model,
+            whisper_model=whisper_model,
             language=settings.transcription.language if settings.transcription.language != "auto" else None,
             use_gpu=settings.transcription.use_gpu,
             dual_channel=True,
+            use_hindi_stt=use_hindi_stt,
             scoring_parameters=scoring_parameters,
         )
 
@@ -316,12 +325,20 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Processing", "Processing is already in progress.")
             return
 
+        # Reconfigure orchestrator with current settings
+        self._configure_orchestrator()
+
         # Clear previous results
         self._results_viewer.clear()
         self._progress_panel.reset()
 
         # Start processing
-        self._status_label.setText(f"Processing: {self._current_file.name}")
+        mode = self._mode_selector.get_mode()
+        if mode == ProcessingMode.OFFLINE and self._mode_selector.is_hindi_mode():
+            self._status_label.setText(f"Processing (Hindi-English): {self._current_file.name}")
+        else:
+            self._status_label.setText(f"Processing: {self._current_file.name}")
+
         self._progress_panel.start_full_process()
         self.processing_started.emit()
 

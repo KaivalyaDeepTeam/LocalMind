@@ -952,6 +952,38 @@ QLabel#selectedFileName {
     color: #0F172A;
 }
 
+/* Batch Queue */
+QFrame#batchQueueContainer {
+    background-color: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 12px;
+}
+
+QListWidget#batchQueueList {
+    background-color: transparent;
+    border: none;
+    font-size: 13px;
+}
+
+QListWidget#batchQueueList::item {
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+QListWidget#batchQueueList::item:selected {
+    background-color: #DCFCE7;
+}
+
+QPushButton#queueButton {
+    background-color: #F0FDF4;
+    color: #059669;
+    border: 1px solid #BBF7D0;
+}
+
+QPushButton#queueButton:hover {
+    background-color: #DCFCE7;
+}
+
 /* === Quick Access === */
 QFrame#quickAccessItem {
     background-color: transparent;
@@ -1096,6 +1128,15 @@ QLabel#offlineInfo {
     font-weight: 500;
     padding: 8px;
     background-color: #D1FAE5;
+    border-radius: 8px;
+}
+
+QLabel#hindiInfo {
+    font-size: 12px;
+    color: #D97706;
+    font-weight: 500;
+    padding: 8px;
+    background-color: #FEF3C7;
     border-radius: 8px;
 }
 

@@ -7,6 +7,10 @@ from localmind.workers.transcription_worker import (
     TranscriptionResult,
     TranscriptionSegment,
 )
+from localmind.workers.hindi_transcription_worker import (
+    HindiSTTWorker,
+    DualChannelHindiSTTWorker,
+)
 from localmind.workers.merge_worker import MergeWorker, MergeResult, MergedSegment
 from localmind.workers.audit_worker import (
     AuditWorker,
@@ -34,6 +38,9 @@ __all__ = [
     "DualChannelTranscriptionWorker",
     "TranscriptionResult",
     "TranscriptionSegment",
+    # Hindi Transcription
+    "HindiSTTWorker",
+    "DualChannelHindiSTTWorker",
     # Merge
     "MergeWorker",
     "MergeResult",
