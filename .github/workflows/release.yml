@@ -1,0 +1,200 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.1.0)'
+        required: true
+        type: string
+
+jobs:
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller LocalMind.spec
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "LocalMind" -srcfolder dist/LocalMind.app -ov -format UDZO LocalMind-macOS.dmg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalMind-macOS
+          path: LocalMind-macOS.dmg
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller LocalMind.spec
+
+      - name: Create ZIP
+        run: |
+          Compress-Archive -Path dist\LocalMind -DestinationPath LocalMind-Windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalMind-Windows
+          path: LocalMind-Windows.zip
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpango-1.0-0 \
+            libpangocairo-1.0-0 \
+            libcairo2 \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libxkbcommon-x11-0 \
+            libegl1 \
+            libgl1-mesa-glx \
+            fuse \
+            libfuse2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller LocalMind.spec
+
+      - name: Create AppImage
+        run: |
+          # Download appimagetool
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+          # Create AppDir structure
+          mkdir -p LocalMind.AppDir/usr/bin
+          mkdir -p LocalMind.AppDir/usr/share/applications
+          mkdir -p LocalMind.AppDir/usr/share/icons/hicolor/256x256/apps
+
+          # Copy built files
+          cp -r dist/LocalMind/* LocalMind.AppDir/usr/bin/
+
+          # Create desktop file
+          cat > LocalMind.AppDir/usr/share/applications/localmind.desktop << EOF
+          [Desktop Entry]
+          Name=LocalMind
+          Exec=LocalMind
+          Icon=localmind
+          Type=Application
+          Categories=AudioVideo;Audio;
+          Comment=AI Audio Transcription and Quality Scoring
+          EOF
+
+          # Copy desktop file to root
+          cp LocalMind.AppDir/usr/share/applications/localmind.desktop LocalMind.AppDir/
+
+          # Create AppRun
+          cat > LocalMind.AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export LD_LIBRARY_PATH="${HERE}/usr/bin:${LD_LIBRARY_PATH}"
+          exec "${HERE}/usr/bin/LocalMind" "$@"
+          EOF
+          chmod +x LocalMind.AppDir/AppRun
+
+          # Create simple icon if not exists
+          if [ -f "localmind/resources/images/icon.png" ]; then
+            cp localmind/resources/images/icon.png LocalMind.AppDir/usr/share/icons/hicolor/256x256/apps/localmind.png
+            cp localmind/resources/images/icon.png LocalMind.AppDir/localmind.png
+          else
+            # Create placeholder icon
+            convert -size 256x256 xc:#6366F1 -fill white -gravity center -pointsize 72 -annotate 0 "LM" LocalMind.AppDir/localmind.png || true
+          fi
+
+          # Build AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage LocalMind.AppDir LocalMind-Linux.AppImage || \
+            tar -czvf LocalMind-Linux.tar.gz -C dist LocalMind
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalMind-Linux
+          path: |
+            LocalMind-Linux.AppImage
+            LocalMind-Linux.tar.gz
+
+  upload-release:
+    name: Upload to Release
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-windows, build-linux]
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f
+
+      - name: Get release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: |
+            artifacts/LocalMind-macOS/LocalMind-macOS.dmg
+            artifacts/LocalMind-Windows/LocalMind-Windows.zip
+            artifacts/LocalMind-Linux/LocalMind-Linux.AppImage
+            artifacts/LocalMind-Linux/LocalMind-Linux.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
