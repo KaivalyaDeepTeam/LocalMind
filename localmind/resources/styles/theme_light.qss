@@ -1181,3 +1181,174 @@ QLabel#downloadStatus {
     font-size: 12px;
     color: #64748B;
 }
+
+/* === Commercial File Browser === */
+
+/* Panel header */
+QLabel#panelHeader {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 8px;
+}
+
+/* Empty state drop zone */
+QFrame#dropZoneEmpty {
+    background-color: #FFFFFF;
+    border: 2px dashed #E2E8F0;
+    border-radius: 16px;
+}
+
+QFrame#dropZoneEmpty:hover {
+    border-color: #A5B4FC;
+    background-color: #F5F3FF;
+}
+
+QFrame#dropZoneEmpty[dragOver="true"] {
+    border-color: #6366F1;
+    border-style: solid;
+    background-color: #EEF2FF;
+}
+
+QLabel#uploadIcon {
+    font-size: 48px;
+    color: #A5B4FC;
+    font-weight: 300;
+    padding: 16px;
+    background-color: #F1F5F9;
+    border-radius: 50%;
+    min-width: 80px;
+    max-width: 80px;
+    min-height: 80px;
+    max-height: 80px;
+}
+
+QFrame#dropZoneEmpty:hover QLabel#uploadIcon {
+    background-color: #EEF2FF;
+    color: #6366F1;
+}
+
+QLabel#dropTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+QLabel#dropSubtitle {
+    font-size: 14px;
+    color: #64748B;
+}
+
+QLabel#dropFormats {
+    font-size: 12px;
+    color: #94A3B8;
+    padding: 8px 16px;
+    background-color: #F8FAFC;
+    border-radius: 20px;
+}
+
+/* File card (selected state) */
+QFrame#fileCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+}
+
+QFrame#fileInfoSection {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+QFrame#audioIconFrame {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #6366F1, stop:1 #8B5CF6);
+    border-radius: 12px;
+}
+
+QLabel#audioIcon {
+    font-size: 28px;
+    color: #FFFFFF;
+}
+
+QLabel#fileName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+QLabel#fileInfo {
+    font-size: 13px;
+    color: #64748B;
+}
+
+QPushButton#changeFileBtn {
+    background-color: transparent;
+    color: #6366F1;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 12px;
+}
+
+QPushButton#changeFileBtn:hover {
+    background-color: #F5F3FF;
+    border-color: #A5B4FC;
+}
+
+/* Primary process button */
+QPushButton#primaryProcessBtn {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6366F1, stop:1 #8B5CF6);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px 32px;
+}
+
+QPushButton#primaryProcessBtn:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F46E5, stop:1 #7C3AED);
+}
+
+QPushButton#primaryProcessBtn:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4338CA, stop:1 #6D28D9);
+}
+
+QLabel#processHint {
+    font-size: 12px;
+    color: #94A3B8;
+}
+
+/* Recent section */
+QFrame#recentSection {
+    background-color: transparent;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 12px;
+}
+
+QLabel#recentHeader {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+QPushButton#recentFileBtn {
+    background-color: #F8FAFC;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 10px;
+}
+
+QPushButton#recentFileBtn:hover {
+    background-color: #EEF2FF;
+    border-color: #A5B4FC;
+    color: #4F46E5;
+}
