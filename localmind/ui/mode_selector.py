@@ -27,7 +27,7 @@ class ModeToggle(QFrame):
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self._mode = ProcessingMode.ONLINE
+        self._mode = ProcessingMode.OFFLINE  # Default to offline mode
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -50,7 +50,6 @@ class ModeToggle(QFrame):
         self._online_btn = QPushButton("Online")
         self._online_btn.setObjectName("modeButton")
         self._online_btn.setCheckable(True)
-        self._online_btn.setChecked(True)
         self._online_btn.setFixedHeight(36)
         self._online_btn.clicked.connect(lambda: self._set_mode(ProcessingMode.ONLINE))
         layout.addWidget(self._online_btn)
@@ -89,21 +88,22 @@ class ProviderSelector(QFrame):
     settings_changed = Signal()
 
     # Available providers and their models
+    # Using text indicators instead of emojis for better cross-platform support
     PROVIDERS = {
         "OpenAI": {
             "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
             "default": "gpt-4o-mini",
-            "icon": "🟢",
+            "icon": "[O]",  # OpenAI
         },
         "Anthropic": {
             "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
             "default": "claude-3-5-sonnet-20241022",
-            "icon": "🟠",
+            "icon": "[A]",  # Anthropic
         },
         "Groq": {
             "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
             "default": "llama-3.3-70b-versatile",
-            "icon": "🔵",
+            "icon": "[G]",  # Groq
         },
     }
 
@@ -310,9 +310,15 @@ class OfflineSettings(QFrame):
         layout.addWidget(self._whisper_container)
 
         # Hindi-English info (only shown for Hindi mode)
-        self._hindi_info = QLabel("Uses HindiSTT model (Romanized output)\nOptimized for Indian call centers")
+        self._hindi_info = QLabel(
+            "🎯 HindiSTT Model Selected\n\n"
+            "Uses a specialized Hindi-English speech recognition model\n"
+            "instead of Whisper. Outputs romanized text (Hinglish).\n"
+            "Optimized for Indian call centers with code-switching."
+        )
         self._hindi_info.setObjectName("hindiInfo")
         self._hindi_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._hindi_info.setWordWrap(True)
         self._hindi_info.setVisible(False)
         layout.addWidget(self._hindi_info)
 

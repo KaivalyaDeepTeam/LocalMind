@@ -104,6 +104,7 @@ class StageProgressWidget(QFrame):
         self._name = name
         self._number = number
         self._start_time: Optional[float] = None
+        self._current_progress: int = 0
         self._is_expanded = False
         self._logs: list[str] = []
         self._setup_ui()
@@ -144,10 +145,10 @@ class StageProgressWidget(QFrame):
         self._status_label.setProperty("state", "waiting")
         header.addWidget(self._status_label)
 
-        # Time display
+        # Time display (with ETA)
         self._time_label = QLabel("")
         self._time_label.setObjectName("stageTime")
-        self._time_label.setMinimumWidth(80)
+        self._time_label.setMinimumWidth(150)  # Wider for ETA
         self._time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         header.addWidget(self._time_label)
 
@@ -172,12 +173,12 @@ class StageProgressWidget(QFrame):
         self._log_panel.setReadOnly(True)
         self._log_panel.setMaximumHeight(100)
         self._log_panel.setVisible(False)
-        self._log_panel.setFont(QFont("JetBrains Mono", 10))
+        self._log_panel.setFont(QFont("Menlo", 10))
         main_layout.addWidget(self._log_panel)
 
-        # Retry button (shown on error)
+        # Retry button (shown on error) - use primary style as retry is a positive action
         self._retry_btn = QPushButton("Retry")
-        self._retry_btn.setProperty("danger", "true")
+        self._retry_btn.setProperty("primary", "true")
         self._retry_btn.setVisible(False)
         self._retry_btn.clicked.connect(self.retry_requested.emit)
         main_layout.addWidget(self._retry_btn)
@@ -219,7 +220,7 @@ class StageProgressWidget(QFrame):
         self._expand_btn.setText("Hide" if self._is_expanded else "Details")
 
     def _update_time_display(self) -> None:
-        """Update the elapsed time display."""
+        """Update the elapsed time display with ETA."""
         if self._start_time is None:
             return
 
@@ -227,10 +228,30 @@ class StageProgressWidget(QFrame):
         minutes = int(elapsed // 60)
         seconds = int(elapsed % 60)
 
+        # Format elapsed time
         if minutes > 0:
-            self._time_label.setText(f"{minutes}m {seconds}s")
+            elapsed_str = f"{minutes}m {seconds}s"
         else:
-            self._time_label.setText(f"{seconds}s")
+            elapsed_str = f"{seconds}s"
+
+        # Calculate ETA if we have progress
+        if self._current_progress > 5 and self._current_progress < 100:
+            # Estimate remaining time based on current rate
+            rate = elapsed / self._current_progress  # seconds per percent
+            remaining_pct = 100 - self._current_progress
+            eta_seconds = rate * remaining_pct
+
+            eta_min = int(eta_seconds // 60)
+            eta_sec = int(eta_seconds % 60)
+
+            if eta_min > 0:
+                eta_str = f"~{eta_min}m {eta_sec}s left"
+            else:
+                eta_str = f"~{eta_sec}s left"
+
+            self._time_label.setText(f"{elapsed_str} ({eta_str})")
+        else:
+            self._time_label.setText(elapsed_str)
 
     def add_log(self, message: str) -> None:
         """Add a log message."""
@@ -285,6 +306,7 @@ class StageProgressWidget(QFrame):
 
     def set_progress(self, value: int) -> None:
         """Set progress value (0-100) with animation."""
+        self._current_progress = value
         self._progress.setValue(value)
 
     def set_complete(self) -> None:
@@ -322,6 +344,16 @@ class StageProgressWidget(QFrame):
         self._opacity_effect.setOpacity(1.0)
         self._timer.stop()
 
+        # Update final time before stopping
+        if self._start_time is not None:
+            elapsed = time.time() - self._start_time
+            minutes = int(elapsed // 60)
+            seconds = int(elapsed % 60)
+            if minutes > 0:
+                self._time_label.setText(f"{minutes}m {seconds}s (failed)")
+            else:
+                self._time_label.setText(f"{seconds}s (failed)")
+
         self._status_label.setText(message)
         self._status_label.setProperty("state", "error")
         self._status_label.style().unpolish(self._status_label)
@@ -336,13 +368,29 @@ class StageProgressWidget(QFrame):
 
         self.add_log(f"Error: {message}")
 
-    def reset(self) -> None:
-        """Reset the stage."""
+    def reset(self, preserve_expansion: bool = False) -> None:
+        """Reset the stage.
+
+        Args:
+            preserve_expansion: If True, keep the current expansion state.
+        """
         self.set_waiting()
         self.clear_logs()
         self._expand_btn.setVisible(False)
-        self._log_panel.setVisible(False)
-        self._is_expanded = False
+        if not preserve_expansion:
+            self._log_panel.setVisible(False)
+            self._is_expanded = False
+
+    def get_expansion_state(self) -> bool:
+        """Get the current expansion state."""
+        return self._is_expanded
+
+    def set_expansion_state(self, expanded: bool) -> None:
+        """Set the expansion state without resetting logs."""
+        self._is_expanded = expanded
+        if self._logs:  # Only show if there are logs
+            self._log_panel.setVisible(expanded)
+            self._expand_btn.setText("Hide" if expanded else "Details")
 
 
 class ProgressPanel(QWidget):

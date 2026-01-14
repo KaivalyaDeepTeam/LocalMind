@@ -56,10 +56,11 @@ class ScoringSettings:
 @dataclass
 class OutputSettings:
     """Output configuration."""
-    default_output_dir: str = ""
-    export_json: bool = True
-    export_pdf: bool = True
-    auto_open_results: bool = True
+    output_directory: str = ""
+    auto_export_json: bool = True
+    auto_export_pdf: bool = True
+    include_transcript: bool = True
+    include_scores: bool = True
 
 
 @dataclass
@@ -73,6 +74,7 @@ class AppSettings:
     window_height: int = 800
     window_x: int = 100
     window_y: int = 100
+    recent_files: list = field(default_factory=list)  # Persisted recent files
 
 
 @dataclass
@@ -112,10 +114,26 @@ class UserSettings:
             settings.scoring = ScoringSettings(**data["scoring"])
 
         if "output" in data:
-            settings.output = OutputSettings(**data["output"])
+            output_data = data["output"].copy()
+            # Migrate old field names to new ones
+            if "default_output_dir" in output_data:
+                output_data["output_directory"] = output_data.pop("default_output_dir")
+            if "export_json" in output_data:
+                output_data["auto_export_json"] = output_data.pop("export_json")
+            if "export_pdf" in output_data:
+                output_data["auto_export_pdf"] = output_data.pop("export_pdf")
+            # Remove old fields that no longer exist
+            output_data.pop("auto_open_results", None)
+            # Add defaults for new fields
+            output_data.setdefault("include_transcript", True)
+            output_data.setdefault("include_scores", True)
+            settings.output = OutputSettings(**output_data)
 
         if "app" in data:
-            settings.app = AppSettings(**data["app"])
+            app_data = data["app"].copy()
+            # Add defaults for new fields
+            app_data.setdefault("recent_files", [])
+            settings.app = AppSettings(**app_data)
 
         return settings
 

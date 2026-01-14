@@ -10,14 +10,16 @@ from typing import Optional, List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QListWidget, QListWidgetItem, QFileDialog,
-    QSizePolicy, QScrollArea,
+    QSizePolicy, QScrollArea, QMessageBox,
 )
 from PySide6.QtCore import Qt, Signal, Slot, QMimeData
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
 
+from localmind.config import get_settings, save_settings
 
-class DropZone(QFrame):
-    """Drag and drop zone for audio files."""
+
+class DropZone(QWidget):
+    """Modern drag and drop zone for audio files."""
 
     file_dropped = Signal(str)
     files_dropped = Signal(list)  # For batch processing
@@ -27,40 +29,86 @@ class DropZone(QFrame):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setAcceptDrops(True)
+        self._drag_over = False
         self._setup_ui()
 
     def _setup_ui(self) -> None:
-        self.setObjectName("dropZone")
-        self.setMinimumHeight(180)
-        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setObjectName("dropZoneContainer")
+        self.setFixedHeight(140)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(12)
+        # Main layout with padding
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Icon
-        icon_label = QLabel("🎵")
-        icon_label.setStyleSheet("font-size: 48px; background: transparent;")
+        # Inner frame for the actual drop area
+        self._inner_frame = QFrame()
+        self._inner_frame.setObjectName("dropZone")
+        outer_layout.addWidget(self._inner_frame)
+
+        # Content layout
+        layout = QHBoxLayout(self._inner_frame)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(16)
+
+        # Left: Icon
+        icon_container = QFrame()
+        icon_container.setObjectName("dropZoneIcon")
+        icon_container.setFixedSize(56, 56)
+        icon_layout = QVBoxLayout(icon_container)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        icon_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        icon_label = QLabel("+")
+        icon_label.setObjectName("dropZoneIconText")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(icon_label)
+        icon_layout.addWidget(icon_label)
+        layout.addWidget(icon_container)
 
-        # Main text
-        title = QLabel("Drop audio file here")
+        # Center: Text content
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(4)
+        text_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        title = QLabel("Drop audio files here")
         title.setObjectName("dropZoneTitle")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
+        text_layout.addWidget(title)
 
-        # Subtitle
-        subtitle = QLabel("or click to browse")
+        subtitle = QLabel("or click to browse your computer")
         subtitle.setObjectName("dropZoneSubtitle")
-        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(subtitle)
+        text_layout.addWidget(subtitle)
 
-        # Supported formats
-        formats = QLabel("MP3, WAV, M4A, FLAC, OGG, WebM")
+        formats = QLabel("Supports MP3, WAV, M4A, FLAC, OGG, WebM")
         formats.setObjectName("dropZoneFormats")
-        formats.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(formats)
+        text_layout.addWidget(formats)
+
+        layout.addLayout(text_layout, stretch=1)
+
+        # Right: Browse button
+        browse_btn = QPushButton("Browse")
+        browse_btn.setObjectName("dropZoneBrowseBtn")
+        browse_btn.setFixedSize(80, 32)
+        browse_btn.clicked.connect(self._open_file_dialog)
+        layout.addWidget(browse_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+    def _open_file_dialog(self) -> None:
+        """Open file dialog for selecting audio files."""
+        filepaths, _ = QFileDialog.getOpenFileNames(
+            self, "Select Audio Files",
+            str(Path.home()),
+            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
+        )
+        if filepaths:
+            self.file_dropped.emit(filepaths[0])
+            if len(filepaths) > 1:
+                self.files_dropped.emit(filepaths)
+
+    def _update_drag_style(self, drag_over: bool) -> None:
+        """Update visual style for drag state."""
+        self._drag_over = drag_over
+        self._inner_frame.setProperty("dragOver", drag_over)
+        self._inner_frame.style().unpolish(self._inner_frame)
+        self._inner_frame.style().polish(self._inner_frame)
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasUrls():
@@ -69,21 +117,15 @@ class DropZone(QFrame):
                     path = Path(url.toLocalFile())
                     if path.suffix.lower() in self.AUDIO_EXTENSIONS:
                         event.acceptProposedAction()
-                        self.setProperty("dragOver", True)
-                        self.style().unpolish(self)
-                        self.style().polish(self)
+                        self._update_drag_style(True)
                         return
         event.ignore()
 
     def dragLeaveEvent(self, event) -> None:
-        self.setProperty("dragOver", False)
-        self.style().unpolish(self)
-        self.style().polish(self)
+        self._update_drag_style(False)
 
     def dropEvent(self, event: QDropEvent) -> None:
-        self.setProperty("dragOver", False)
-        self.style().unpolish(self)
-        self.style().polish(self)
+        self._update_drag_style(False)
 
         # Collect all valid audio files
         files = []
@@ -93,25 +135,14 @@ class DropZone(QFrame):
                 if path.suffix.lower() in self.AUDIO_EXTENSIONS:
                     files.append(str(path))
 
-        # Emit first file (for single file processing)
         if files:
             self.file_dropped.emit(files[0])
-            # Also emit all files for batch processing
-            if hasattr(self, 'files_dropped'):
+            if len(files) > 1:
                 self.files_dropped.emit(files)
 
     def mousePressEvent(self, event) -> None:
-        # Open file dialog on click - supports multiple selection
-        filepaths, _ = QFileDialog.getOpenFileNames(
-            self, "Select Audio Files",
-            str(Path.home()),
-            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
-        )
-        if filepaths:
-            self.file_dropped.emit(filepaths[0])
-            # Emit all files for batch processing
-            if len(filepaths) > 1 and hasattr(self, 'files_dropped'):
-                self.files_dropped.emit(filepaths)
+        # Only open dialog if not clicking the browse button
+        self._open_file_dialog()
 
 
 class QuickAccessItem(QFrame):
@@ -205,11 +236,12 @@ class FileBrowserPanel(QWidget):
         self._current_file: Optional[str] = None
         self._batch_queue: List[str] = []
         self._setup_ui()
+        self._load_recent_files()  # Load persisted recent files
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(16)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
 
         # Drop zone
         self._drop_zone = DropZone()
@@ -323,8 +355,6 @@ class FileBrowserPanel(QWidget):
         self._set_selected_file(filepath)
         self._add_to_recent(filepath)
         self.file_selected.emit(filepath)
-        # Auto-start processing on drop
-        self.file_double_clicked.emit(filepath)
 
     @Slot(str)
     def _on_quick_access_clicked(self, path: str) -> None:
@@ -366,7 +396,18 @@ class FileBrowserPanel(QWidget):
 
     @Slot()
     def _on_clear_queue(self) -> None:
-        """Clear the batch queue."""
+        """Clear the batch queue with confirmation."""
+        if len(self._batch_queue) > 1:
+            result = QMessageBox.question(
+                self,
+                "Clear Queue",
+                f"Remove all {len(self._batch_queue)} files from the queue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if result != QMessageBox.StandardButton.Yes:
+                return
+
         self._batch_queue.clear()
         self._update_queue_ui()
 
@@ -374,8 +415,12 @@ class FileBrowserPanel(QWidget):
         """Update the batch queue display."""
         self._queue_list.clear()
         for filepath in self._batch_queue:
-            filename = Path(filepath).name
-            self._queue_list.addItem(f"🎵 {filename}")
+            path = Path(filepath)
+            # Show filename with parent folder for disambiguation
+            display_name = f"{path.parent.name}/{path.name}"
+            item = QListWidgetItem(f"🎵 {display_name}")
+            item.setToolTip(filepath)  # Full path on hover
+            self._queue_list.addItem(item)
 
         has_queue = len(self._batch_queue) > 0
         self._queue_header.setVisible(has_queue)
@@ -416,11 +461,31 @@ class FileBrowserPanel(QWidget):
         self._recent_files.insert(0, filepath)
         self._recent_files = self._recent_files[:5]  # Keep only 5 recent
         self._update_recent_ui()
+        self._save_recent_files()  # Persist to settings
 
     def _remove_from_recent(self, filepath: str) -> None:
         if filepath in self._recent_files:
             self._recent_files.remove(filepath)
             self._update_recent_ui()
+            self._save_recent_files()  # Persist to settings
+
+    def _load_recent_files(self) -> None:
+        """Load recent files from settings."""
+        try:
+            settings = get_settings()
+            self._recent_files = list(settings.app.recent_files)[:5]
+            self._update_recent_ui()
+        except Exception:
+            pass  # Silently ignore errors loading recent files
+
+    def _save_recent_files(self) -> None:
+        """Save recent files to settings."""
+        try:
+            settings = get_settings()
+            settings.app.recent_files = self._recent_files[:5]
+            save_settings(settings)
+        except Exception:
+            pass  # Silently ignore errors saving recent files
 
     def _update_recent_ui(self) -> None:
         # Clear existing items

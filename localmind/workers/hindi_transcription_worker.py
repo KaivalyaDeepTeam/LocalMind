@@ -87,6 +87,8 @@ class HindiSTTWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the HindiSTT model."""
+        import os
+
         try:
             import torch
             from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
@@ -101,7 +103,7 @@ class HindiSTTWorker(BaseWorker):
                 device = "cuda:0"
                 torch_dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"
+                device = "mps"  # Apple Silicon GPU
                 torch_dtype = torch.float16
             else:
                 device = "cpu"
@@ -112,36 +114,46 @@ class HindiSTTWorker(BaseWorker):
 
         self.report_progress(10, f"Loading model on {device}...")
 
-        # Load model with optional Flash Attention
-        model_kwargs = {
-            "torch_dtype": torch_dtype,
-            "low_cpu_mem_usage": True,
-            "use_safetensors": True,
-        }
+        # Patch torch.load to handle CUDA-saved models on non-CUDA devices
+        original_load = torch.load
+        target_device = "cpu" if device == "mps" else device
+        def patched_load(*args, **kwargs):
+            if 'map_location' not in kwargs:
+                kwargs['map_location'] = torch.device(target_device)
+            return original_load(*args, **kwargs)
+        torch.load = patched_load
 
-        if self._use_flash_attention:
-            try:
-                model_kwargs["attn_implementation"] = "flash_attention_2"
-            except Exception:
-                pass  # Fall back to default attention
+        try:
+            model_kwargs = {
+                "torch_dtype": torch_dtype,
+                "low_cpu_mem_usage": True,
+            }
 
-        model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            self.MODEL_ID,
-            **model_kwargs
-        )
-        model.to(device)
+            if self._use_flash_attention and device not in ("cpu", "mps"):
+                try:
+                    model_kwargs["attn_implementation"] = "flash_attention_2"
+                except Exception:
+                    pass
 
-        processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+            model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                self.MODEL_ID,
+                **model_kwargs
+            )
+            model.to(device)
 
-        self._pipe = pipeline(
-            "automatic-speech-recognition",
-            model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
-            torch_dtype=torch_dtype,
-            device=device,
-            generate_kwargs={"task": "transcribe", "language": "en"},
-        )
+            processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+
+            self._pipe = pipeline(
+                "automatic-speech-recognition",
+                model=model,
+                tokenizer=processor.tokenizer,
+                feature_extractor=processor.feature_extractor,
+                torch_dtype=torch_dtype,
+                device=device,
+                generate_kwargs={"task": "transcribe", "language": "en"},
+            )
+        finally:
+            torch.load = original_load
 
         self.report_progress(25, "Model loaded successfully")
 
@@ -284,6 +296,8 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the HindiSTT model."""
+        import os
+
         try:
             import torch
             from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
@@ -298,7 +312,7 @@ class DualChannelHindiSTTWorker(BaseWorker):
                 device = "cuda:0"
                 torch_dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"
+                device = "mps"  # Apple Silicon GPU
                 torch_dtype = torch.float16
             else:
                 device = "cpu"
@@ -309,35 +323,46 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
         self.report_progress(10, f"Loading model on {device}...")
 
-        model_kwargs = {
-            "torch_dtype": torch_dtype,
-            "low_cpu_mem_usage": True,
-            "use_safetensors": True,
-        }
+        # Patch torch.load to handle CUDA-saved models on non-CUDA devices
+        original_load = torch.load
+        target_device = "cpu" if device == "mps" else device
+        def patched_load(*args, **kwargs):
+            if 'map_location' not in kwargs:
+                kwargs['map_location'] = torch.device(target_device)
+            return original_load(*args, **kwargs)
+        torch.load = patched_load
 
-        if self._use_flash_attention:
-            try:
-                model_kwargs["attn_implementation"] = "flash_attention_2"
-            except Exception:
-                pass
+        try:
+            model_kwargs = {
+                "torch_dtype": torch_dtype,
+                "low_cpu_mem_usage": True,
+            }
 
-        model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            self.MODEL_ID,
-            **model_kwargs
-        )
-        model.to(device)
+            if self._use_flash_attention and device not in ("cpu", "mps"):
+                try:
+                    model_kwargs["attn_implementation"] = "flash_attention_2"
+                except Exception:
+                    pass
 
-        processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+            model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                self.MODEL_ID,
+                **model_kwargs
+            )
+            model.to(device)
 
-        self._pipe = pipeline(
-            "automatic-speech-recognition",
-            model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
-            torch_dtype=torch_dtype,
-            device=device,
-            generate_kwargs={"task": "transcribe", "language": "en"},
-        )
+            processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+
+            self._pipe = pipeline(
+                "automatic-speech-recognition",
+                model=model,
+                tokenizer=processor.tokenizer,
+                feature_extractor=processor.feature_extractor,
+                torch_dtype=torch_dtype,
+                device=device,
+                generate_kwargs={"task": "transcribe", "language": "en"},
+            )
+        finally:
+            torch.load = original_load
 
         self.report_progress(18, "Model loaded successfully")
 

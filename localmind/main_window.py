@@ -123,6 +123,11 @@ class MainWindow(QMainWindow):
 
         file_menu.addSeparator()
 
+        export_transcript = QAction("Export &Transcript...", self)
+        export_transcript.setShortcut("Ctrl+Shift+T")
+        export_transcript.triggered.connect(self._on_export_transcript)
+        file_menu.addAction(export_transcript)
+
         export_json = QAction("Export as &JSON...", self)
         export_json.setShortcut("Ctrl+Shift+J")
         export_json.triggered.connect(self._on_export_json)
@@ -269,6 +274,7 @@ class MainWindow(QMainWindow):
             dual_channel=True,
             use_hindi_stt=use_hindi_stt,
             scoring_parameters=scoring_parameters,
+            transcription_only=True,  # TODO: Add UI toggle - set False for full scoring
         )
 
     @Slot()
@@ -402,17 +408,68 @@ class MainWindow(QMainWindow):
         self._status_label.setText("Processing complete")
         self.processing_finished.emit()
 
+        # Build display data
+        display_data = result.to_dict()
+
+        # Debug: print what we're getting
+        print(f"[DEBUG] Transcription result: {result.transcription is not None}")
+        if result.transcription:
+            print(f"[DEBUG] Text length: {len(result.transcription.text)}")
+            print(f"[DEBUG] Segments count: {len(result.transcription.segments) if result.transcription.segments else 0}")
+            print(f"[DEBUG] Language: {result.transcription.language}")
+
+        # For transcription-only mode, format the data for the viewer
+        if result.transcription and not result.audit:
+            display_data["transcript"] = result.transcription.text
+            display_data["segments"] = [
+                {"speaker": s.speaker, "text": s.text, "start": s.start, "end": s.end}
+                for s in result.transcription.segments
+            ] if result.transcription.segments else []
+            display_data["language"] = result.transcription.language
+            display_data["file_name"] = self._current_file.name if self._current_file else "audio"
+            # Add placeholder scores for transcription-only
+            display_data["overall_score"] = 0
+            display_data["max_score"] = 100
+
         # Load results into viewer
-        if result.audit:
-            self._results_viewer.load_results(result.to_dict())
+        if display_data.get("transcript") or result.audit:
+            self._results_viewer.load_results(display_data)
+            # Force show the Transcript tab for transcription-only mode
+            if not result.audit:
+                self._results_viewer.setCurrentIndex(0)
 
         # Show success toast
-        score = result.audit.overall_score if result.audit else 0
-        self._toast_manager.show_success(
-            f"Processing complete! Score: {score:.1f}%",
-            action_text="View Results",
-            action_callback=lambda: self._results_viewer.setCurrentIndex(0),
-        )
+        if result.audit:
+            score = result.audit.overall_score
+            self._toast_manager.show_success(
+                f"Processing complete! Score: {score:.1f}%",
+                action_text="View Results",
+                action_callback=lambda: self._results_viewer.setCurrentIndex(0),
+            )
+        else:
+            # Transcription-only mode
+            self._toast_manager.show_success(
+                "Transcription complete!",
+                action_text="View Transcript",
+                action_callback=lambda: self._results_viewer.setCurrentIndex(0),
+            )
+
+        # Auto-save transcript for transcription-only mode
+        if result.transcription and not result.audit and self._current_file:
+            transcript_path = self._current_file.parent / f"{self._current_file.stem}_transcript.txt"
+            try:
+                with open(transcript_path, "w", encoding="utf-8") as f:
+                    f.write(f"Transcript: {self._current_file.name}\n")
+                    f.write(f"Language: {result.transcription.language or 'unknown'}\n")
+                    f.write("=" * 50 + "\n\n")
+                    if result.transcription.segments:
+                        for seg in result.transcription.segments:
+                            f.write(f"[{seg.start:.1f}s - {seg.end:.1f}s] {seg.speaker}: {seg.text}\n\n")
+                    else:
+                        f.write(result.transcription.text)
+                self._toast_manager.show_info(f"Transcript saved: {transcript_path.name}")
+            except Exception as e:
+                print(f"Failed to auto-save transcript: {e}")
 
         # Auto-export if configured
         settings = get_settings()
@@ -438,6 +495,19 @@ class MainWindow(QMainWindow):
             message=f"An error occurred during processing:\n\n{error}",
             show_dialog=True,
         )
+
+    @Slot()
+    def _on_export_transcript(self) -> None:
+        """Export transcript as text file."""
+        default_name = "transcript.txt"
+        if self._current_file:
+            default_name = f"{self._current_file.stem}_transcript.txt"
+
+        filepath, _ = QFileDialog.getSaveFileName(
+            self, "Export Transcript", str(Path.home() / default_name), "Text Files (*.txt)"
+        )
+        if filepath:
+            self._results_viewer.export_transcript(filepath)
 
     @Slot()
     def _on_export_json(self) -> None:
@@ -497,6 +567,7 @@ class MainWindow(QMainWindow):
             <tr><td><b>Ctrl+O</b></td><td>Open audio file</td></tr>
             <tr><td><b>Ctrl+Return</b></td><td>Process audio</td></tr>
             <tr><td><b>Escape</b></td><td>Stop processing</td></tr>
+            <tr><td><b>Ctrl+Shift+T</b></td><td>Export transcript</td></tr>
             <tr><td><b>Ctrl+Shift+J</b></td><td>Export as JSON</td></tr>
             <tr><td><b>Ctrl+Shift+P</b></td><td>Export as PDF</td></tr>
             <tr><td><b>Ctrl+Shift+S</b></td><td>Edit scoring parameters</td></tr>

@@ -21,8 +21,55 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QFont, QBrush, QPainterPath,
-    QLinearGradient, QConicalGradient,
+    QLinearGradient, QConicalGradient, QSyntaxHighlighter, QTextCharFormat,
 )
+import re
+
+
+class JsonSyntaxHighlighter(QSyntaxHighlighter):
+    """Simple JSON syntax highlighter for the raw JSON viewer."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Define formats for different JSON elements
+        self._key_format = QTextCharFormat()
+        self._key_format.setForeground(QColor("#7C3AED"))  # Purple for keys
+        self._key_format.setFontWeight(QFont.Weight.Bold)
+
+        self._string_format = QTextCharFormat()
+        self._string_format.setForeground(QColor("#059669"))  # Green for strings
+
+        self._number_format = QTextCharFormat()
+        self._number_format.setForeground(QColor("#D97706"))  # Amber for numbers
+
+        self._keyword_format = QTextCharFormat()
+        self._keyword_format.setForeground(QColor("#DC2626"))  # Red for keywords
+
+        self._bracket_format = QTextCharFormat()
+        self._bracket_format.setForeground(QColor("#64748B"))  # Gray for brackets
+
+        # Patterns for highlighting
+        self._patterns = [
+            # JSON keys (before colon)
+            (r'"([^"\\]|\\.)*"\s*:', self._key_format),
+            # String values
+            (r':\s*"([^"\\]|\\.)*"', self._string_format),
+            # Numbers
+            (r'\b-?\d+\.?\d*([eE][+-]?\d+)?\b', self._number_format),
+            # Keywords (true, false, null)
+            (r'\b(true|false|null)\b', self._keyword_format),
+            # Brackets and braces
+            (r'[\[\]{}]', self._bracket_format),
+        ]
+
+    def highlightBlock(self, text: str) -> None:
+        """Apply syntax highlighting to a block of text."""
+        for pattern, fmt in self._patterns:
+            for match in re.finditer(pattern, text):
+                start = match.start()
+                length = match.end() - start
+                self.setFormat(start, length, fmt)
 
 
 class CircularScoreGauge(QWidget):
@@ -205,8 +252,16 @@ class ScoreGaugeWidget(QFrame):
         layout.setSpacing(8)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Circular gauge
+        # Circular gauge with grade explanation tooltip
         self._gauge = CircularScoreGauge(self._label, size=100)
+        self._gauge.setToolTip(
+            "Grade Scale:\n"
+            "A = 90-100% (Excellent)\n"
+            "B = 80-89% (Good)\n"
+            "C = 70-79% (Average)\n"
+            "D = 60-69% (Below Average)\n"
+            "F = Below 60% (Needs Improvement)"
+        )
         layout.addWidget(self._gauge, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def set_score(self, score: float, max_score: float = 100.0) -> None:
@@ -421,6 +476,7 @@ class ResultsViewer(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._results: Optional[Dict[str, Any]] = None
+        self._scroll_positions: Dict[int, int] = {}  # Track scroll position per tab
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -465,11 +521,17 @@ class ResultsViewer(QWidget):
         self._feedback_viewer = FeedbackViewer()
         self._tabs.addTab(self._feedback_viewer, "AI Feedback")
 
-        # Raw JSON tab
+        # Raw JSON tab with syntax highlighting
         self._raw_json = QTextEdit()
         self._raw_json.setReadOnly(True)
         self._raw_json.setObjectName("rawJsonViewer")
+        self._raw_json.setFont(QFont("Menlo", 10))
+        self._json_highlighter = JsonSyntaxHighlighter(self._raw_json.document())
         self._tabs.addTab(self._raw_json, "Raw JSON")
+
+        # Connect tab change to preserve scroll position
+        self._tabs.currentChanged.connect(self._on_tab_changed)
+        self._previous_tab = 0
 
         layout.addWidget(self._tabs)
 
@@ -480,26 +542,75 @@ class ResultsViewer(QWidget):
         # Initially show empty state
         self._update_visibility(has_results=False)
 
-    def _update_visibility(self, has_results: bool) -> None:
+    def _update_visibility(self, has_results: bool, transcription_only: bool = False) -> None:
         """Update visibility of components based on results state."""
-        self._scores_container.setVisible(has_results)
+        # Hide score gauges for transcription-only mode
+        self._scores_container.setVisible(has_results and not transcription_only)
         self._tabs.setVisible(has_results)
         self._empty_state.setVisible(not has_results)
+
+    def _on_tab_changed(self, new_index: int) -> None:
+        """Handle tab change - save and restore scroll positions."""
+        # Save scroll position of previous tab
+        prev_widget = self._tabs.widget(self._previous_tab)
+        if prev_widget:
+            scrollable = self._get_scrollable_widget(prev_widget)
+            if scrollable and hasattr(scrollable, 'verticalScrollBar'):
+                self._scroll_positions[self._previous_tab] = scrollable.verticalScrollBar().value()
+
+        # Restore scroll position of new tab
+        new_widget = self._tabs.widget(new_index)
+        if new_widget and new_index in self._scroll_positions:
+            scrollable = self._get_scrollable_widget(new_widget)
+            if scrollable and hasattr(scrollable, 'verticalScrollBar'):
+                # Use timer to ensure widget is ready
+                QTimer.singleShot(0, lambda: scrollable.verticalScrollBar().setValue(
+                    self._scroll_positions.get(new_index, 0)
+                ))
+
+        self._previous_tab = new_index
+
+    def _get_scrollable_widget(self, widget: QWidget) -> Optional[QWidget]:
+        """Get the scrollable widget from a tab widget."""
+        # Direct QTextEdit widgets
+        if isinstance(widget, QTextEdit):
+            return widget
+        # For custom viewer widgets, find the QTextEdit child
+        text_edit = widget.findChild(QTextEdit)
+        if text_edit:
+            return text_edit
+        # For table widgets
+        table = widget.findChild(QTableWidget)
+        if table:
+            return table
+        return widget
 
     def load_results(self, results: Dict[str, Any]) -> None:
         """Load audit results."""
         self._results = results
-        self._update_visibility(has_results=True)
 
-        # Update gauges
-        overall = results.get("overall_score", 0)
-        self._overall_gauge.set_score(overall)
+        # Detect transcription-only mode (has transcript but no meaningful scores)
+        is_transcription_only = (
+            results.get("overall_score", 0) == 0 and
+            "transcript" in results and
+            not results.get("scores") and
+            not results.get("parameter_scores")
+        )
 
-        compliance = results.get("compliance_score", 0)
-        self._compliance_gauge.set_score(compliance)
+        self._update_visibility(has_results=True, transcription_only=is_transcription_only)
 
-        quality = results.get("quality_score", 0)
-        self._quality_gauge.set_score(quality)
+        # Update gauges with actual max_score from results (only if not transcription-only)
+        if not is_transcription_only:
+            max_score = results.get("max_score", 100.0)
+
+            overall = results.get("overall_score", 0)
+            self._overall_gauge.set_score(overall, max_score)
+
+            compliance = results.get("compliance_score", 0)
+            self._compliance_gauge.set_score(compliance, max_score)
+
+            quality = results.get("quality_score", 0)
+            self._quality_gauge.set_score(quality, max_score)
 
         # Update transcript
         if "transcript" in results:
@@ -552,6 +663,40 @@ class ResultsViewer(QWidget):
                 json.dump(self._results, f, indent=2)
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed to export: {e}")
+
+    def export_transcript(self, filepath: str) -> None:
+        """Export transcript to text file."""
+        if not self._results:
+            QMessageBox.warning(self, "No Results", "No transcript to export.")
+            return
+
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                # Write header
+                file_name = self._results.get("file_name", "audio")
+                language = self._results.get("language", "unknown")
+                f.write(f"Transcript: {file_name}\n")
+                f.write(f"Language: {language}\n")
+                f.write("=" * 50 + "\n\n")
+
+                # Write segments with speaker labels if available
+                if "segments" in self._results and self._results["segments"]:
+                    for seg in self._results["segments"]:
+                        speaker = seg.get("speaker", "Unknown")
+                        text = seg.get("text", "")
+                        start = seg.get("start", 0)
+                        end = seg.get("end", 0)
+                        f.write(f"[{start:.1f}s - {end:.1f}s] {speaker}: {text}\n\n")
+                elif "transcript" in self._results:
+                    # Plain transcript without segments
+                    f.write(self._results["transcript"])
+
+            QMessageBox.information(
+                self, "Export Complete",
+                f"Transcript exported to:\n{filepath}"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export transcript: {e}")
 
     def export_pdf(self, filepath: str) -> None:
         """Export results to PDF file."""

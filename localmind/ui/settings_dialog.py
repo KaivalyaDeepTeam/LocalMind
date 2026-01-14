@@ -80,6 +80,15 @@ class LLMSettingsTab(QWidget):
         self._openai_model.addItem("gpt-4-turbo", "gpt-4-turbo")
         openai_layout.addRow("Model:", self._openai_model)
 
+        self._openai_test_btn = QPushButton("Test Connection")
+        self._openai_test_btn.clicked.connect(self._test_openai)
+        self._openai_status = QLabel("")
+        openai_test_row = QHBoxLayout()
+        openai_test_row.addWidget(self._openai_test_btn)
+        openai_test_row.addWidget(self._openai_status)
+        openai_test_row.addStretch()
+        openai_layout.addRow("", openai_test_row)
+
         layout.addWidget(self._openai_group)
 
         # Anthropic settings
@@ -96,6 +105,15 @@ class LLMSettingsTab(QWidget):
         self._anthropic_model.addItem("claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20241022")
         self._anthropic_model.addItem("claude-3-haiku-20240307", "claude-3-haiku-20240307")
         anthropic_layout.addRow("Model:", self._anthropic_model)
+
+        self._anthropic_test_btn = QPushButton("Test Connection")
+        self._anthropic_test_btn.clicked.connect(self._test_anthropic)
+        self._anthropic_status = QLabel("")
+        anthropic_test_row = QHBoxLayout()
+        anthropic_test_row.addWidget(self._anthropic_test_btn)
+        anthropic_test_row.addWidget(self._anthropic_status)
+        anthropic_test_row.addStretch()
+        anthropic_layout.addRow("", anthropic_test_row)
 
         layout.addWidget(self._anthropic_group)
 
@@ -153,6 +171,64 @@ class LLMSettingsTab(QWidget):
             self, "Download Model",
             "Model download will be implemented in a future update."
         )
+
+    @Slot()
+    def _test_openai(self) -> None:
+        """Test OpenAI API connection."""
+        api_key = self._openai_key.text().strip()
+        if not api_key:
+            self._openai_status.setText("❌ No API key")
+            self._openai_status.setStyleSheet("color: #DC2626;")
+            return
+
+        self._openai_status.setText("Testing...")
+        self._openai_status.setStyleSheet("color: #6B7280;")
+        self._openai_test_btn.setEnabled(False)
+
+        try:
+            import openai
+            client = openai.OpenAI(api_key=api_key)
+            # Make a minimal API call to test the key
+            client.models.list()
+            self._openai_status.setText("✓ Connected")
+            self._openai_status.setStyleSheet("color: #059669;")
+        except Exception as e:
+            error_msg = str(e)[:50] + "..." if len(str(e)) > 50 else str(e)
+            self._openai_status.setText(f"❌ {error_msg}")
+            self._openai_status.setStyleSheet("color: #DC2626;")
+        finally:
+            self._openai_test_btn.setEnabled(True)
+
+    @Slot()
+    def _test_anthropic(self) -> None:
+        """Test Anthropic API connection."""
+        api_key = self._anthropic_key.text().strip()
+        if not api_key:
+            self._anthropic_status.setText("❌ No API key")
+            self._anthropic_status.setStyleSheet("color: #DC2626;")
+            return
+
+        self._anthropic_status.setText("Testing...")
+        self._anthropic_status.setStyleSheet("color: #6B7280;")
+        self._anthropic_test_btn.setEnabled(False)
+
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            # Make a minimal API call to test the key
+            client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=1,
+                messages=[{"role": "user", "content": "Hi"}]
+            )
+            self._anthropic_status.setText("✓ Connected")
+            self._anthropic_status.setStyleSheet("color: #059669;")
+        except Exception as e:
+            error_msg = str(e)[:50] + "..." if len(str(e)) > 50 else str(e)
+            self._anthropic_status.setText(f"❌ {error_msg}")
+            self._anthropic_status.setStyleSheet("color: #DC2626;")
+        finally:
+            self._anthropic_test_btn.setEnabled(True)
 
 
 class TranscriptionSettingsTab(QWidget):
@@ -295,7 +371,7 @@ class OutputSettingsTab(QWidget):
 
     def save_settings(self) -> None:
         """Save settings from UI."""
-        self._settings.output.output_directory = self._output_dir.text() or None
+        self._settings.output.output_directory = self._output_dir.text() or ""
         self._settings.output.auto_export_json = self._auto_export_json.isChecked()
         self._settings.output.auto_export_pdf = self._auto_export_pdf.isChecked()
         self._settings.output.include_transcript = self._include_transcript.isChecked()
@@ -311,6 +387,57 @@ class OutputSettingsTab(QWidget):
         )
         if directory:
             self._output_dir.setText(directory)
+
+
+class AppearanceSettingsTab(QWidget):
+    """Tab for appearance settings."""
+
+    def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._settings = settings
+        self._setup_ui()
+        self._load_settings()
+
+    def _setup_ui(self) -> None:
+        """Set up the UI."""
+        layout = QVBoxLayout(self)
+
+        # Theme settings
+        theme_group = QGroupBox("Theme")
+        theme_layout = QFormLayout(theme_group)
+
+        self._theme_combo = QComboBox()
+        self._theme_combo.addItem("System (Auto)", "system")
+        self._theme_combo.addItem("Light", "light")
+        self._theme_combo.addItem("Dark", "dark")
+        self._theme_combo.currentIndexChanged.connect(self._on_theme_changed)
+        theme_layout.addRow("Theme:", self._theme_combo)
+
+        theme_note = QLabel("Theme changes apply immediately")
+        theme_note.setStyleSheet("color: #6B7280; font-size: 11px;")
+        theme_layout.addRow("", theme_note)
+
+        layout.addWidget(theme_group)
+        layout.addStretch()
+
+    def _load_settings(self) -> None:
+        """Load settings into UI."""
+        idx = self._theme_combo.findData(self._settings.app.theme)
+        if idx >= 0:
+            self._theme_combo.setCurrentIndex(idx)
+
+    def save_settings(self) -> None:
+        """Save settings from UI."""
+        self._settings.app.theme = self._theme_combo.currentData()
+
+    @Slot()
+    def _on_theme_changed(self) -> None:
+        """Apply theme immediately when changed."""
+        from localmind.ui.theme_manager import get_theme_manager
+        theme = self._theme_combo.currentData()
+        manager = get_theme_manager()
+        if manager:
+            manager.set_theme(theme)
 
 
 class SettingsDialog(QDialog):
@@ -342,6 +469,9 @@ class SettingsDialog(QDialog):
         self._output_tab = OutputSettingsTab(self._settings)
         self._tabs.addTab(self._output_tab, "Output")
 
+        self._appearance_tab = AppearanceSettingsTab(self._settings)
+        self._tabs.addTab(self._appearance_tab, "Appearance")
+
         layout.addWidget(self._tabs)
 
         # Buttons
@@ -361,6 +491,7 @@ class SettingsDialog(QDialog):
         self._llm_tab.save_settings()
         self._transcription_tab.save_settings()
         self._output_tab.save_settings()
+        self._appearance_tab.save_settings()
         save_settings(self._settings)
         self.settings_saved.emit()
 

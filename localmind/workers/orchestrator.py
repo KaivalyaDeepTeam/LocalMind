@@ -83,6 +83,7 @@ class ProcessingOrchestrator(QObject):
         self._dual_channel = True
         self._use_hindi_stt = False  # Use HindiSTT for Hindi-English
         self._parameters: Optional[List[Dict[str, Any]]] = None
+        self._transcription_only = False  # Skip scoring, only transcribe
 
     @property
     def is_processing(self) -> bool:
@@ -97,6 +98,7 @@ class ProcessingOrchestrator(QObject):
         dual_channel: bool = True,
         use_hindi_stt: bool = False,
         scoring_parameters: Optional[List[Dict[str, Any]]] = None,
+        transcription_only: bool = False,
     ) -> None:
         """Configure processing settings.
 
@@ -107,6 +109,7 @@ class ProcessingOrchestrator(QObject):
             dual_channel: Whether to process as dual-channel audio.
             use_hindi_stt: Use HindiSTT model for Hindi-English transcription.
             scoring_parameters: Custom scoring parameters.
+            transcription_only: If True, skip scoring and only transcribe.
         """
         self._whisper_model = whisper_model
         self._language = language
@@ -114,6 +117,7 @@ class ProcessingOrchestrator(QObject):
         self._dual_channel = dual_channel
         self._use_hindi_stt = use_hindi_stt
         self._parameters = scoring_parameters
+        self._transcription_only = transcription_only
 
     def start(self, audio_path: str) -> None:
         """Start processing an audio file.
@@ -207,6 +211,12 @@ class ProcessingOrchestrator(QObject):
 
         self._result.transcription = result
         self.stage_completed.emit("transcription")
+
+        # If transcription only, skip merge and audit
+        if self._transcription_only:
+            self._is_processing = False
+            self.processing_complete.emit(self._result)
+            return
 
         # Start merge
         self._start_merge()

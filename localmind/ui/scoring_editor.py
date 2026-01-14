@@ -118,6 +118,9 @@ class ParameterEditWidget(QWidget):
         self._weight_slider = QSlider(Qt.Orientation.Horizontal)
         self._weight_slider.setRange(1, 30)  # 0.1 to 3.0
         self._weight_slider.setValue(10)
+        self._weight_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self._weight_slider.setTickInterval(5)  # Tick at 0.5x intervals
+        self._weight_slider.setToolTip("Adjust parameter weight (0.1x to 3.0x)")
         self._weight_slider.valueChanged.connect(self._on_weight_slider_changed)
         weight_layout.addWidget(self._weight_slider)
 
@@ -126,6 +129,19 @@ class ParameterEditWidget(QWidget):
         weight_layout.addWidget(self._weight_label)
 
         layout.addLayout(weight_layout)
+
+        # Weight scale labels
+        scale_layout = QHBoxLayout()
+        scale_layout.addWidget(QLabel(""))  # Spacer for "Weight:" label alignment
+        scale_layout.addWidget(QLabel("0.1x"))
+        scale_layout.addStretch()
+        mid_label = QLabel("1.5x")
+        mid_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        scale_layout.addWidget(mid_label)
+        scale_layout.addStretch()
+        scale_layout.addWidget(QLabel("3.0x"))
+        scale_layout.addWidget(QLabel(""))  # Spacer for weight value alignment
+        layout.addLayout(scale_layout)
 
         # Weight presets
         preset_layout = QHBoxLayout()

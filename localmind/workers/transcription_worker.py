@@ -129,24 +129,39 @@ class TranscriptionWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the Whisper model."""
+        import os
+
         try:
+            import torch
             import whisper
         except ImportError:
             raise ImportError(
                 "openai-whisper not installed. Install with: pip install openai-whisper"
             )
 
-        device = "cuda" if self._use_gpu else "cpu"
+        device = "cpu"  # Default to CPU
 
-        # Check for MPS (Apple Silicon)
+        # Check for GPU availability
+        if self._use_gpu:
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"  # Apple Silicon GPU
+            else:
+                device = "cpu"
+
+        # Patch torch.load to handle CUDA-saved models on non-CUDA devices
+        original_load = torch.load
+        def patched_load(*args, **kwargs):
+            if 'map_location' not in kwargs:
+                kwargs['map_location'] = torch.device(device)
+            return original_load(*args, **kwargs)
+        torch.load = patched_load
+
         try:
-            import torch
-            if torch.backends.mps.is_available() and self._use_gpu:
-                device = "mps"
-        except (ImportError, AttributeError):
-            pass
-
-        self._model = whisper.load_model(self._model_name, device=device)
+            self._model = whisper.load_model(self._model_name, device=device)
+        finally:
+            torch.load = original_load
 
     def _load_audio(self):
         """Load audio file."""
@@ -279,23 +294,39 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the Whisper model."""
+        import os
+
         try:
+            import torch
             import whisper
         except ImportError:
             raise ImportError(
                 "openai-whisper not installed. Install with: pip install openai-whisper"
             )
 
-        device = "cuda" if self._use_gpu else "cpu"
+        device = "cpu"  # Default to CPU
+
+        # Check for GPU availability
+        if self._use_gpu:
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"  # Apple Silicon GPU
+            else:
+                device = "cpu"
+
+        # Patch torch.load to handle CUDA-saved models on non-CUDA devices
+        original_load = torch.load
+        def patched_load(*args, **kwargs):
+            if 'map_location' not in kwargs:
+                kwargs['map_location'] = torch.device(device)
+            return original_load(*args, **kwargs)
+        torch.load = patched_load
 
         try:
-            import torch
-            if torch.backends.mps.is_available() and self._use_gpu:
-                device = "mps"
-        except (ImportError, AttributeError):
-            pass
-
-        self._model = whisper.load_model(self._model_name, device=device)
+            self._model = whisper.load_model(self._model_name, device=device)
+        finally:
+            torch.load = original_load
 
     def _load_channels(self):
         """Load separate audio channels."""

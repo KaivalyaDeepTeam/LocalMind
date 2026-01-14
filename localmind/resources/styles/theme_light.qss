@@ -19,7 +19,7 @@
  * - Info:            #0284C7 (Sky-600)
  *
  * Typography:
- * - Font Family: Inter, Google Sans, SF Pro Display, system-ui
+ * - Font Family: Helvetica Neue, Arial
  * - Body: 14px, Heading: 16-24px, Caption: 12px
  *
  * Elevation (box-shadow):
@@ -31,7 +31,7 @@
 QWidget {
     background-color: #F8FAFC;
     color: #0F172A;
-    font-family: "Inter", "Google Sans", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-family: "Helvetica Neue", Arial;
     font-size: 14px;
     selection-background-color: #4F46E5;
     selection-color: #FFFFFF;
@@ -768,7 +768,7 @@ QLabel#stageStatus[state="error"] {
 QLabel#stageTime {
     color: #64748B;
     font-size: 12px;
-    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-family: "Menlo", "Consolas", "Courier New";
 }
 
 /* Progress header */
@@ -780,7 +780,7 @@ QLabel#progressHeader {
 QLabel#totalTime {
     color: #64748B;
     font-size: 13px;
-    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-family: "Menlo", "Consolas", "Courier New";
 }
 
 /* Overall status */
@@ -865,7 +865,7 @@ QTextEdit#transcriptViewer {
     border: 1px solid #E2E8F0;
     border-radius: 8px;
     padding: 12px;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "Helvetica Neue", Arial;
     font-size: 13px;
     line-height: 1.6;
 }
@@ -885,7 +885,7 @@ QTextEdit#rawJsonViewer {
     border: 1px solid #E2E8F0;
     border-radius: 8px;
     padding: 12px;
-    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-family: "Menlo", "Consolas", "Courier New";
     font-size: 11px;
     color: #475569;
 }
@@ -906,37 +906,74 @@ QTabWidget#resultsTabWidget::pane {
 }
 
 /* === Drop Zone === */
+QWidget#dropZoneContainer {
+    background: transparent;
+}
+
 QFrame#dropZone {
-    background-color: #F8FAFC;
-    border: 2px dashed #CBD5E1;
-    border-radius: 16px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
 }
 
 QFrame#dropZone:hover {
-    border-color: #4F46E5;
-    background-color: #EEF2FF;
+    border-color: #818CF8;
+    background-color: #F5F3FF;
 }
 
 QFrame#dropZone[dragOver="true"] {
-    border-color: #4F46E5;
-    border-style: solid;
+    border: 2px solid #6366F1;
     background-color: #EEF2FF;
 }
 
+QFrame#dropZoneIcon {
+    background-color: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+QFrame#dropZone:hover QFrame#dropZoneIcon {
+    background-color: #EEF2FF;
+    border-color: #C7D2FE;
+}
+
+QLabel#dropZoneIconText {
+    font-size: 24px;
+    font-weight: 300;
+    color: #6366F1;
+}
+
 QLabel#dropZoneTitle {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 600;
     color: #0F172A;
 }
 
 QLabel#dropZoneSubtitle {
-    font-size: 14px;
+    font-size: 13px;
     color: #64748B;
 }
 
 QLabel#dropZoneFormats {
-    font-size: 12px;
+    font-size: 11px;
     color: #94A3B8;
+}
+
+QPushButton#dropZoneBrowseBtn {
+    background-color: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+QPushButton#dropZoneBrowseBtn:hover {
+    background-color: #4F46E5;
+}
+
+QPushButton#dropZoneBrowseBtn:pressed {
+    background-color: #4338CA;
 }
 
 /* Selected File Container */

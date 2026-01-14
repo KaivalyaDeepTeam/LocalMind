@@ -4,21 +4,24 @@ LocalMind Setup Wizard
 First-run setup wizard for downloading models and configuring the app.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from PySide6.QtWidgets import (
     QWizard, QWizardPage, QVBoxLayout, QHBoxLayout, QWidget,
     QLabel, QCheckBox, QRadioButton, QButtonGroup, QProgressBar,
-    QGroupBox, QTextEdit, QPushButton, QFrame,
+    QGroupBox, QTextEdit, QPushButton, QFrame, QMessageBox,
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QFont
+
+import shutil
 
 from localmind.workers.model_download_worker import (
     ModelDownloadWorker, ModelInfo, SetupWizardData,
     AVAILABLE_MODELS, ModelType, is_model_downloaded,
     get_required_download_size, get_optional_download_size,
 )
+from localmind.config import SettingsManager
 
 
 class WelcomePage(QWizardPage):
@@ -249,6 +252,27 @@ class DownloadPage(QWizardPage):
         self._skip_button.clicked.connect(self._on_skip)
         layout.addWidget(self._skip_button, alignment=Qt.AlignmentFlag.AlignRight)
 
+    def _check_disk_space(self, required_gb: float) -> Tuple[bool, float]:
+        """Check if there's enough disk space for downloads.
+
+        Args:
+            required_gb: Required space in GB
+
+        Returns:
+            Tuple of (has_enough_space, available_gb)
+        """
+        models_dir = SettingsManager.get_models_dir()
+        try:
+            # Get disk usage for the models directory (or its parent if it doesn't exist)
+            check_path = models_dir if models_dir.exists() else models_dir.parent
+            usage = shutil.disk_usage(check_path)
+            available_gb = usage.free / (1024 ** 3)  # Convert to GB
+            # Add 10% buffer for safety
+            return available_gb >= (required_gb * 1.1), available_gb
+        except Exception:
+            # If we can't check, assume enough space
+            return True, 0.0
+
     def initializePage(self) -> None:
         """Start downloads when page is shown."""
         self._download_complete = False
@@ -268,6 +292,29 @@ class DownloadPage(QWizardPage):
             self._download_complete = True
             self.completeChanged.emit()
             return
+
+        # Calculate total required space
+        total_required_gb = sum(m.size_gb for m in models_to_download)
+
+        # Check disk space before starting
+        has_space, available_gb = self._check_disk_space(total_required_gb)
+        if not has_space:
+            result = QMessageBox.warning(
+                self,
+                "Insufficient Disk Space",
+                f"Not enough disk space for downloads.\n\n"
+                f"Required: ~{total_required_gb:.1f} GB\n"
+                f"Available: ~{available_gb:.1f} GB\n\n"
+                f"Free up some disk space or choose smaller models.\n\n"
+                f"Continue anyway?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if result != QMessageBox.StandardButton.Yes:
+                self._log.append(f"Insufficient disk space. Need {total_required_gb:.1f} GB, have {available_gb:.1f} GB")
+                self._current_label.setText("Waiting for disk space...")
+                return
+            self._log.append(f"Warning: Low disk space ({available_gb:.1f} GB available)")
 
         # Start download worker
         self._worker = ModelDownloadWorker(models_to_download)
@@ -326,7 +373,24 @@ class DownloadPage(QWizardPage):
 
     @Slot()
     def _on_skip(self) -> None:
-        """Skip remaining downloads."""
+        """Skip remaining downloads with warning."""
+        # Show warning dialog
+        result = QMessageBox.warning(
+            self,
+            "Skip Downloads?",
+            "LocalMind requires AI models to function properly.\n\n"
+            "Without downloading models:\n"
+            "• Transcription will not work\n"
+            "• Quality auditing will be limited\n\n"
+            "You can download models later from Settings.\n\n"
+            "Are you sure you want to skip?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if result != QMessageBox.StandardButton.Yes:
+            return
+
         if self._worker and self._worker.isRunning():
             self._worker.stop()
             self._worker.wait()

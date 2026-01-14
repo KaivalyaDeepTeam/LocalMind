@@ -28,6 +28,15 @@ class ToastType(Enum):
     INFO = "info"
 
 
+# Default durations per toast type (errors need more time to read)
+DEFAULT_DURATIONS = {
+    ToastType.SUCCESS: 4000,
+    ToastType.INFO: 5000,
+    ToastType.WARNING: 6000,
+    ToastType.ERROR: 8000,
+}
+
+
 class ToastNotification(QFrame):
     """
     A single toast notification with slide-in animation.
@@ -170,8 +179,9 @@ class ToastNotification(QFrame):
         close_btn.clicked.connect(self._start_hide_animation)
         layout.addWidget(close_btn)
 
-        # Fixed width, dynamic height
-        self.setFixedWidth(360)
+        # Responsive width with min/max constraints
+        self.setMinimumWidth(280)
+        self.setMaximumWidth(450)
         self.adjustSize()
 
     def _setup_animations(self) -> None:
@@ -253,7 +263,7 @@ class ToastManager(QWidget):
         self,
         message: str,
         toast_type: ToastType = ToastType.INFO,
-        duration: int = 4000,
+        duration: Optional[int] = None,
         action_text: Optional[str] = None,
         action_callback: Optional[Callable] = None,
     ) -> ToastNotification:
@@ -270,6 +280,10 @@ class ToastManager(QWidget):
         Returns:
             The created ToastNotification
         """
+        # Use type-specific default duration if not specified
+        if duration is None:
+            duration = DEFAULT_DURATIONS.get(toast_type, 5000)
+
         toast = ToastNotification(
             message=message,
             toast_type=toast_type,
