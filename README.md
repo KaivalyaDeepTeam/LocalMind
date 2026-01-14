@@ -42,18 +42,18 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 
 ### Download
 
-| Platform | Download |
-|----------|----------|
-| macOS | [LocalMind.dmg](#) |
-| Windows | [LocalMind-Setup.exe](#) |
-| Ubuntu/Debian | [localmind.deb](#) |
+| Platform | Download | Size |
+|----------|----------|------|
+| macOS | [LocalMind-macOS.dmg](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
+| Windows | [LocalMind-Windows.zip](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
+| Linux | [LocalMind-Linux.tar.gz](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
 
 ### First Run
 
-1. Install LocalMind
+1. Download and install LocalMind for your platform
 2. Launch the application
-3. Download AI models (4.5 GB, one-time)
-4. Select an audio file and click "Process"
+3. Select an audio file and click "Process"
+4. Whisper model downloads automatically on first use
 
 That's it! No accounts, no API keys, no configuration needed.
 
@@ -97,15 +97,29 @@ python -m localmind
 
 ### Build Installers
 
+Build must be done on the target platform.
+
+**macOS:**
 ```bash
-# macOS
-./packaging/macos/build.sh
+pip install pyinstaller
+pyinstaller LocalMind.spec
+hdiutil create -volname "LocalMind" -srcfolder dist/LocalMind.app -ov -format UDZO LocalMind-macOS.dmg
+```
 
-# Windows
-packaging\windows\build.bat
+**Windows:**
+```bash
+pip install pyinstaller
+pyinstaller LocalMind.spec
+# Creates dist\LocalMind\ - compress to ZIP
+```
 
-# Linux
-./packaging/linux/build.sh
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install libpango-1.0-0 libpangocairo-1.0-0 libcairo2
+pip install pyinstaller
+pyinstaller LocalMind.spec
+# Creates dist/LocalMind/ - compress to tar.gz
+tar -czvf LocalMind-Linux.tar.gz -C dist LocalMind
 ```
 
 ## Technology
