@@ -22,6 +22,7 @@ from localmind.ui.results_viewer import ResultsViewer
 from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.setup_wizard import SetupWizard
+from localmind.ui.toast import ToastManager, ToastType, init_toast_manager
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
 from localmind.config import get_profile_manager
 from localmind.utils import get_error_handler, ErrorContext, ErrorMessages
@@ -46,6 +47,9 @@ class MainWindow(QMainWindow):
         # Initialize error handler with this window as parent
         self._error_handler = get_error_handler()
         self._error_handler.set_parent_widget(self)
+
+        # Initialize toast notification manager
+        self._toast_manager = init_toast_manager(self)
 
         self._setup_ui()
         self._setup_menu_bar()
@@ -344,16 +348,32 @@ class MainWindow(QMainWindow):
         if result.audit:
             self._results_viewer.load_results(result.to_dict())
 
+        # Show success toast
+        score = result.audit.overall_score if result.audit else 0
+        self._toast_manager.show_success(
+            f"Processing complete! Score: {score:.1f}%",
+            action_text="View Results",
+            action_callback=lambda: self._results_viewer.setCurrentIndex(0),
+        )
+
         # Auto-export if configured
         settings = get_settings()
         if settings.output.auto_export_json and settings.output.output_directory:
             output_path = Path(settings.output.output_directory) / f"{self._current_file.stem}_result.json"
             self._results_viewer.export_json(str(output_path))
+            self._toast_manager.show_info(f"Results exported to {output_path.name}")
 
     @Slot(str)
     def _on_processing_error(self, error: str) -> None:
         """Handle processing error."""
         self._status_label.setText(f"Error: {error}")
+
+        # Show error toast
+        self._toast_manager.show_error(
+            f"Processing failed: {error[:100]}...",
+            duration=6000,
+        )
+
         self._error_handler.handle_error(
             Exception(error),
             title="Processing Error",

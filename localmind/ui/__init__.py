@@ -13,6 +13,14 @@ from localmind.ui.theme_manager import (
     init_theme_manager,
     apply_theme_from_settings,
 )
+from localmind.ui.toast import (
+    ToastNotification,
+    ToastManager,
+    ToastType,
+    get_toast_manager,
+    init_toast_manager,
+    show_toast,
+)
 
 __all__ = [
     "FileBrowserPanel",
@@ -27,4 +35,10 @@ __all__ = [
     "get_theme_manager",
     "init_theme_manager",
     "apply_theme_from_settings",
+    "ToastNotification",
+    "ToastManager",
+    "ToastType",
+    "get_toast_manager",
+    "init_toast_manager",
+    "show_toast",
 ]
