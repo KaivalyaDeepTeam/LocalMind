@@ -23,6 +23,7 @@ from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.setup_wizard import SetupWizard
 from localmind.ui.toast import ToastManager, ToastType, init_toast_manager
+from localmind.ui.mode_selector import ModeSelector, ProcessingMode
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
 from localmind.config import get_profile_manager
 from localmind.utils import get_error_handler, ErrorContext, ErrorMessages
@@ -61,7 +62,7 @@ class MainWindow(QMainWindow):
     def _setup_ui(self) -> None:
         """Set up the main UI layout."""
         self.setWindowTitle(__app_name__)
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1000, 700)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -71,14 +72,31 @@ class MainWindow(QMainWindow):
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # Left: File browser
+        # Left panel: Mode selector + File browser
+        left_panel = QWidget()
+        left_panel.setObjectName("leftPanel")
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(0)
+
+        # Mode selector at top
+        self._mode_selector = ModeSelector()
+        self._mode_selector.mode_changed.connect(self._on_mode_changed)
+        self._mode_selector.settings_changed.connect(self._on_mode_settings_changed)
+        left_layout.addWidget(self._mode_selector)
+
+        # File browser below
         self._file_browser = FileBrowserPanel()
-        splitter.addWidget(self._file_browser)
+        left_layout.addWidget(self._file_browser, stretch=1)
+
+        splitter.addWidget(left_panel)
 
         # Right: Progress and Results
         right = QWidget()
+        right.setObjectName("rightPanel")
         right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(8, 8, 8, 8)
+        right_layout.setContentsMargins(16, 16, 16, 16)
+        right_layout.setSpacing(16)
 
         self._progress_panel = ProgressPanel()
         right_layout.addWidget(self._progress_panel)
@@ -87,7 +105,7 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self._results_viewer, stretch=1)
 
         splitter.addWidget(right)
-        splitter.setSizes([300, 700])
+        splitter.setSizes([350, 650])
 
         layout.addWidget(splitter)
 
@@ -264,6 +282,29 @@ class MainWindow(QMainWindow):
     def _on_file_double_clicked(self, filepath: str) -> None:
         self._current_file = Path(filepath)
         self._on_process()
+
+    @Slot(ProcessingMode)
+    def _on_mode_changed(self, mode: ProcessingMode) -> None:
+        """Handle processing mode change."""
+        if mode == ProcessingMode.ONLINE:
+            provider = self._mode_selector.get_provider()
+            self._status_label.setText(f"Online mode - {provider}")
+            self._provider_label.setText(f"Provider: {provider}")
+        else:
+            self._status_label.setText("Offline mode - 100% private")
+            self._provider_label.setText("Mode: Offline")
+
+    @Slot()
+    def _on_mode_settings_changed(self) -> None:
+        """Handle mode settings change."""
+        mode = self._mode_selector.get_mode()
+        if mode == ProcessingMode.ONLINE:
+            provider = self._mode_selector.get_provider()
+            model = self._mode_selector.get_model()
+            self._provider_label.setText(f"{provider}: {model}")
+        else:
+            whisper_model = self._mode_selector.get_whisper_model()
+            self._provider_label.setText(f"Whisper: {whisper_model}")
 
     @Slot()
     def _on_process(self) -> None:

@@ -122,7 +122,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=ICON_FILE if Path(ICON_FILE).exists() if ICON_FILE else None,
+    icon=ICON_FILE if ICON_FILE and Path(ICON_FILE).exists() else None,
 )
 
 coll = COLLECT(

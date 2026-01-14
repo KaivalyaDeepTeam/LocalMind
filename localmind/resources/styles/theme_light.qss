@@ -53,6 +53,16 @@ QFrame[frameShape="1"] {
     border-radius: 12px;
 }
 
+/* Main Panels */
+QWidget#leftPanel {
+    background-color: #FFFFFF;
+    border-right: 1px solid #E2E8F0;
+}
+
+QWidget#rightPanel {
+    background-color: #F8FAFC;
+}
+
 /* === Buttons === */
 QPushButton {
     background-color: #FFFFFF;
@@ -893,4 +903,203 @@ QTabWidget#resultsTabWidget::pane {
     border: 1px solid #E2E8F0;
     border-radius: 8px;
     border-top-left-radius: 0;
+}
+
+/* === Drop Zone === */
+QFrame#dropZone {
+    background-color: #F8FAFC;
+    border: 2px dashed #CBD5E1;
+    border-radius: 16px;
+}
+
+QFrame#dropZone:hover {
+    border-color: #4F46E5;
+    background-color: #EEF2FF;
+}
+
+QFrame#dropZone[dragOver="true"] {
+    border-color: #4F46E5;
+    border-style: solid;
+    background-color: #EEF2FF;
+}
+
+QLabel#dropZoneTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+QLabel#dropZoneSubtitle {
+    font-size: 14px;
+    color: #64748B;
+}
+
+QLabel#dropZoneFormats {
+    font-size: 12px;
+    color: #94A3B8;
+}
+
+/* Selected File Container */
+QFrame#selectedFileContainer {
+    background-color: #EEF2FF;
+    border: 1px solid #C7D2FE;
+    border-radius: 12px;
+}
+
+QLabel#selectedFileName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+/* === Quick Access === */
+QFrame#quickAccessItem {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+QFrame#quickAccessItem:hover {
+    background-color: #F1F5F9;
+    border-color: #E2E8F0;
+}
+
+QLabel#quickAccessName {
+    font-size: 14px;
+    color: #0F172A;
+}
+
+/* === Recent Files === */
+QFrame#recentFileItem {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+QFrame#recentFileItem:hover {
+    background-color: #F1F5F9;
+    border-color: #E2E8F0;
+}
+
+QLabel#recentFileName {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0F172A;
+}
+
+QLabel#recentFileFolder {
+    font-size: 11px;
+    color: #64748B;
+}
+
+/* === Section Headers === */
+QLabel#sectionHeader {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* === Mode Toggle === */
+QFrame#modeToggle {
+    background-color: #F1F5F9;
+    border-radius: 10px;
+}
+
+QPushButton#modeButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #64748B;
+    padding: 8px 24px;
+}
+
+QPushButton#modeButton:hover {
+    background-color: #E2E8F0;
+}
+
+QPushButton#modeButton[active="true"] {
+    background-color: #FFFFFF;
+    color: #4F46E5;
+    font-weight: 600;
+}
+
+/* === Provider Selector === */
+QFrame#providerSelector {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+QLabel#fieldLabel {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    min-width: 80px;
+}
+
+QComboBox#providerCombo,
+QComboBox#modelCombo,
+QComboBox#whisperModelCombo {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+QComboBox#providerCombo:hover,
+QComboBox#modelCombo:hover,
+QComboBox#whisperModelCombo:hover {
+    border-color: #CBD5E1;
+}
+
+QComboBox#providerCombo:focus,
+QComboBox#modelCombo:focus,
+QComboBox#whisperModelCombo:focus {
+    border-color: #4F46E5;
+}
+
+QLineEdit#apiKeyInput {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+QLineEdit#apiKeyInput:focus {
+    border-color: #4F46E5;
+}
+
+QLabel#apiStatus {
+    font-size: 12px;
+    color: #D97706;
+}
+
+QLabel#apiStatus[valid="true"] {
+    color: #059669;
+}
+
+/* === Offline Settings === */
+QFrame#offlineSettings {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+QLabel#offlineInfo {
+    font-size: 13px;
+    color: #059669;
+    font-weight: 500;
+    padding: 8px;
+    background-color: #D1FAE5;
+    border-radius: 8px;
+}
+
+QLabel#downloadStatus {
+    font-size: 12px;
+    color: #64748B;
 }

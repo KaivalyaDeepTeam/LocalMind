@@ -1,186 +1,345 @@
 """
 LocalMind File Browser Panel
 
-VLC-like file browser for selecting audio files.
+Modern drag-and-drop file selector with quick access locations.
 """
 
 from pathlib import Path
 from typing import Optional, List
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTreeView, QFileSystemModel,
-    QLineEdit, QPushButton, QLabel, QComboBox, QFrame,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QFrame, QListWidget, QListWidgetItem, QFileDialog,
+    QSizePolicy, QScrollArea,
 )
-from PySide6.QtCore import Qt, Signal, Slot, QDir, QModelIndex
+from PySide6.QtCore import Qt, Signal, Slot, QMimeData
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
 
 
-class FileBrowserPanel(QWidget):
-    """VLC-like file browser panel."""
+class DropZone(QFrame):
+    """Drag and drop zone for audio files."""
 
-    file_selected = Signal(str)
-    file_double_clicked = Signal(str)
+    file_dropped = Signal(str)
 
-    # Supported audio formats
-    AUDIO_EXTENSIONS = [
-        "*.wav", "*.mp3", "*.m4a", "*.ogg", "*.flac", "*.webm",
-        "*.aac", "*.wma", "*.opus",
-    ]
+    AUDIO_EXTENSIONS = {'.wav', '.mp3', '.m4a', '.ogg', '.flac', '.webm', '.aac', '.wma', '.opus'}
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self._current_path: Optional[Path] = None
+        self.setAcceptDrops(True)
         self._setup_ui()
-        self._connect_signals()
-        self._load_initial_directory()
 
     def _setup_ui(self) -> None:
-        """Set up the UI."""
+        self.setObjectName("dropZone")
+        self.setMinimumHeight(180)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(8)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setSpacing(12)
 
-        # Header
-        header = QLabel("Audio Files")
-        header.setStyleSheet("font-weight: bold; font-size: 14px;")
-        layout.addWidget(header)
+        # Icon
+        icon_label = QLabel("🎵")
+        icon_label.setStyleSheet("font-size: 48px; background: transparent;")
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(icon_label)
 
-        # Path bar
-        path_layout = QHBoxLayout()
-        path_layout.setSpacing(4)
+        # Main text
+        title = QLabel("Drop audio file here")
+        title.setObjectName("dropZoneTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
 
-        self._path_combo = QComboBox()
-        self._path_combo.setEditable(True)
-        self._path_combo.setSizePolicy(
-            self._path_combo.sizePolicy().horizontalPolicy(),
-            self._path_combo.sizePolicy().verticalPolicy()
+        # Subtitle
+        subtitle = QLabel("or click to browse")
+        subtitle.setObjectName("dropZoneSubtitle")
+        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(subtitle)
+
+        # Supported formats
+        formats = QLabel("MP3, WAV, M4A, FLAC, OGG, WebM")
+        formats.setObjectName("dropZoneFormats")
+        formats.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(formats)
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    path = Path(url.toLocalFile())
+                    if path.suffix.lower() in self.AUDIO_EXTENSIONS:
+                        event.acceptProposedAction()
+                        self.setProperty("dragOver", True)
+                        self.style().unpolish(self)
+                        self.style().polish(self)
+                        return
+        event.ignore()
+
+    def dragLeaveEvent(self, event) -> None:
+        self.setProperty("dragOver", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        self.setProperty("dragOver", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+        for url in event.mimeData().urls():
+            if url.isLocalFile():
+                path = Path(url.toLocalFile())
+                if path.suffix.lower() in self.AUDIO_EXTENSIONS:
+                    self.file_dropped.emit(str(path))
+                    return
+
+    def mousePressEvent(self, event) -> None:
+        # Open file dialog on click
+        filepath, _ = QFileDialog.getOpenFileName(
+            self, "Select Audio File",
+            str(Path.home()),
+            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
         )
-        path_layout.addWidget(self._path_combo, stretch=1)
+        if filepath:
+            self.file_dropped.emit(filepath)
 
-        self._up_button = QPushButton("↑")
-        self._up_button.setFixedWidth(30)
-        self._up_button.setToolTip("Go to parent directory")
-        path_layout.addWidget(self._up_button)
 
-        self._home_button = QPushButton("⌂")
-        self._home_button.setFixedWidth(30)
-        self._home_button.setToolTip("Go to home directory")
-        path_layout.addWidget(self._home_button)
+class QuickAccessItem(QFrame):
+    """Quick access location button."""
 
-        layout.addLayout(path_layout)
+    clicked = Signal(str)
 
-        # File tree
-        self._file_model = QFileSystemModel()
-        self._file_model.setNameFilters(self.AUDIO_EXTENSIONS)
-        self._file_model.setNameFilterDisables(False)
+    def __init__(self, name: str, path: str, icon: str, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._path = path
+        self._setup_ui(name, icon)
 
-        self._tree_view = QTreeView()
-        self._tree_view.setModel(self._file_model)
-        self._tree_view.setRootIndex(self._file_model.index(str(Path.home())))
-        self._tree_view.setColumnWidth(0, 250)
-        self._tree_view.hideColumn(1)  # Size
-        self._tree_view.hideColumn(2)  # Type
-        self._tree_view.setHeaderHidden(False)
-        self._tree_view.setSortingEnabled(True)
-        self._tree_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        layout.addWidget(self._tree_view, stretch=1)
+    def _setup_ui(self, name: str, icon: str) -> None:
+        self.setObjectName("quickAccessItem")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(44)
 
-        # Info bar
-        self._info_label = QLabel("Select an audio file")
-        self._info_label.setStyleSheet("color: gray; font-size: 11px;")
-        layout.addWidget(self._info_label)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(10)
 
-    def _connect_signals(self) -> None:
-        """Connect signals."""
-        self._tree_view.clicked.connect(self._on_item_clicked)
-        self._tree_view.doubleClicked.connect(self._on_item_double_clicked)
-        self._up_button.clicked.connect(self._go_up)
-        self._home_button.clicked.connect(self._go_home)
-        self._path_combo.lineEdit().returnPressed.connect(self._on_path_entered)
+        icon_label = QLabel(icon)
+        icon_label.setStyleSheet("font-size: 18px; background: transparent;")
+        layout.addWidget(icon_label)
 
-    def _load_initial_directory(self) -> None:
-        """Load the initial directory."""
+        name_label = QLabel(name)
+        name_label.setObjectName("quickAccessName")
+        layout.addWidget(name_label)
+
+        layout.addStretch()
+
+    def mousePressEvent(self, event) -> None:
+        self.clicked.emit(self._path)
+
+
+class RecentFileItem(QFrame):
+    """Recent file item."""
+
+    clicked = Signal(str)
+    remove_clicked = Signal(str)
+
+    def __init__(self, filepath: str, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._filepath = filepath
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        self.setObjectName("recentFileItem")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(52)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(10)
+
+        # Icon
+        icon_label = QLabel("🎵")
+        icon_label.setStyleSheet("font-size: 16px; background: transparent;")
+        layout.addWidget(icon_label)
+
+        # File info
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(2)
+
+        path = Path(self._filepath)
+        name_label = QLabel(path.name)
+        name_label.setObjectName("recentFileName")
+        info_layout.addWidget(name_label)
+
+        folder_label = QLabel(str(path.parent.name))
+        folder_label.setObjectName("recentFileFolder")
+        info_layout.addWidget(folder_label)
+
+        layout.addLayout(info_layout, stretch=1)
+
+    def mousePressEvent(self, event) -> None:
+        self.clicked.emit(self._filepath)
+
+
+class FileBrowserPanel(QWidget):
+    """Modern file browser with drag-drop and quick access."""
+
+    file_selected = Signal(str)
+    file_double_clicked = Signal(str)
+    process_clicked = Signal()
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._recent_files: List[str] = []
+        self._current_file: Optional[str] = None
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
+
+        # Drop zone
+        self._drop_zone = DropZone()
+        self._drop_zone.file_dropped.connect(self._on_file_dropped)
+        layout.addWidget(self._drop_zone)
+
+        # Selected file display
+        self._selected_container = QFrame()
+        self._selected_container.setObjectName("selectedFileContainer")
+        self._selected_container.setVisible(False)
+        selected_layout = QVBoxLayout(self._selected_container)
+        selected_layout.setContentsMargins(12, 12, 12, 12)
+        selected_layout.setSpacing(8)
+
+        file_row = QHBoxLayout()
+        file_icon = QLabel("🎵")
+        file_icon.setStyleSheet("font-size: 18px; background: transparent;")
+        file_row.addWidget(file_icon)
+
+        self._selected_file_label = QLabel("")
+        self._selected_file_label.setObjectName("selectedFileName")
+        self._selected_file_label.setWordWrap(True)
+        file_row.addWidget(self._selected_file_label, stretch=1)
+        selected_layout.addLayout(file_row)
+
+        # Process button
+        self._process_btn = QPushButton("Process Audio")
+        self._process_btn.setObjectName("processButton")
+        self._process_btn.clicked.connect(self._on_process_clicked)
+        selected_layout.addWidget(self._process_btn)
+
+        layout.addWidget(self._selected_container)
+
+        # Quick Access section
+        quick_access_header = QLabel("Quick Access")
+        quick_access_header.setObjectName("sectionHeader")
+        layout.addWidget(quick_access_header)
+
+        # Quick access locations
         home = str(Path.home())
-        self._file_model.setRootPath(home)
-        self._tree_view.setRootIndex(self._file_model.index(home))
-        self._path_combo.setCurrentText(home)
-        self._current_path = Path(home)
+        locations = [
+            ("Desktop", str(Path.home() / "Desktop"), "🖥️"),
+            ("Documents", str(Path.home() / "Documents"), "📁"),
+            ("Downloads", str(Path.home() / "Downloads"), "⬇️"),
+            ("Music", str(Path.home() / "Music"), "🎵"),
+        ]
 
-    @Slot(QModelIndex)
-    def _on_item_clicked(self, index: QModelIndex) -> None:
-        """Handle item click."""
-        path = self._file_model.filePath(index)
-        if path:
-            file_path = Path(path)
-            if file_path.is_file():
-                self._current_path = file_path
-                self._info_label.setText(f"{file_path.name} ({self._format_size(file_path.stat().st_size)})")
-                self.file_selected.emit(str(file_path))
-            elif file_path.is_dir():
-                self._navigate_to(file_path)
+        for name, path, icon in locations:
+            if Path(path).exists():
+                item = QuickAccessItem(name, path, icon)
+                item.clicked.connect(self._on_quick_access_clicked)
+                layout.addWidget(item)
 
-    @Slot(QModelIndex)
-    def _on_item_double_clicked(self, index: QModelIndex) -> None:
-        """Handle item double-click."""
-        path = self._file_model.filePath(index)
-        if path:
-            file_path = Path(path)
-            if file_path.is_file():
-                self.file_double_clicked.emit(str(file_path))
-            elif file_path.is_dir():
-                self._navigate_to(file_path)
+        # Recent Files section
+        self._recent_header = QLabel("Recent Files")
+        self._recent_header.setObjectName("sectionHeader")
+        self._recent_header.setVisible(False)
+        layout.addWidget(self._recent_header)
+
+        self._recent_container = QWidget()
+        self._recent_layout = QVBoxLayout(self._recent_container)
+        self._recent_layout.setContentsMargins(0, 0, 0, 0)
+        self._recent_layout.setSpacing(4)
+        self._recent_container.setVisible(False)
+        layout.addWidget(self._recent_container)
+
+        layout.addStretch()
+
+    @Slot(str)
+    def _on_file_dropped(self, filepath: str) -> None:
+        self._set_selected_file(filepath)
+        self._add_to_recent(filepath)
+        self.file_selected.emit(filepath)
+        # Auto-start processing on drop
+        self.file_double_clicked.emit(filepath)
+
+    @Slot(str)
+    def _on_quick_access_clicked(self, path: str) -> None:
+        filepath, _ = QFileDialog.getOpenFileName(
+            self, "Select Audio File", path,
+            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
+        )
+        if filepath:
+            self._set_selected_file(filepath)
+            self._add_to_recent(filepath)
+            self.file_selected.emit(filepath)
+
+    @Slot(str)
+    def _on_recent_clicked(self, filepath: str) -> None:
+        if Path(filepath).exists():
+            self._set_selected_file(filepath)
+            self.file_selected.emit(filepath)
+        else:
+            self._remove_from_recent(filepath)
 
     @Slot()
-    def _go_up(self) -> None:
-        """Navigate to parent directory."""
-        current = self._tree_view.rootIndex()
-        path = Path(self._file_model.filePath(current))
-        if path.parent != path:
-            self._navigate_to(path.parent)
+    def _on_process_clicked(self) -> None:
+        if self._current_file:
+            self.file_double_clicked.emit(self._current_file)
+            self.process_clicked.emit()
 
-    @Slot()
-    def _go_home(self) -> None:
-        """Navigate to home directory."""
-        self._navigate_to(Path.home())
+    def _set_selected_file(self, filepath: str) -> None:
+        """Update the selected file display."""
+        self._current_file = filepath
+        filename = Path(filepath).name
+        self._selected_file_label.setText(filename)
+        self._selected_container.setVisible(True)
 
-    @Slot()
-    def _on_path_entered(self) -> None:
-        """Handle path entry."""
-        path_str = self._path_combo.currentText()
-        path = Path(path_str).expanduser()
-        if path.exists() and path.is_dir():
-            self._navigate_to(path)
+    def _add_to_recent(self, filepath: str) -> None:
+        if filepath in self._recent_files:
+            self._recent_files.remove(filepath)
+        self._recent_files.insert(0, filepath)
+        self._recent_files = self._recent_files[:5]  # Keep only 5 recent
+        self._update_recent_ui()
 
-    def _navigate_to(self, path: Path) -> None:
-        """Navigate to a directory."""
-        if path.is_dir():
-            self._file_model.setRootPath(str(path))
-            self._tree_view.setRootIndex(self._file_model.index(str(path)))
-            self._path_combo.setCurrentText(str(path))
+    def _remove_from_recent(self, filepath: str) -> None:
+        if filepath in self._recent_files:
+            self._recent_files.remove(filepath)
+            self._update_recent_ui()
+
+    def _update_recent_ui(self) -> None:
+        # Clear existing items
+        while self._recent_layout.count():
+            child = self._recent_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # Add new items
+        for filepath in self._recent_files:
+            if Path(filepath).exists():
+                item = RecentFileItem(filepath)
+                item.clicked.connect(self._on_recent_clicked)
+                self._recent_layout.addWidget(item)
+
+        # Show/hide section
+        has_recent = len(self._recent_files) > 0
+        self._recent_header.setVisible(has_recent)
+        self._recent_container.setVisible(has_recent)
 
     def select_file(self, filepath: str) -> None:
         """Programmatically select a file."""
-        path = Path(filepath)
-        if path.exists():
-            # Navigate to parent directory
-            self._navigate_to(path.parent)
-            # Select the file
-            index = self._file_model.index(str(path))
-            self._tree_view.setCurrentIndex(index)
-            self._tree_view.scrollTo(index)
-            self._current_path = path
-            self.file_selected.emit(str(path))
+        self._add_to_recent(filepath)
+        self.file_selected.emit(filepath)
 
     def get_selected_file(self) -> Optional[str]:
         """Get the currently selected file."""
-        if self._current_path and self._current_path.is_file():
-            return str(self._current_path)
-        return None
-
-    @staticmethod
-    def _format_size(size: int) -> str:
-        """Format file size for display."""
-        for unit in ["B", "KB", "MB", "GB"]:
-            if size < 1024:
-                return f"{size:.1f} {unit}"
-            size /= 1024
-        return f"{size:.1f} TB"
+        return self._current_file

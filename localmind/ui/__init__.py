@@ -7,6 +7,7 @@ from localmind.ui.settings_dialog import SettingsDialog
 from localmind.ui.scoring_editor import ScoringEditorDialog
 from localmind.ui.report_preview import ReportPreviewDialog
 from localmind.ui.setup_wizard import SetupWizard
+from localmind.ui.mode_selector import ModeSelector, ProcessingMode
 from localmind.ui.theme_manager import (
     ThemeManager,
     get_theme_manager,
@@ -31,6 +32,8 @@ __all__ = [
     "ScoringEditorDialog",
     "ReportPreviewDialog",
     "SetupWizard",
+    "ModeSelector",
+    "ProcessingMode",
     "ThemeManager",
     "get_theme_manager",
     "init_theme_manager",
