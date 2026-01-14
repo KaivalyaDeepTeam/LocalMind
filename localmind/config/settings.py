@@ -40,6 +40,10 @@ class TranscriptionSettings:
     romanize: bool = False
     enable_diarization: bool = True
     device: str = "auto"
+    whisper_model: str = "large-v3"
+    use_gpu: bool = True
+    chunk_length: int = 30
+    batch_size: int = 16
 
 
 @dataclass
@@ -169,6 +173,11 @@ class SettingsManager:
         self._config_dir.mkdir(parents=True, exist_ok=True)
         self.get_models_dir().mkdir(parents=True, exist_ok=True)
         self.get_cache_dir().mkdir(parents=True, exist_ok=True)
+
+    @property
+    def config_dir(self) -> Path:
+        """Get the config directory path."""
+        return self._config_dir
 
     @property
     def settings(self) -> UserSettings:
