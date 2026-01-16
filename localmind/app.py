@@ -14,6 +14,7 @@ from localmind import __app_name__, __version__
 from localmind.main_window import MainWindow
 from localmind.config.settings import get_settings_manager, get_settings
 from localmind.ui.theme_manager import init_theme_manager
+from localmind.i18n import init_translations
 
 
 def setup_application() -> QApplication:
@@ -37,6 +38,9 @@ def setup_application() -> QApplication:
     theme_manager = init_theme_manager(app)
     settings = get_settings()
     theme_manager.set_theme(settings.app.theme)
+
+    # Initialize translations with user's language preference
+    init_translations(settings.app.language)
 
     return app
 

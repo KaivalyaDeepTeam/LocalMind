@@ -140,7 +140,7 @@ class StageProgressWidget(QFrame):
         header.addStretch()
 
         # Status label
-        self._status_label = QLabel("Waiting")
+        self._status_label = QLabel(self.tr("Waiting"))
         self._status_label.setObjectName("stageStatus")
         self._status_label.setProperty("state", "waiting")
         header.addWidget(self._status_label)
@@ -153,7 +153,7 @@ class StageProgressWidget(QFrame):
         header.addWidget(self._time_label)
 
         # Expand button
-        self._expand_btn = QPushButton("Details")
+        self._expand_btn = QPushButton(self.tr("Details"))
         self._expand_btn.setObjectName("expandButton")
         self._expand_btn.setProperty("ghost", "true")
         self._expand_btn.setFixedHeight(24)
@@ -177,7 +177,7 @@ class StageProgressWidget(QFrame):
         main_layout.addWidget(self._log_panel)
 
         # Retry button (shown on error) - use primary style as retry is a positive action
-        self._retry_btn = QPushButton("Retry")
+        self._retry_btn = QPushButton(self.tr("Retry"))
         self._retry_btn.setProperty("primary", "true")
         self._retry_btn.setVisible(False)
         self._retry_btn.clicked.connect(self.retry_requested.emit)
@@ -217,7 +217,7 @@ class StageProgressWidget(QFrame):
         """Toggle the log panel expansion."""
         self._is_expanded = not self._is_expanded
         self._log_panel.setVisible(self._is_expanded)
-        self._expand_btn.setText("Hide" if self._is_expanded else "Details")
+        self._expand_btn.setText(self.tr("Hide") if self._is_expanded else self.tr("Details"))
 
     def _update_time_display(self) -> None:
         """Update the elapsed time display with ETA."""
@@ -271,7 +271,7 @@ class StageProgressWidget(QFrame):
         self._opacity_effect.setOpacity(1.0)
         self._timer.stop()
 
-        self._status_label.setText("Waiting")
+        self._status_label.setText(self.tr("Waiting"))
         self._status_label.setProperty("state", "waiting")
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
@@ -292,7 +292,7 @@ class StageProgressWidget(QFrame):
         self._timer.start(1000)
         self._pulse_animation.start()
 
-        self._status_label.setText("Processing...")
+        self._status_label.setText(self.tr("Processing..."))
         self._status_label.setProperty("state", "active")
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
@@ -325,7 +325,7 @@ class StageProgressWidget(QFrame):
             else:
                 self._time_label.setText(f"{seconds}s")
 
-        self._status_label.setText("Complete")
+        self._status_label.setText(self.tr("Complete"))
         self._status_label.setProperty("state", "complete")
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
@@ -423,7 +423,7 @@ class ProgressPanel(QWidget):
         # Header with overall time
         header_layout = QHBoxLayout()
 
-        self._header = QLabel("Processing Pipeline")
+        self._header = QLabel(self.tr("Processing Pipeline"))
         self._header.setObjectName("progressHeader")
         self._header.setFont(QFont("", 16, QFont.Weight.DemiBold))
         header_layout.addWidget(self._header)
@@ -437,32 +437,32 @@ class ProgressPanel(QWidget):
         layout.addLayout(header_layout)
 
         # Stage widgets
-        self._transcribe_stage = StageProgressWidget("Transcription", 1)
+        self._transcribe_stage = StageProgressWidget(self.tr("Transcription"), 1)
         self._transcribe_stage.retry_requested.connect(
             lambda: self._retry_stage(ProcessingStage.TRANSCRIBING)
         )
         layout.addWidget(self._transcribe_stage)
 
-        self._merge_stage = StageProgressWidget("Merge Channels", 2)
+        self._merge_stage = StageProgressWidget(self.tr("Merge Channels"), 2)
         self._merge_stage.retry_requested.connect(
             lambda: self._retry_stage(ProcessingStage.MERGING)
         )
         layout.addWidget(self._merge_stage)
 
-        self._audit_stage = StageProgressWidget("Quality Audit", 3)
+        self._audit_stage = StageProgressWidget(self.tr("Quality Audit"), 3)
         self._audit_stage.retry_requested.connect(
             lambda: self._retry_stage(ProcessingStage.AUDITING)
         )
         layout.addWidget(self._audit_stage)
 
-        self._report_stage = StageProgressWidget("Generate Report", 4)
+        self._report_stage = StageProgressWidget(self.tr("Generate Report"), 4)
         self._report_stage.retry_requested.connect(
             lambda: self._retry_stage(ProcessingStage.GENERATING_REPORT)
         )
         layout.addWidget(self._report_stage)
 
         # Overall status
-        self._overall_status = QLabel("Ready to process")
+        self._overall_status = QLabel(self.tr("Ready to process"))
         self._overall_status.setObjectName("overallStatus")
         self._overall_status.setProperty("state", "idle")
         self._overall_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -513,7 +513,7 @@ class ProgressPanel(QWidget):
         self._set_stage(ProcessingStage.TRANSCRIBING)
         self._transcribe_stage.set_active()
 
-        self._overall_status.setText("Processing audio file...")
+        self._overall_status.setText(self.tr("Processing audio file..."))
         self._overall_status.setProperty("state", "active")
         self._overall_status.style().unpolish(self._overall_status)
         self._overall_status.style().polish(self._overall_status)
@@ -589,7 +589,7 @@ class ProgressPanel(QWidget):
             else:
                 self._total_time_label.setText(f"Completed in {seconds}s")
 
-        self._overall_status.setText("Processing complete!")
+        self._overall_status.setText(self.tr("Processing complete!"))
         self._overall_status.setProperty("state", "complete")
         self._overall_status.style().unpolish(self._overall_status)
         self._overall_status.style().polish(self._overall_status)
@@ -617,7 +617,7 @@ class ProgressPanel(QWidget):
         self._total_timer.stop()
         self._set_stage(ProcessingStage.IDLE)
 
-        self._overall_status.setText("Stopped")
+        self._overall_status.setText(self.tr("Stopped"))
         self._overall_status.setProperty("state", "warning")
         self._overall_status.style().unpolish(self._overall_status)
         self._overall_status.style().polish(self._overall_status)
@@ -635,7 +635,7 @@ class ProgressPanel(QWidget):
 
         self._set_stage(ProcessingStage.IDLE)
 
-        self._overall_status.setText("Ready to process")
+        self._overall_status.setText(self.tr("Ready to process"))
         self._overall_status.setProperty("state", "idle")
         self._overall_status.style().unpolish(self._overall_status)
         self._overall_status.style().polish(self._overall_status)

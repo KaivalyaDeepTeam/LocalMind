@@ -64,19 +64,19 @@ class DropZoneWidget(QFrame):
         layout.addWidget(icon_label)
 
         # Main text
-        title = QLabel("Drop your audio file here")
+        title = QLabel(self.tr("Drop your audio file here"))
         title.setObjectName("dropTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
         # Subtitle
-        subtitle = QLabel("or click anywhere to browse")
+        subtitle = QLabel(self.tr("or click anywhere to browse"))
         subtitle.setObjectName("dropSubtitle")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(subtitle)
 
         # Supported formats
-        formats = QLabel("MP3, WAV, M4A, FLAC, OGG, WebM")
+        formats = QLabel(self.tr("MP3, WAV, M4A, FLAC, OGG, WebM"))
         formats.setObjectName("dropFormats")
         formats.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(formats)
@@ -158,7 +158,7 @@ class FileCardWidget(QFrame):
         details_layout = QVBoxLayout()
         details_layout.setSpacing(4)
 
-        self._filename_label = QLabel("No file selected")
+        self._filename_label = QLabel(self.tr("No file selected"))
         self._filename_label.setObjectName("fileName")
         self._filename_label.setWordWrap(True)
         details_layout.addWidget(self._filename_label)
@@ -170,7 +170,7 @@ class FileCardWidget(QFrame):
         file_layout.addLayout(details_layout, stretch=1)
 
         # Change file button
-        change_btn = QPushButton("Change")
+        change_btn = QPushButton(self.tr("Change"))
         change_btn.setObjectName("changeFileBtn")
         change_btn.setFixedWidth(80)
         change_btn.clicked.connect(self.change_file_clicked.emit)
@@ -179,14 +179,14 @@ class FileCardWidget(QFrame):
         layout.addWidget(file_section)
 
         # Process button - prominent and centered
-        self._process_btn = QPushButton("Start Processing")
+        self._process_btn = QPushButton(self.tr("Start Processing"))
         self._process_btn.setObjectName("primaryProcessBtn")
         self._process_btn.setMinimumHeight(48)
         self._process_btn.clicked.connect(self.process_clicked.emit)
         layout.addWidget(self._process_btn)
 
         # Hint text
-        hint = QLabel("Press Enter or click to start transcription")
+        hint = QLabel(self.tr("Press Enter or click to start transcription"))
         hint.setObjectName("processHint")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
@@ -238,7 +238,7 @@ class FileBrowserPanel(QWidget):
         layout.setSpacing(16)
 
         # Header
-        header = QLabel("Audio File")
+        header = QLabel(self.tr("Audio File"))
         header.setObjectName("panelHeader")
         layout.addWidget(header)
 
@@ -266,7 +266,7 @@ class FileBrowserPanel(QWidget):
         recent_layout.setContentsMargins(0, 8, 0, 0)
         recent_layout.setSpacing(8)
 
-        recent_header = QLabel("Recent")
+        recent_header = QLabel(self.tr("Recent"))
         recent_header.setObjectName("recentHeader")
         recent_layout.addWidget(recent_header)
 
@@ -280,9 +280,9 @@ class FileBrowserPanel(QWidget):
     def _open_file_dialog(self) -> None:
         """Open file selection dialog."""
         filepath, _ = QFileDialog.getOpenFileName(
-            self, "Select Audio File",
+            self, self.tr("Select Audio File"),
             str(Path.home()),
-            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;All Files (*.*)"
+            self.tr("Audio Files") + " (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;" + self.tr("All Files") + " (*.*)"
         )
         if filepath:
             self._on_file_selected(filepath)

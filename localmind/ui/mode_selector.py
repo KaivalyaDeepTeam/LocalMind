@@ -39,7 +39,7 @@ class ModeToggle(QFrame):
         layout.setSpacing(0)
 
         # Offline button
-        self._offline_btn = QPushButton("Offline")
+        self._offline_btn = QPushButton(self.tr("Offline"))
         self._offline_btn.setObjectName("modeButton")
         self._offline_btn.setCheckable(True)
         self._offline_btn.setFixedHeight(36)
@@ -47,7 +47,7 @@ class ModeToggle(QFrame):
         layout.addWidget(self._offline_btn)
 
         # Online button
-        self._online_btn = QPushButton("Online")
+        self._online_btn = QPushButton(self.tr("Online"))
         self._online_btn.setObjectName("modeButton")
         self._online_btn.setCheckable(True)
         self._online_btn.setFixedHeight(36)
@@ -120,7 +120,7 @@ class ProviderSelector(QFrame):
 
         # Provider selection
         provider_row = QHBoxLayout()
-        provider_label = QLabel("Provider")
+        provider_label = QLabel(self.tr("Provider"))
         provider_label.setObjectName("fieldLabel")
         provider_row.addWidget(provider_label)
 
@@ -136,7 +136,7 @@ class ProviderSelector(QFrame):
 
         # Model selection
         model_row = QHBoxLayout()
-        model_label = QLabel("Model")
+        model_label = QLabel(self.tr("Model"))
         model_label.setObjectName("fieldLabel")
         model_row.addWidget(model_label)
 
@@ -149,13 +149,13 @@ class ProviderSelector(QFrame):
 
         # API Key input
         api_row = QHBoxLayout()
-        api_label = QLabel("API Key")
+        api_label = QLabel(self.tr("API Key"))
         api_label.setObjectName("fieldLabel")
         api_row.addWidget(api_label)
 
         self._api_key_input = QLineEdit()
         self._api_key_input.setObjectName("apiKeyInput")
-        self._api_key_input.setPlaceholderText("Enter your API key...")
+        self._api_key_input.setPlaceholderText(self.tr("Enter your API key..."))
         self._api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
         self._api_key_input.textChanged.connect(self._on_api_key_changed)
         api_row.addWidget(self._api_key_input, stretch=1)
@@ -181,10 +181,10 @@ class ProviderSelector(QFrame):
     def _on_api_key_changed(self) -> None:
         api_key = self._api_key_input.text()
         if api_key:
-            self._status_label.setText("✓ API key set")
+            self._status_label.setText(self.tr("API key set"))
             self._status_label.setProperty("valid", True)
         else:
-            self._status_label.setText("⚠ API key required")
+            self._status_label.setText(self.tr("API key required"))
             self._status_label.setProperty("valid", False)
 
         self._status_label.style().unpolish(self._status_label)
@@ -266,14 +266,14 @@ class OfflineSettings(QFrame):
         layout.setSpacing(12)
 
         # Info label
-        info = QLabel("🔒 100% Private - No data leaves your device")
+        info = QLabel(self.tr("100% Private - No data leaves your device"))
         info.setObjectName("offlineInfo")
         info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(info)
 
         # Language Mode selection
         lang_row = QHBoxLayout()
-        lang_label = QLabel("Language")
+        lang_label = QLabel(self.tr("Language"))
         lang_label.setObjectName("fieldLabel")
         lang_row.addWidget(lang_label)
 
@@ -288,7 +288,7 @@ class OfflineSettings(QFrame):
 
         # Whisper model selection (only shown for English mode)
         self._whisper_row = QHBoxLayout()
-        model_label = QLabel("Model")
+        model_label = QLabel(self.tr("Model"))
         model_label.setObjectName("fieldLabel")
         self._whisper_row.addWidget(model_label)
 
@@ -311,10 +311,10 @@ class OfflineSettings(QFrame):
 
         # Hindi-English info (only shown for Hindi mode)
         self._hindi_info = QLabel(
-            "🎯 HindiSTT Model Selected\n\n"
-            "Uses a specialized Hindi-English speech recognition model\n"
-            "instead of Whisper. Outputs romanized text (Hinglish).\n"
-            "Optimized for Indian call centers with code-switching."
+            self.tr("HindiSTT Model Selected") + "\n\n" +
+            self.tr("Uses a specialized Hindi-English speech recognition model") + "\n" +
+            self.tr("instead of Whisper. Outputs romanized text (Hinglish).") + "\n" +
+            self.tr("Optimized for Indian call centers with code-switching.")
         )
         self._hindi_info.setObjectName("hindiInfo")
         self._hindi_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -323,7 +323,7 @@ class OfflineSettings(QFrame):
         layout.addWidget(self._hindi_info)
 
         # Download status
-        self._status_label = QLabel("Model will be downloaded on first use")
+        self._status_label = QLabel(self.tr("Model will be downloaded on first use"))
         self._status_label.setObjectName("downloadStatus")
         layout.addWidget(self._status_label)
 
@@ -370,7 +370,7 @@ class ModeSelector(QWidget):
         layout.setSpacing(12)
 
         # Header
-        header = QLabel("Processing Mode")
+        header = QLabel(self.tr("Processing Mode"))
         header.setObjectName("sectionHeader")
         layout.addWidget(header)
 
@@ -401,13 +401,13 @@ class ModeSelector(QWidget):
         scoring_layout.setContentsMargins(12, 12, 12, 12)
         scoring_layout.setSpacing(8)
 
-        self._scoring_checkbox = QCheckBox("Enable Quality Scoring")
+        self._scoring_checkbox = QCheckBox(self.tr("Enable Quality Scoring"))
         self._scoring_checkbox.setObjectName("scoringCheckbox")
         self._scoring_checkbox.setChecked(False)  # Default to transcription-only
         self._scoring_checkbox.stateChanged.connect(self._on_scoring_changed)
         scoring_layout.addWidget(self._scoring_checkbox)
 
-        scoring_hint = QLabel("Transcription only when unchecked. Scoring requires LLM.")
+        scoring_hint = QLabel(self.tr("Transcription only when unchecked. Scoring requires LLM."))
         scoring_hint.setObjectName("scoringHint")
         scoring_hint.setWordWrap(True)
         scoring_layout.addWidget(scoring_hint)

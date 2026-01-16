@@ -34,54 +34,54 @@ class LLMSettingsTab(QWidget):
         layout = QVBoxLayout(self)
 
         # Provider selection
-        provider_group = QGroupBox("LLM Provider")
+        provider_group = QGroupBox(self.tr("LLM Provider"))
         provider_layout = QFormLayout(provider_group)
 
         self._provider_combo = QComboBox()
-        self._provider_combo.addItem("Local LLM (Free, Offline)", LLMProviderType.LOCAL)
-        self._provider_combo.addItem("OpenAI API", LLMProviderType.OPENAI)
-        self._provider_combo.addItem("Anthropic API", LLMProviderType.ANTHROPIC)
+        self._provider_combo.addItem(self.tr("Local LLM (Free, Offline)"), LLMProviderType.LOCAL)
+        self._provider_combo.addItem(self.tr("OpenAI API"), LLMProviderType.OPENAI)
+        self._provider_combo.addItem(self.tr("Anthropic API"), LLMProviderType.ANTHROPIC)
         self._provider_combo.currentIndexChanged.connect(self._on_provider_changed)
-        provider_layout.addRow("Provider:", self._provider_combo)
+        provider_layout.addRow(self.tr("Provider:"), self._provider_combo)
 
         layout.addWidget(provider_group)
 
         # Local LLM settings
-        self._local_group = QGroupBox("Local LLM Settings")
+        self._local_group = QGroupBox(self.tr("Local LLM Settings"))
         local_layout = QFormLayout(self._local_group)
 
         self._local_model_combo = QComboBox()
-        self._local_model_combo.addItem("Phi-3.5-mini (2.4 GB) - Recommended", "phi-3.5-mini")
-        self._local_model_combo.addItem("Llama 3.2 (3B) (2.0 GB)", "llama-3.2-3b")
-        self._local_model_combo.addItem("Qwen 2.5 (3B) (2.0 GB)", "qwen-2.5-3b")
-        local_layout.addRow("Model:", self._local_model_combo)
+        self._local_model_combo.addItem(self.tr("Phi-3.5-mini (2.4 GB) - Recommended"), "phi-3.5-mini")
+        self._local_model_combo.addItem(self.tr("Llama 3.2 (3B) (2.0 GB)"), "llama-3.2-3b")
+        self._local_model_combo.addItem(self.tr("Qwen 2.5 (3B) (2.0 GB)"), "qwen-2.5-3b")
+        local_layout.addRow(self.tr("Model:"), self._local_model_combo)
 
-        self._download_button = QPushButton("Download Model")
+        self._download_button = QPushButton(self.tr("Download Model"))
         self._download_button.clicked.connect(self._on_download_model)
         local_layout.addRow("", self._download_button)
 
-        self._local_status = QLabel("Status: Not downloaded")
+        self._local_status = QLabel(self.tr("Status: Not downloaded"))
         self._local_status.setStyleSheet("color: gray;")
         local_layout.addRow("", self._local_status)
 
         layout.addWidget(self._local_group)
 
         # OpenAI settings
-        self._openai_group = QGroupBox("OpenAI Settings")
+        self._openai_group = QGroupBox(self.tr("OpenAI Settings"))
         openai_layout = QFormLayout(self._openai_group)
 
         self._openai_key = QLineEdit()
         self._openai_key.setEchoMode(QLineEdit.EchoMode.Password)
         self._openai_key.setPlaceholderText("sk-...")
-        openai_layout.addRow("API Key:", self._openai_key)
+        openai_layout.addRow(self.tr("API Key:"), self._openai_key)
 
         self._openai_model = QComboBox()
         self._openai_model.addItem("gpt-4o", "gpt-4o")
         self._openai_model.addItem("gpt-4o-mini", "gpt-4o-mini")
         self._openai_model.addItem("gpt-4-turbo", "gpt-4-turbo")
-        openai_layout.addRow("Model:", self._openai_model)
+        openai_layout.addRow(self.tr("Model:"), self._openai_model)
 
-        self._openai_test_btn = LoadingButton("Test Connection")
+        self._openai_test_btn = LoadingButton(self.tr("Test Connection"))
         self._openai_test_btn.clicked.connect(self._test_openai)
         self._openai_status = QLabel("")
         openai_test_row = QHBoxLayout()
@@ -93,21 +93,21 @@ class LLMSettingsTab(QWidget):
         layout.addWidget(self._openai_group)
 
         # Anthropic settings
-        self._anthropic_group = QGroupBox("Anthropic Settings")
+        self._anthropic_group = QGroupBox(self.tr("Anthropic Settings"))
         anthropic_layout = QFormLayout(self._anthropic_group)
 
         self._anthropic_key = QLineEdit()
         self._anthropic_key.setEchoMode(QLineEdit.EchoMode.Password)
         self._anthropic_key.setPlaceholderText("sk-ant-...")
-        anthropic_layout.addRow("API Key:", self._anthropic_key)
+        anthropic_layout.addRow(self.tr("API Key:"), self._anthropic_key)
 
         self._anthropic_model = QComboBox()
         self._anthropic_model.addItem("claude-sonnet-4-20250514", "claude-sonnet-4-20250514")
         self._anthropic_model.addItem("claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20241022")
         self._anthropic_model.addItem("claude-3-haiku-20240307", "claude-3-haiku-20240307")
-        anthropic_layout.addRow("Model:", self._anthropic_model)
+        anthropic_layout.addRow(self.tr("Model:"), self._anthropic_model)
 
-        self._anthropic_test_btn = LoadingButton("Test Connection")
+        self._anthropic_test_btn = LoadingButton(self.tr("Test Connection"))
         self._anthropic_test_btn.clicked.connect(self._test_anthropic)
         self._anthropic_status = QLabel("")
         anthropic_test_row = QHBoxLayout()
@@ -169,8 +169,8 @@ class LLMSettingsTab(QWidget):
         """Handle model download."""
         # TODO: Implement model download
         QMessageBox.information(
-            self, "Download Model",
-            "Model download will be implemented in a future update."
+            self, self.tr("Download Model"),
+            self.tr("Model download will be implemented in a future update.")
         )
 
     @Slot()
@@ -244,42 +244,42 @@ class TranscriptionSettingsTab(QWidget):
         layout = QVBoxLayout(self)
 
         # Whisper settings
-        whisper_group = QGroupBox("Whisper Settings")
+        whisper_group = QGroupBox(self.tr("Whisper Settings"))
         whisper_layout = QFormLayout(whisper_group)
 
         self._whisper_model = QComboBox()
-        self._whisper_model.addItem("Large V3 (Best Quality)", "large-v3")
-        self._whisper_model.addItem("Medium (Faster)", "medium")
-        self._whisper_model.addItem("Small (Fastest)", "small")
-        whisper_layout.addRow("Model:", self._whisper_model)
+        self._whisper_model.addItem(self.tr("Large V3 (Best Quality)"), "large-v3")
+        self._whisper_model.addItem(self.tr("Medium (Faster)"), "medium")
+        self._whisper_model.addItem(self.tr("Small (Fastest)"), "small")
+        whisper_layout.addRow(self.tr("Model:"), self._whisper_model)
 
         self._language = QComboBox()
-        self._language.addItem("Auto-detect", "auto")
-        self._language.addItem("English", "en")
-        self._language.addItem("Hindi", "hi")
-        self._language.addItem("Spanish", "es")
-        self._language.addItem("French", "fr")
-        whisper_layout.addRow("Language:", self._language)
+        self._language.addItem(self.tr("Auto-detect"), "auto")
+        self._language.addItem(self.tr("English"), "en")
+        self._language.addItem(self.tr("Hindi"), "hi")
+        self._language.addItem(self.tr("Spanish"), "es")
+        self._language.addItem(self.tr("French"), "fr")
+        whisper_layout.addRow(self.tr("Language:"), self._language)
 
-        self._use_gpu = QCheckBox("Use GPU acceleration (if available)")
+        self._use_gpu = QCheckBox(self.tr("Use GPU acceleration (if available)"))
         whisper_layout.addRow("", self._use_gpu)
 
         layout.addWidget(whisper_group)
 
         # Advanced settings
-        advanced_group = QGroupBox("Advanced Settings")
+        advanced_group = QGroupBox(self.tr("Advanced Settings"))
         advanced_layout = QFormLayout(advanced_group)
 
         self._chunk_length = QSpinBox()
         self._chunk_length.setRange(10, 60)
         self._chunk_length.setValue(30)
-        self._chunk_length.setSuffix(" seconds")
-        advanced_layout.addRow("Chunk Length:", self._chunk_length)
+        self._chunk_length.setSuffix(self.tr(" seconds"))
+        advanced_layout.addRow(self.tr("Chunk Length:"), self._chunk_length)
 
         self._batch_size = QSpinBox()
         self._batch_size.setRange(1, 32)
         self._batch_size.setValue(16)
-        advanced_layout.addRow("Batch Size:", self._batch_size)
+        advanced_layout.addRow(self.tr("Batch Size:"), self._batch_size)
 
         layout.addWidget(advanced_group)
 
@@ -322,7 +322,7 @@ class OutputSettingsTab(QWidget):
         layout = QVBoxLayout(self)
 
         # Output directory
-        output_group = QGroupBox("Output Settings")
+        output_group = QGroupBox(self.tr("Output Settings"))
         output_layout = QFormLayout(output_group)
 
         dir_layout = QHBoxLayout()
@@ -330,29 +330,29 @@ class OutputSettingsTab(QWidget):
         self._output_dir.setReadOnly(True)
         dir_layout.addWidget(self._output_dir)
 
-        self._browse_button = QPushButton("Browse...")
+        self._browse_button = QPushButton(self.tr("Browse..."))
         self._browse_button.clicked.connect(self._on_browse)
         dir_layout.addWidget(self._browse_button)
 
-        output_layout.addRow("Output Directory:", dir_layout)
+        output_layout.addRow(self.tr("Output Directory:"), dir_layout)
 
-        self._auto_export_json = QCheckBox("Auto-export JSON after processing")
+        self._auto_export_json = QCheckBox(self.tr("Auto-export JSON after processing"))
         output_layout.addRow("", self._auto_export_json)
 
-        self._auto_export_pdf = QCheckBox("Auto-export PDF after processing")
+        self._auto_export_pdf = QCheckBox(self.tr("Auto-export PDF after processing"))
         output_layout.addRow("", self._auto_export_pdf)
 
         layout.addWidget(output_group)
 
         # PDF settings
-        pdf_group = QGroupBox("PDF Report Settings")
+        pdf_group = QGroupBox(self.tr("PDF Report Settings"))
         pdf_layout = QFormLayout(pdf_group)
 
-        self._include_transcript = QCheckBox("Include full transcript")
+        self._include_transcript = QCheckBox(self.tr("Include full transcript"))
         self._include_transcript.setChecked(True)
         pdf_layout.addRow("", self._include_transcript)
 
-        self._include_scores = QCheckBox("Include score breakdown")
+        self._include_scores = QCheckBox(self.tr("Include score breakdown"))
         self._include_scores.setChecked(True)
         pdf_layout.addRow("", self._include_scores)
 
@@ -381,7 +381,7 @@ class OutputSettingsTab(QWidget):
         """Browse for output directory."""
         from pathlib import Path
         directory = QFileDialog.getExistingDirectory(
-            self, "Select Output Directory",
+            self, self.tr("Select Output Directory"),
             self._output_dir.text() or str(Path.home())
         )
         if directory:
@@ -394,6 +394,7 @@ class AppearanceSettingsTab(QWidget):
     def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._settings = settings
+        self._initial_language = settings.app.language
         self._setup_ui()
         self._load_settings()
 
@@ -401,36 +402,53 @@ class AppearanceSettingsTab(QWidget):
         """Set up the UI."""
         layout = QVBoxLayout(self)
 
+        # Language settings
+        language_group = QGroupBox(self.tr("Language"))
+        language_layout = QFormLayout(language_group)
+
+        self._language_combo = QComboBox()
+        from localmind.i18n import TranslationManager
+        for code, name in TranslationManager.LANGUAGES.items():
+            self._language_combo.addItem(name, code)
+        self._language_combo.currentIndexChanged.connect(self._on_language_changed)
+        language_layout.addRow(self.tr("UI Language:"), self._language_combo)
+
+        self._language_note = QLabel("")
+        self._language_note.setStyleSheet("color: #6B7280; font-size: 11px;")
+        language_layout.addRow("", self._language_note)
+
+        layout.addWidget(language_group)
+
         # Theme settings
-        theme_group = QGroupBox("Theme")
+        theme_group = QGroupBox(self.tr("Theme"))
         theme_layout = QFormLayout(theme_group)
 
         self._theme_combo = QComboBox()
-        self._theme_combo.addItem("System (Auto)", "system")
-        self._theme_combo.addItem("Light", "light")
-        self._theme_combo.addItem("Dark", "dark")
+        self._theme_combo.addItem(self.tr("System (Auto)"), "system")
+        self._theme_combo.addItem(self.tr("Light"), "light")
+        self._theme_combo.addItem(self.tr("Dark"), "dark")
         self._theme_combo.currentIndexChanged.connect(self._on_theme_changed)
-        theme_layout.addRow("Theme:", self._theme_combo)
+        theme_layout.addRow(self.tr("Theme:"), self._theme_combo)
 
-        theme_note = QLabel("Theme changes apply immediately")
+        theme_note = QLabel(self.tr("Theme changes apply immediately"))
         theme_note.setStyleSheet("color: #6B7280; font-size: 11px;")
         theme_layout.addRow("", theme_note)
 
         layout.addWidget(theme_group)
 
         # Accessibility settings
-        accessibility_group = QGroupBox("Accessibility")
+        accessibility_group = QGroupBox(self.tr("Accessibility"))
         accessibility_layout = QFormLayout(accessibility_group)
 
-        self._colorblind_checkbox = QCheckBox("Colorblind-friendly mode")
+        self._colorblind_checkbox = QCheckBox(self.tr("Colorblind-friendly mode"))
         self._colorblind_checkbox.setToolTip(
-            "Use blue-purple-orange colors instead of green-yellow-red\n"
-            "for better visibility with red-green color blindness"
+            self.tr("Use blue-purple-orange colors instead of green-yellow-red\n"
+            "for better visibility with red-green color blindness")
         )
         self._colorblind_checkbox.stateChanged.connect(self._on_colorblind_changed)
         accessibility_layout.addRow("", self._colorblind_checkbox)
 
-        colorblind_note = QLabel("Uses blue/purple/orange colors for score gauges")
+        colorblind_note = QLabel(self.tr("Uses blue/purple/orange colors for score gauges"))
         colorblind_note.setStyleSheet("color: #6B7280; font-size: 11px;")
         accessibility_layout.addRow("", colorblind_note)
 
@@ -439,6 +457,12 @@ class AppearanceSettingsTab(QWidget):
 
     def _load_settings(self) -> None:
         """Load settings into UI."""
+        # Load language
+        lang_idx = self._language_combo.findData(self._settings.app.language)
+        if lang_idx >= 0:
+            self._language_combo.setCurrentIndex(lang_idx)
+
+        # Load theme
         idx = self._theme_combo.findData(self._settings.app.theme)
         if idx >= 0:
             self._theme_combo.setCurrentIndex(idx)
@@ -446,8 +470,19 @@ class AppearanceSettingsTab(QWidget):
 
     def save_settings(self) -> None:
         """Save settings from UI."""
+        self._settings.app.language = self._language_combo.currentData()
         self._settings.app.theme = self._theme_combo.currentData()
         self._settings.app.colorblind_mode = self._colorblind_checkbox.isChecked()
+
+    @Slot()
+    def _on_language_changed(self) -> None:
+        """Show restart note when language is changed."""
+        current = self._language_combo.currentData()
+        if current != self._initial_language:
+            self._language_note.setText(self.tr("Restart required to apply language change"))
+            self._language_note.setStyleSheet("color: #D97706; font-size: 11px;")
+        else:
+            self._language_note.setText("")
 
     @Slot()
     def _on_theme_changed(self) -> None:
@@ -478,7 +513,7 @@ class SettingsDialog(QDialog):
 
     def _setup_ui(self) -> None:
         """Set up the UI."""
-        self.setWindowTitle("Settings")
+        self.setWindowTitle(self.tr("Settings"))
         self.setMinimumSize(500, 400)
 
         layout = QVBoxLayout(self)
@@ -487,16 +522,16 @@ class SettingsDialog(QDialog):
         self._tabs = QTabWidget()
 
         self._llm_tab = LLMSettingsTab(self._settings)
-        self._tabs.addTab(self._llm_tab, "LLM Provider")
+        self._tabs.addTab(self._llm_tab, self.tr("LLM Provider"))
 
         self._transcription_tab = TranscriptionSettingsTab(self._settings)
-        self._tabs.addTab(self._transcription_tab, "Transcription")
+        self._tabs.addTab(self._transcription_tab, self.tr("Transcription"))
 
         self._output_tab = OutputSettingsTab(self._settings)
-        self._tabs.addTab(self._output_tab, "Output")
+        self._tabs.addTab(self._output_tab, self.tr("Output"))
 
         self._appearance_tab = AppearanceSettingsTab(self._settings)
-        self._tabs.addTab(self._appearance_tab, "Appearance")
+        self._tabs.addTab(self._appearance_tab, self.tr("Appearance"))
 
         layout.addWidget(self._tabs)
 
@@ -531,4 +566,4 @@ class SettingsDialog(QDialog):
     def _on_apply(self) -> None:
         """Handle Apply button."""
         self._save_all()
-        QMessageBox.information(self, "Settings Saved", "Settings have been saved.")
+        QMessageBox.information(self, self.tr("Settings Saved"), self.tr("Settings have been saved."))

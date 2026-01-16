@@ -119,105 +119,105 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # File menu
-        file_menu = menubar.addMenu("&File")
+        file_menu = menubar.addMenu(self.tr("&File"))
 
-        open_action = QAction("&Open Audio File...", self)
+        open_action = QAction(self.tr("&Open Audio File..."), self)
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._on_open_file)
         file_menu.addAction(open_action)
 
         file_menu.addSeparator()
 
-        export_transcript = QAction("Export &Transcript...", self)
+        export_transcript = QAction(self.tr("Export &Transcript..."), self)
         export_transcript.setShortcut("Ctrl+Shift+T")
         export_transcript.triggered.connect(self._on_export_transcript)
         file_menu.addAction(export_transcript)
 
-        export_json = QAction("Export as &JSON...", self)
+        export_json = QAction(self.tr("Export as &JSON..."), self)
         export_json.setShortcut("Ctrl+Shift+J")
         export_json.triggered.connect(self._on_export_json)
         file_menu.addAction(export_json)
 
-        export_pdf = QAction("Export as &PDF...", self)
+        export_pdf = QAction(self.tr("Export as &PDF..."), self)
         export_pdf.setShortcut("Ctrl+Shift+P")
         export_pdf.triggered.connect(self._on_export_pdf)
         file_menu.addAction(export_pdf)
 
         file_menu.addSeparator()
 
-        quit_action = QAction("&Quit", self)
+        quit_action = QAction(self.tr("&Quit"), self)
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(self.close)
         file_menu.addAction(quit_action)
 
         # Edit menu
-        edit_menu = menubar.addMenu("&Edit")
+        edit_menu = menubar.addMenu(self.tr("&Edit"))
 
-        scoring_action = QAction("&Scoring Parameters...", self)
+        scoring_action = QAction(self.tr("&Scoring Parameters..."), self)
         scoring_action.setShortcut("Ctrl+Shift+S")
         scoring_action.triggered.connect(self._on_edit_scoring)
         edit_menu.addAction(scoring_action)
 
         edit_menu.addSeparator()
 
-        settings_action = QAction("&Settings...", self)
+        settings_action = QAction(self.tr("&Settings..."), self)
         settings_action.setShortcut(QKeySequence.StandardKey.Preferences)
         settings_action.triggered.connect(self._on_open_settings)
         edit_menu.addAction(settings_action)
 
         # Process menu
-        process_menu = menubar.addMenu("&Process")
+        process_menu = menubar.addMenu(self.tr("&Process"))
 
-        process_action = QAction("&Process Audio", self)
+        process_action = QAction(self.tr("&Process Audio"), self)
         process_action.setShortcut("Ctrl+Return")
         process_action.triggered.connect(self._on_process)
         process_menu.addAction(process_action)
 
         process_menu.addSeparator()
 
-        stop_action = QAction("&Stop", self)
+        stop_action = QAction(self.tr("&Stop"), self)
         stop_action.setShortcut("Escape")
         stop_action.triggered.connect(self._on_stop)
         process_menu.addAction(stop_action)
 
         # Help menu
-        help_menu = menubar.addMenu("&Help")
+        help_menu = menubar.addMenu(self.tr("&Help"))
 
-        shortcuts_action = QAction("&Keyboard Shortcuts", self)
+        shortcuts_action = QAction(self.tr("&Keyboard Shortcuts"), self)
         shortcuts_action.setShortcut("Ctrl+/")
         shortcuts_action.triggered.connect(self._on_show_shortcuts)
         help_menu.addAction(shortcuts_action)
 
         help_menu.addSeparator()
 
-        about_action = QAction("&About LocalMind", self)
+        about_action = QAction(self.tr("&About LocalMind"), self)
         about_action.triggered.connect(self._on_about)
         help_menu.addAction(about_action)
 
     def _setup_toolbar(self) -> None:
         """Set up the toolbar."""
-        toolbar = QToolBar("Main")
+        toolbar = QToolBar(self.tr("Main"))
         toolbar.setMovable(False)
         toolbar.setIconSize(QSize(24, 24))
         self.addToolBar(toolbar)
 
-        open_action = QAction("Open", self)
+        open_action = QAction(self.tr("Open"), self)
         open_action.triggered.connect(self._on_open_file)
         toolbar.addAction(open_action)
 
         toolbar.addSeparator()
 
-        process_action = QAction("Process", self)
+        process_action = QAction(self.tr("Process"), self)
         process_action.triggered.connect(self._on_process)
         toolbar.addAction(process_action)
 
-        stop_action = QAction("Stop", self)
+        stop_action = QAction(self.tr("Stop"), self)
         stop_action.triggered.connect(self._on_stop)
         toolbar.addAction(stop_action)
 
         toolbar.addSeparator()
 
-        settings_action = QAction("Settings", self)
+        settings_action = QAction(self.tr("Settings"), self)
         settings_action.triggered.connect(self._on_open_settings)
         toolbar.addAction(settings_action)
 
@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
         self._status_spinner.hide()
         self._status_bar.addWidget(self._status_spinner)
 
-        self._status_label = QLabel("Ready")
+        self._status_label = QLabel(self.tr("Ready"))
         self._status_bar.addWidget(self._status_label, stretch=1)
 
         settings = get_settings()
@@ -574,7 +574,9 @@ class MainWindow(QMainWindow):
         dialog = SettingsDialog(self)
         if dialog.exec():
             settings = get_settings()
-            self._provider_label.setText(f"LLM: {settings.llm.provider.value.title()}")
+            provider = settings.llm.provider
+            provider_name = provider.value if hasattr(provider, 'value') else str(provider)
+            self._provider_label.setText(f"LLM: {provider_name.title()}")
             self._configure_orchestrator()
 
     @Slot()

@@ -67,6 +67,7 @@ class OutputSettings:
 class AppSettings:
     """Application settings."""
     theme: str = "system"
+    language: str = "en"  # UI language (en, ru, es, hi, ar)
     colorblind_mode: bool = False  # Use colorblind-friendly colors
     check_updates: bool = True
     first_run_complete: bool = False
@@ -135,6 +136,7 @@ class UserSettings:
             # Add defaults for new fields
             app_data.setdefault("recent_files", [])
             app_data.setdefault("colorblind_mode", False)
+            app_data.setdefault("language", "en")
             settings.app = AppSettings(**app_data)
 
         return settings
