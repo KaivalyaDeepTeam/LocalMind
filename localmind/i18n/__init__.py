@@ -2,12 +2,14 @@
 LocalMind Internationalization (i18n) Module
 
 Handles multi-language support using Qt's translation system.
+Includes RTL (Right-to-Left) support for Arabic and other RTL languages.
 """
 
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
-from PySide6.QtCore import QTranslator, QLocale, QCoreApplication
+from PySide6.QtCore import QTranslator, QLocale, QCoreApplication, Qt
+from PySide6.QtWidgets import QApplication
 
 
 class TranslationManager:
@@ -21,6 +23,9 @@ class TranslationManager:
         "hi": "हिन्दी",
         "ar": "العربية",
     }
+
+    # Languages that require Right-to-Left layout
+    RTL_LANGUAGES: Set[str] = {"ar", "he", "fa", "ur"}
 
     def __init__(self):
         self._translator: Optional[QTranslator] = None
@@ -47,7 +52,7 @@ class TranslationManager:
         Load translation for the specified language.
 
         Args:
-            language: Language code (e.g., 'en', 'ru', 'es')
+            language: Language code (e.g., 'en', 'ru', 'es', 'ar')
 
         Returns:
             True if translation loaded successfully, False otherwise
@@ -60,6 +65,9 @@ class TranslationManager:
         if self._translator is not None:
             app.removeTranslator(self._translator)
             self._translator = None
+
+        # Set layout direction based on language (RTL or LTR)
+        self._apply_layout_direction(language)
 
         # English is the source language, no translation needed
         if language == "en":
@@ -74,6 +82,7 @@ class TranslationManager:
             if not translation_file.exists():
                 # Fallback to English
                 self._current_language = "en"
+                self._apply_layout_direction("en")
                 return False
 
         # Load the translation
@@ -85,7 +94,33 @@ class TranslationManager:
         else:
             self._translator = None
             self._current_language = "en"
+            self._apply_layout_direction("en")
             return False
+
+    def _apply_layout_direction(self, language: str) -> None:
+        """
+        Apply the appropriate layout direction for the language.
+
+        Args:
+            language: Language code
+        """
+        app = QApplication.instance()
+        if app is None:
+            return
+
+        if language in self.RTL_LANGUAGES:
+            app.setLayoutDirection(Qt.RightToLeft)
+        else:
+            app.setLayoutDirection(Qt.LeftToRight)
+
+    def is_rtl(self) -> bool:
+        """Check if current language uses RTL layout."""
+        return self._current_language in self.RTL_LANGUAGES
+
+    @classmethod
+    def is_language_rtl(cls, language: str) -> bool:
+        """Check if a specific language uses RTL layout."""
+        return language in cls.RTL_LANGUAGES
 
     def get_system_language(self) -> str:
         """
