@@ -24,9 +24,12 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 
 ### Quality Auditing
 - AI-powered call quality scoring
-- Customizable scoring parameters (drag-and-drop editor)
+- **Fully customizable scoring parameters** - Create profiles for your organization
+- Visual drag-and-drop weight editor (no technical skills needed)
+- Import/export scoring profiles to share with your team
 - Compliance violation detection
 - Strengths and improvement suggestions
+- [**→ Customization Guide**](SCORING_GUIDE.md) - Step-by-step instructions for non-technical users
 
 ### Flexible AI Backend
 - **Local LLM** - Bundled AI model, works offline (recommended)
@@ -35,7 +38,7 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 
 ### Export Options
 - JSON export for integration
-- Professional PDF reports
+- TXT transcript export
 - Copy to clipboard
 
 ## Quick Start
@@ -56,6 +59,30 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 4. Whisper model downloads automatically on first use
 
 That's it! No accounts, no API keys, no configuration needed.
+
+## Customization for Organizations
+
+LocalMind is designed for **easy customization by non-technical users**. Organizations can create custom scoring profiles that match their specific audit requirements.
+
+### Creating Your Own Scoring Profile
+
+1. Open **Edit → Scoring Parameters** (Ctrl+Shift+S)
+2. Click **New** to create a profile for your organization
+3. Add custom parameters using the visual editor
+4. Adjust weights with the drag-and-drop slider
+5. Save and share with your team
+
+### Real-World Example
+
+**Svetozar Technologies** might create a custom profile with:
+- Data Privacy Compliance (3.0x weight - critical)
+- Technical Accuracy (2.5x weight - high)
+- Brand Messaging (1.5x weight - important)
+- Custom company-specific requirements
+
+**No coding required!** The visual editor makes it easy for call center managers, QA teams, and trainers to customize scoring without technical knowledge.
+
+📖 **[Read the Complete Customization Guide](SCORING_GUIDE.md)**
 
 ## System Requirements
 
@@ -79,6 +106,7 @@ That's it! No accounts, no API keys, no configuration needed.
 
 ### Install from Source
 
+**macOS:**
 ```bash
 # Clone repository
 git clone https://github.com/KaivalyaDeepTeam/localmind.git
@@ -86,7 +114,41 @@ cd localmind
 
 # Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
+python -m localmind
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Clone repository
+git clone https://github.com/KaivalyaDeepTeam/localmind.git
+cd localmind
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
+python -m localmind
+```
+
+**Windows:**
+```bash
+# Clone repository
+git clone https://github.com/KaivalyaDeepTeam/localmind.git
+cd localmind
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -101,6 +163,7 @@ Build must be done on the target platform.
 
 **macOS:**
 ```bash
+# Build
 pip install pyinstaller
 pyinstaller LocalMind.spec
 hdiutil create -volname "LocalMind" -srcfolder dist/LocalMind.app -ov -format UDZO LocalMind-macOS.dmg
@@ -115,7 +178,7 @@ pyinstaller LocalMind.spec
 
 **Linux (Ubuntu/Debian):**
 ```bash
-sudo apt-get install libpango-1.0-0 libpangocairo-1.0-0 libcairo2
+# Build
 pip install pyinstaller
 pyinstaller LocalMind.spec
 # Creates dist/LocalMind/ - compress to tar.gz
@@ -130,7 +193,6 @@ LocalMind is built with:
 - **Whisper** - State-of-the-art speech recognition
 - **Phi-3.5** - Efficient local language model
 - **llama.cpp** - Optimized local inference
-- **WeasyPrint** - Professional PDF generation
 
 ## Contributing
 

@@ -325,7 +325,8 @@ class TranscriptViewer(QWidget):
         """Set transcript from segments with speaker labels."""
         html = []
         for seg in segments:
-            speaker = seg.get("speaker", "Unknown")
+            # Handle None speaker labels - display as "Unknown"
+            speaker = seg.get("speaker") or "Unknown"
             text = seg.get("text", "")
             start = seg.get("start", 0)
             end = seg.get("end", 0)
@@ -477,8 +478,8 @@ class EmptyStateWidget(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Icon placeholder (text-based)
-        icon_label = QLabel("📊")
-        icon_label.setStyleSheet("font-size: 48px;")
+        icon_label = QLabel("[Results]")
+        icon_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #94A3B8;")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(icon_label)
 
@@ -682,91 +683,163 @@ class ResultsViewer(QWidget):
         self._tabs.setCurrentIndex(index)
 
     def export_json(self, filepath: str) -> None:
-        """Export results to JSON file."""
+        """Export results to JSON file with comprehensive edge case handling."""
         if not self._results:
             QMessageBox.warning(self, "No Results", "No results to export.")
             return
 
         try:
-            with open(filepath, "w") as f:
-                json.dump(self._results, f, indent=2)
+            # Validate filepath
+            if not filepath:
+                QMessageBox.warning(self, "Invalid Path", "Please provide a valid file path.")
+                return
+
+            # Ensure .json extension
+            if not filepath.endswith('.json'):
+                filepath += '.json'
+
+            # Create parent directory if it doesn't exist
+            from pathlib import Path
+            parent_dir = Path(filepath).parent
+            parent_dir.mkdir(parents=True, exist_ok=True)
+
+            # Export with UTF-8 encoding to handle all characters
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(self._results, f, indent=2, ensure_ascii=False)
+
+            QMessageBox.information(
+                self, "Export Complete",
+                f"Results exported to:\n{filepath}"
+            )
+
+        except PermissionError:
+            QMessageBox.critical(
+                self, "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location."
+            )
+        except OSError as e:
+            if "No space left on device" in str(e):
+                QMessageBox.critical(
+                    self, "Disk Full",
+                    "Not enough disk space to save the file.\n\nPlease free up some space and try again."
+                )
+            else:
+                QMessageBox.critical(
+                    self, "File System Error",
+                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again."
+                )
+        except MemoryError:
+            QMessageBox.critical(
+                self, "Memory Error",
+                "Not enough memory to export results.\n\nTry closing other applications and try again."
+            )
         except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Failed to export: {e}")
+            QMessageBox.critical(
+                self, "Export Error",
+                f"Failed to export JSON:\n{str(e)}\n\nPlease try again or choose a different location."
+            )
 
     def export_transcript(self, filepath: str) -> None:
-        """Export transcript to text file."""
+        """Export transcript to text file with comprehensive edge case handling."""
         if not self._results:
             QMessageBox.warning(self, "No Results", "No transcript to export.")
             return
 
+        # Check if transcript data exists
+        has_segments = "segments" in self._results and self._results["segments"]
+        has_transcript = "transcript" in self._results and self._results["transcript"]
+
+        if not has_segments and not has_transcript:
+            QMessageBox.warning(
+                self, "No Transcript",
+                "No transcript data available to export.\n\nPlease process an audio file first."
+            )
+            return
+
         try:
+            # Validate filepath
+            if not filepath:
+                QMessageBox.warning(self, "Invalid Path", "Please provide a valid file path.")
+                return
+
+            # Ensure .txt extension
+            if not filepath.endswith('.txt'):
+                filepath += '.txt'
+
+            # Create parent directory if it doesn't exist
+            from pathlib import Path
+            parent_dir = Path(filepath).parent
+            parent_dir.mkdir(parents=True, exist_ok=True)
+
             with open(filepath, "w", encoding="utf-8") as f:
                 # Write header
                 file_name = self._results.get("file_name", "audio")
                 language = self._results.get("language", "unknown")
+                duration = self._results.get("duration", 0)
+
                 f.write(f"Transcript: {file_name}\n")
                 f.write(f"Language: {language}\n")
+                if duration:
+                    f.write(f"Duration: {duration:.1f}s\n")
                 f.write("=" * 50 + "\n\n")
 
                 # Write segments with speaker labels if available
-                if "segments" in self._results and self._results["segments"]:
+                if has_segments:
                     for seg in self._results["segments"]:
-                        speaker = seg.get("speaker", "Unknown")
-                        text = seg.get("text", "")
+                        # Handle None speaker labels - export as "Unknown"
+                        speaker = seg.get("speaker") or "Unknown"
+                        text = seg.get("text", "").strip()
                         start = seg.get("start", 0)
                         end = seg.get("end", 0)
+
+                        # Skip empty segments
+                        if not text:
+                            continue
+
                         f.write(f"[{start:.1f}s - {end:.1f}s] {speaker}: {text}\n\n")
-                elif "transcript" in self._results:
+                elif has_transcript:
                     # Plain transcript without segments
-                    f.write(self._results["transcript"])
+                    transcript_text = self._results["transcript"].strip()
+                    if transcript_text:
+                        f.write(transcript_text)
+                        f.write("\n")
 
             QMessageBox.information(
                 self, "Export Complete",
                 f"Transcript exported to:\n{filepath}"
             )
-        except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Failed to export transcript: {e}")
 
-    def export_pdf(self, filepath: str) -> None:
-        """Export results to PDF file."""
-        if not self._results:
-            QMessageBox.warning(self, "No Results", "No results to export.")
-            return
-
-        try:
-            from localmind.reports import PDFReportGenerator, ReportOptions
-
-            options = ReportOptions(
-                include_transcript=True,
-                include_chart=True,
-                include_scores=True,
+        except PermissionError:
+            QMessageBox.critical(
+                self, "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location."
             )
-            generator = PDFReportGenerator(options)
-
-            if not generator.can_generate():
-                QMessageBox.warning(
-                    self, "Missing Dependencies",
-                    "PDF export requires Jinja2 and WeasyPrint.\n\n"
-                    "Install with: pip install jinja2 weasyprint"
+        except OSError as e:
+            if "No space left on device" in str(e):
+                QMessageBox.critical(
+                    self, "Disk Full",
+                    "Not enough disk space to save the file.\n\nPlease free up some space and try again."
                 )
-                return
-
-            # Get file name from results or use default
-            file_name = self._results.get("file_name", "audio_file")
-            generator.generate_pdf(self._results, filepath, file_name)
-
-            QMessageBox.information(
-                self, "Export Complete",
-                f"PDF report exported to:\n{filepath}"
+            else:
+                QMessageBox.critical(
+                    self, "File System Error",
+                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again."
+                )
+        except UnicodeEncodeError as e:
+            QMessageBox.critical(
+                self, "Encoding Error",
+                f"Failed to encode transcript text:\n{e}\n\nSome characters may not be supported."
             )
-
-        except ImportError as e:
-            QMessageBox.warning(
-                self, "Missing Dependencies",
-                f"PDF export requires additional packages:\n\n{e}"
+        except MemoryError:
+            QMessageBox.critical(
+                self, "Memory Error",
+                "Not enough memory to export transcript.\n\nTry closing other applications and try again."
             )
         except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Failed to export PDF:\n\n{e}")
+            QMessageBox.critical(
+                self, "Export Error",
+                f"Failed to export transcript:\n{str(e)}\n\nPlease try again or choose a different location."
+            )
 
     def get_results(self) -> Optional[Dict[str, Any]]:
         """Get the current results."""

@@ -259,10 +259,39 @@ class TranscriptionSettingsTab(QWidget):
         self._language.addItem(self.tr("Hindi"), "hi")
         self._language.addItem(self.tr("Spanish"), "es")
         self._language.addItem(self.tr("French"), "fr")
+        self._language.addItem(self.tr("German"), "de")
+        self._language.addItem(self.tr("Italian"), "it")
+        self._language.addItem(self.tr("Portuguese"), "pt")
+        self._language.addItem(self.tr("Russian"), "ru")
+        self._language.addItem(self.tr("Japanese"), "ja")
+        self._language.addItem(self.tr("Korean"), "ko")
+        self._language.addItem(self.tr("Chinese"), "zh")
+        self._language.addItem(self.tr("Arabic"), "ar")
+        self._language.addItem(self.tr("Turkish"), "tr")
+        self._language.addItem(self.tr("Dutch"), "nl")
         whisper_layout.addRow(self.tr("Language:"), self._language)
 
         self._use_gpu = QCheckBox(self.tr("Use GPU acceleration (if available)"))
         whisper_layout.addRow("", self._use_gpu)
+
+        # Speaker diarization (for all languages)
+        self._use_diarization = QCheckBox(self.tr("Enable Speaker Diarization"))
+        diarization_available = self._check_diarization_available()
+        self._use_diarization.setEnabled(diarization_available)
+
+        if not diarization_available:
+            self._use_diarization.setToolTip(
+                self.tr("Speaker diarization requires pyannote.audio (Python 3.10 only)\n"
+                        "Install with: pip install pyannote.audio\n"
+                        "Note: Only works with Python 3.10, not 3.11+")
+            )
+        else:
+            self._use_diarization.setToolTip(
+                self.tr("Auto-detects speakers and labels them as Agent/Customer\n"
+                        "Works with all languages\n"
+                        "Adds ~30-60 seconds to processing time")
+            )
+        whisper_layout.addRow("", self._use_diarization)
 
         layout.addWidget(whisper_group)
 
@@ -285,6 +314,14 @@ class TranscriptionSettingsTab(QWidget):
 
         layout.addStretch()
 
+    def _check_diarization_available(self) -> bool:
+        """Check if pyannote.audio is installed and working."""
+        try:
+            import pyannote.audio
+            return True
+        except ImportError:
+            return False
+
     def _load_settings(self) -> None:
         """Load settings into UI."""
         idx = self._whisper_model.findData(self._settings.transcription.whisper_model)
@@ -296,6 +333,7 @@ class TranscriptionSettingsTab(QWidget):
             self._language.setCurrentIndex(lang_idx)
 
         self._use_gpu.setChecked(self._settings.transcription.use_gpu)
+        self._use_diarization.setChecked(self._settings.transcription.enable_diarization)
         self._chunk_length.setValue(self._settings.transcription.chunk_length)
         self._batch_size.setValue(self._settings.transcription.batch_size)
 
@@ -304,6 +342,7 @@ class TranscriptionSettingsTab(QWidget):
         self._settings.transcription.whisper_model = self._whisper_model.currentData()
         self._settings.transcription.language = self._language.currentData()
         self._settings.transcription.use_gpu = self._use_gpu.isChecked()
+        self._settings.transcription.enable_diarization = self._use_diarization.isChecked()
         self._settings.transcription.chunk_length = self._chunk_length.value()
         self._settings.transcription.batch_size = self._batch_size.value()
 

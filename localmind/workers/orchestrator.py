@@ -82,6 +82,9 @@ class ProcessingOrchestrator(QObject):
         self._use_gpu = True
         self._dual_channel = True
         self._use_hindi_stt = False  # Use HindiSTT for Hindi-English
+        self._hindi_model_variant = "apex"  # "apex" (fast) or "prime" (accurate)
+        self._use_diarization = False  # Use speaker diarization
+        self._use_preprocessing = True  # Apply audio preprocessing (default ON)
         self._parameters: Optional[List[Dict[str, Any]]] = None
         self._transcription_only = False  # Skip scoring, only transcribe
 
@@ -97,6 +100,9 @@ class ProcessingOrchestrator(QObject):
         use_gpu: bool = True,
         dual_channel: bool = True,
         use_hindi_stt: bool = False,
+        hindi_model_variant: str = "apex",
+        use_diarization: bool = False,
+        use_preprocessing: bool = True,
         scoring_parameters: Optional[List[Dict[str, Any]]] = None,
         transcription_only: bool = False,
     ) -> None:
@@ -108,6 +114,9 @@ class ProcessingOrchestrator(QObject):
             use_gpu: Whether to use GPU acceleration.
             dual_channel: Whether to process as dual-channel audio.
             use_hindi_stt: Use HindiSTT model for Hindi-English transcription.
+            hindi_model_variant: "apex" (8x faster, noisy audio) or "prime" (accurate, clean audio).
+            use_diarization: Whether to use speaker diarization (auto-detects speakers in mono audio).
+            use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction). Default True.
             scoring_parameters: Custom scoring parameters.
             transcription_only: If True, skip scoring and only transcribe.
         """
@@ -116,6 +125,9 @@ class ProcessingOrchestrator(QObject):
         self._use_gpu = use_gpu
         self._dual_channel = dual_channel
         self._use_hindi_stt = use_hindi_stt
+        self._hindi_model_variant = hindi_model_variant
+        self._use_diarization = use_diarization
+        self._use_preprocessing = use_preprocessing
         self._parameters = scoring_parameters
         self._transcription_only = transcription_only
 
@@ -158,38 +170,66 @@ class ProcessingOrchestrator(QObject):
 
         self._is_processing = False
 
+    def _check_if_stereo(self, audio_path: Path) -> bool:
+        """Check if audio file is stereo (2 channels) or mono (1 channel)."""
+        try:
+            import librosa
+            audio, sr = librosa.load(str(audio_path), sr=None, mono=False)
+            return audio.ndim == 2  # True if stereo, False if mono
+        except Exception:
+            # If we can't determine, assume mono (safer default)
+            return False
+
     def _start_transcription(self) -> None:
         """Start the transcription stage."""
         self.stage_started.emit("transcription")
 
         # Choose worker based on Hindi mode
         if self._use_hindi_stt:
+            # Check if audio is actually stereo before using dual-channel mode
+            is_stereo = self._check_if_stereo(self._audio_path)
+
             # Use HindiSTT for Hindi-English (Hinglish) transcription
-            if self._dual_channel:
+            if self._dual_channel and is_stereo:
                 self._transcription_worker = DualChannelHindiSTTWorker(
                     audio_path=str(self._audio_path),
                     use_gpu=self._use_gpu,
+                    model_variant=self._hindi_model_variant,
+                    use_preprocessing=self._use_preprocessing,
                 )
             else:
+                # Use single-channel for mono audio (most common)
                 self._transcription_worker = HindiSTTWorker(
                     audio_path=str(self._audio_path),
                     use_gpu=self._use_gpu,
+                    model_variant=self._hindi_model_variant,
+                    use_diarization=self._use_diarization,
+                    num_speakers=2,  # Assume Agent + Customer
+                    use_preprocessing=self._use_preprocessing,
                 )
         else:
+            # Check if audio is actually stereo before using dual-channel mode
+            is_stereo = self._check_if_stereo(self._audio_path)
+
             # Use standard Whisper
-            if self._dual_channel:
+            if self._dual_channel and is_stereo:
                 self._transcription_worker = DualChannelTranscriptionWorker(
                     audio_path=str(self._audio_path),
                     model_name=self._whisper_model,
                     language=self._language,
                     use_gpu=self._use_gpu,
+                    use_preprocessing=self._use_preprocessing,
                 )
             else:
+                # Use single-channel for mono audio (most common)
                 self._transcription_worker = TranscriptionWorker(
                     audio_path=str(self._audio_path),
                     model_name=self._whisper_model,
                     language=self._language,
                     use_gpu=self._use_gpu,
+                    use_preprocessing=self._use_preprocessing,
+                    use_diarization=self._use_diarization,
+                    num_speakers=2,  # Assume Agent + Customer
                 )
 
         self._transcription_worker.progress.connect(

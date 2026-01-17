@@ -2,33 +2,53 @@
 LocalMind Hindi STT Worker
 
 Background worker for Hindi-English (Hinglish) transcription using
-the fine-tuned Whisper model from Svetozar1993/HindiSTT.
+Whisper-Hindi2Hinglish models from Oriserve.
+
+Supported Models:
+- Apex (default): 8x faster, better for noisy Indian audio, 0.8B params
+- Prime: Higher accuracy on clean audio, 2B params
 
 Features:
-- Romanized Hindi output (Hinglish)
-- Noise resistant
-- Low hallucination
-- Optimized for Indian call centers
+- Hinglish language support (reduces grammatical errors)
+- 40%+ better performance than base Whisper Large V3
+- Noise-resistant design for Indian environments
+- Hallucination mitigation
+- Optimized for call centers
 """
 
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from dataclasses import dataclass, field
 
 from localmind.workers.base import BaseWorker
 from localmind.workers.transcription_worker import TranscriptionSegment, TranscriptionResult
 
+# Try to import diarization - it's optional
+try:
+    from localmind.workers.diarization_worker import DiarizationWorker, combine_diarization_with_transcription
+    DIARIZATION_AVAILABLE = True
+except ImportError:
+    DIARIZATION_AVAILABLE = False
+
+# Available Hindi models
+HINDI_MODELS = {
+    "apex": "Oriserve/Whisper-Hindi2Hinglish-Apex",    # Default: 8x faster, better for noisy audio
+    "prime": "Oriserve/Whisper-Hindi2Hinglish-Prime",  # Higher accuracy on clean audio
+}
+
 
 class HindiSTTWorker(BaseWorker):
     """Worker for Hindi-English transcription using HindiSTT model."""
-
-    MODEL_ID = "Svetozar1993/HindiSTT"
 
     def __init__(
         self,
         audio_path: str,
         use_gpu: bool = True,
         use_flash_attention: bool = False,
+        model_variant: Literal["apex", "prime"] = "apex",
+        use_diarization: bool = False,
+        num_speakers: Optional[int] = 2,
+        use_preprocessing: bool = True,
         parent=None,
     ):
         """Initialize Hindi STT worker.
@@ -37,17 +57,27 @@ class HindiSTTWorker(BaseWorker):
             audio_path: Path to audio file.
             use_gpu: Whether to use GPU acceleration.
             use_flash_attention: Use Flash Attention 2 for faster inference.
+            model_variant: Which model to use - "apex" (fast, noisy audio) or "prime" (accurate, clean audio).
+            use_diarization: Whether to use speaker diarization (auto-detects speakers).
+            num_speakers: Expected number of speakers (None for auto-detection).
+            use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction).
             parent: Parent QObject.
         """
         super().__init__(parent)
         self._audio_path = Path(audio_path)
         self._use_gpu = use_gpu
         self._use_flash_attention = use_flash_attention
+        self._model_variant = model_variant
+        self._model_id = HINDI_MODELS[model_variant]
+        self._use_diarization = use_diarization
+        self._num_speakers = num_speakers
+        self._use_preprocessing = use_preprocessing
         self._pipe = None
 
     def do_work(self) -> TranscriptionResult:
         """Perform Hindi-English transcription."""
-        self.report_progress(0, "Loading HindiSTT model...")
+        model_name = "Apex" if self._model_variant == "apex" else "Prime"
+        self.report_progress(0, f"Loading Hindi model ({model_name})...")
 
         if self.check_stop():
             return None
@@ -64,17 +94,24 @@ class HindiSTTWorker(BaseWorker):
         # Transcribe
         result = self._transcribe()
 
-        self.report_progress(90, "Processing results...")
+        self.report_progress(60, "Processing transcription...")
 
-        # Build result with segments if available
+        # Build single segment from chunked transcription
+        full_text = result.get("text", "").strip()
         segments = []
-        if "chunks" in result:
-            for chunk in result["chunks"]:
-                segments.append(TranscriptionSegment(
-                    start=chunk.get("timestamp", [0, 0])[0] or 0,
-                    end=chunk.get("timestamp", [0, 0])[1] or 0,
-                    text=chunk.get("text", "").strip(),
-                ))
+
+        if full_text:
+            segments.append(TranscriptionSegment(
+                start=0.0,
+                end=0.0,
+                text=full_text,
+                speaker=None,  # Will be set by diarization if enabled
+            ))
+
+        # Apply speaker diarization if enabled
+        if self._use_diarization and DIARIZATION_AVAILABLE and segments:
+            self.report_progress(70, "Running speaker diarization...")
+            segments = self._apply_diarization(segments)
 
         transcription = TranscriptionResult(
             text=result["text"].strip(),
@@ -85,13 +122,68 @@ class HindiSTTWorker(BaseWorker):
         self.report_progress(100, "Hindi-English transcription complete")
         return transcription
 
+    def _apply_diarization(self, segments: List[TranscriptionSegment]) -> List[TranscriptionSegment]:
+        """Apply speaker diarization to segments."""
+        try:
+            # Run diarization
+            diarization_worker = DiarizationWorker(
+                audio_path=str(self._audio_path),
+                num_speakers=self._num_speakers,
+                min_speakers=1,
+                max_speakers=10,
+                use_gpu=self._use_gpu,
+            )
+
+            diarization_result = diarization_worker.do_work()
+
+            if not diarization_result or not diarization_result.segments:
+                return segments  # Return original segments if diarization fails
+
+            # Combine transcription with diarization
+            segments_dicts = [
+                {"start": s.start, "end": s.end, "text": s.text}
+                for s in segments
+            ]
+
+            combined = combine_diarization_with_transcription(
+                segments_dicts,
+                diarization_result.segments
+            )
+
+            # Convert back to TranscriptionSegment objects
+            # Map SPEAKER_00 -> Agent, SPEAKER_01 -> Customer
+            speaker_map = {}
+            for i, speaker_label in enumerate(sorted(set(s["speaker"] for s in combined))):
+                if i == 0:
+                    speaker_map[speaker_label] = "Agent"
+                elif i == 1:
+                    speaker_map[speaker_label] = "Customer"
+                else:
+                    speaker_map[speaker_label] = f"Speaker_{i+1}"
+
+            result_segments = []
+            for seg in combined:
+                speaker = speaker_map.get(seg["speaker"], seg["speaker"])
+                result_segments.append(TranscriptionSegment(
+                    start=seg["start"],
+                    end=seg["end"],
+                    text=seg["text"],
+                    speaker=speaker,
+                ))
+
+            return result_segments
+
+        except Exception as e:
+            print(f"Diarization failed: {e}, continuing without speaker labels")
+            return segments  # Return original segments if diarization fails
+
     def _load_model(self) -> None:
-        """Load the HindiSTT model."""
+        """Load the HindiSTT model with optimized parameters."""
         import os
 
         try:
             import torch
-            from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+            from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
         except ImportError:
             raise ImportError(
                 "transformers not installed. Install with: pip install transformers torch"
@@ -100,23 +192,23 @@ class HindiSTTWorker(BaseWorker):
         # Determine device and dtype
         if self._use_gpu:
             if torch.cuda.is_available():
-                device = "cuda:0"
-                torch_dtype = torch.float16
+                self._device = "cuda:0"
+                self._dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"  # Apple Silicon GPU
-                torch_dtype = torch.float16
+                self._device = "mps"  # Apple Silicon GPU
+                self._dtype = torch.float16
             else:
-                device = "cpu"
-                torch_dtype = torch.float32
+                self._device = "cpu"
+                self._dtype = torch.float32
         else:
-            device = "cpu"
-            torch_dtype = torch.float32
+            self._device = "cpu"
+            self._dtype = torch.float32
 
-        self.report_progress(10, f"Loading model on {device}...")
+        self.report_progress(3, f"Loading model on {self._device}...")
 
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
-        target_device = "cpu" if device == "mps" else device
+        target_device = "cpu" if self._device == "mps" else self._device
         def patched_load(*args, **kwargs):
             if 'map_location' not in kwargs:
                 kwargs['map_location'] = torch.device(target_device)
@@ -125,59 +217,214 @@ class HindiSTTWorker(BaseWorker):
 
         try:
             model_kwargs = {
-                "torch_dtype": torch_dtype,
+                "torch_dtype": self._dtype,
                 "low_cpu_mem_usage": True,
+                "use_safetensors": True,
             }
 
-            if self._use_flash_attention and device not in ("cpu", "mps"):
+            if self._use_flash_attention and self._device not in ("cpu", "mps"):
                 try:
                     model_kwargs["attn_implementation"] = "flash_attention_2"
                 except Exception:
                     pass
 
-            model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                self.MODEL_ID,
+            # Download and load model
+            self.report_progress(5, f"Downloading {self._model_id}...")
+
+            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                self._model_id,
                 **model_kwargs
             )
-            model.to(device)
 
-            processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+            self.report_progress(15, "Moving model to device...")
+            self._model = self._model.to(self._device)
+            self._model.eval()
 
-            self._pipe = pipeline(
-                "automatic-speech-recognition",
-                model=model,
-                tokenizer=processor.tokenizer,
-                feature_extractor=processor.feature_extractor,
-                torch_dtype=torch_dtype,
-                device=device,
-                generate_kwargs={"task": "transcribe", "language": "en"},
-            )
+            self.report_progress(20, "Loading processor...")
+            self._processor = AutoProcessor.from_pretrained(self._model_id)
+
         finally:
             torch.load = original_load
 
         self.report_progress(25, "Model loaded successfully")
 
     def _transcribe(self) -> Dict[str, Any]:
-        """Transcribe audio file."""
-        result = self._pipe(
-            str(self._audio_path),
-            return_timestamps=True,
-        )
-        return result
+        """Transcribe audio file with chunking to avoid timestamp issues."""
+        import tempfile
+        import soundfile as sf
+        import numpy as np
+        from localmind.audio.preprocessing import preprocess_audio_for_transcription
+
+        # Load and preprocess audio
+        if self._use_preprocessing:
+            self.report_progress(35, "Preprocessing audio (volume leveling, noise reduction)...")
+            try:
+                audio, sr = preprocess_audio_for_transcription(
+                    str(self._audio_path),
+                    target_sr=16000,
+                    apply_compression=True,
+                    apply_gate=True,
+                    telephone_filter=False,
+                )
+            except Exception as e:
+                print(f"Warning: Audio preprocessing failed ({e}), using original audio")
+                import librosa
+                audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=True)
+        else:
+            import librosa
+            audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=True)
+
+        # Chunk audio with 5-second overlap for better boundary handling
+        chunk_duration = 25  # seconds (< 30s limit)
+        overlap_duration = 5  # seconds overlap
+        stride_duration = chunk_duration - overlap_duration  # 20 seconds
+
+        chunk_samples = chunk_duration * sr
+        stride_samples = stride_duration * sr
+        total_samples = len(audio)
+
+        # Calculate number of chunks with overlap
+        num_chunks = max(1, int(np.ceil((total_samples - chunk_samples) / stride_samples)) + 1)
+
+        print(f"Processing audio in {num_chunks} chunks (25s each, 5s overlap)...")
+
+        all_text = []
+        previous_text_end = ""  # Store end of previous chunk for deduplication
+
+        for i in range(num_chunks):
+            # Calculate chunk boundaries with overlap
+            start_sample = i * stride_samples
+            end_sample = min(start_sample + chunk_samples, total_samples)
+
+            # For the last chunk, make sure we get all remaining audio
+            if i == num_chunks - 1:
+                end_sample = total_samples
+
+            chunk = audio[start_sample:end_sample]
+
+            # Pad chunk to 30 seconds (Whisper requirement for mel features length 3000)
+            target_length = 30 * sr  # 30 seconds
+            if len(chunk) < target_length:
+                # Pad with zeros to reach 30 seconds
+                padding = target_length - len(chunk)
+                chunk = np.pad(chunk, (0, padding), mode='constant', constant_values=0)
+
+            # Transcribe chunk with optimized parameters
+            progress = 40 + int((i / num_chunks) * 50)
+            self.report_progress(progress, f"Transcribing chunk {i+1}/{num_chunks}...")
+
+            try:
+                # Process audio through processor
+                inputs = self._processor(
+                    chunk,
+                    sampling_rate=sr,
+                    return_tensors="pt",
+                    return_attention_mask=True
+                )
+
+                input_features = inputs.input_features.to(self._device, dtype=self._dtype)
+
+                # CRITICAL generation parameters for maximum word capture
+                generate_kwargs = {
+                    # Language and task (suppress warnings)
+                    "language": "en",  # Hindi-English mixed
+                    "task": "transcribe",
+
+                    # Temperature fallback for difficult code-mixed speech
+                    "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
+
+                    # CRITICAL: Low threshold to capture quiet speakers
+                    "no_speech_threshold": 0.3,  # Default 0.6 causes missing words!
+
+                    # Relaxed hallucination detection for better recall
+                    "compression_ratio_threshold": 2.4,  # Default 1.35 too aggressive
+                    "logprob_threshold": -1.0,
+
+                    # Don't condition on previous tokens for better independence
+                    "condition_on_prev_tokens": False,
+
+                    # Generation settings
+                    "max_new_tokens": 444,  # Leave room for special tokens
+                    "num_beams": 1,
+                    "do_sample": False,
+                }
+
+                # Generate transcription
+                import torch
+                with torch.no_grad():
+                    try:
+                        generated_ids = self._model.generate(
+                            input_features,
+                            **generate_kwargs
+                        )
+                    except Exception:
+                        # Fallback for older transformers
+                        generated_ids = self._model.generate(
+                            input_features,
+                            max_new_tokens=444,
+                            num_beams=1,
+                            do_sample=False
+                        )
+
+                # Decode
+                text = self._processor.batch_decode(
+                    generated_ids,
+                    skip_special_tokens=True
+                )[0].strip()
+
+                if text:
+                    if i == 0:
+                        # First chunk - keep everything
+                        all_text.append(text)
+                        # Store last few words for overlap detection
+                        words = text.split()
+                        previous_text_end = " ".join(words[-10:]) if len(words) > 10 else text
+                    else:
+                        # Subsequent chunks - try to remove duplicate overlap
+                        # Simple deduplication: check if start of current text matches end of previous
+                        words = text.split()
+                        deduplicated = False
+
+                        # Try to find overlap by checking first N words against previous chunk's end
+                        for overlap_words in range(min(15, len(words)), 0, -1):
+                            chunk_start = " ".join(words[:overlap_words])
+                            if chunk_start in previous_text_end:
+                                # Found overlap - skip these words
+                                remaining_text = " ".join(words[overlap_words:])
+                                if remaining_text:
+                                    all_text.append(remaining_text)
+                                    # Update previous_text_end
+                                    remaining_words = remaining_text.split()
+                                    previous_text_end = " ".join(remaining_words[-10:]) if len(remaining_words) > 10 else remaining_text
+                                deduplicated = True
+                                break
+
+                        if not deduplicated:
+                            # No clear overlap found - keep all (better to duplicate than lose words)
+                            all_text.append(text)
+                            previous_text_end = " ".join(words[-10:]) if len(words) > 10 else text
+
+            except Exception as e:
+                print(f"Warning: Chunk {i} failed ({e}), skipping")
+
+        # Combine all chunks
+        full_text = " ".join(all_text)
+
+        return {"text": full_text}
 
 
 class DualChannelHindiSTTWorker(BaseWorker):
     """Worker for dual-channel Hindi-English transcription with speaker diarization."""
-
-    MODEL_ID = "Svetozar1993/HindiSTT"
 
     def __init__(
         self,
         audio_path: str,
         use_gpu: bool = True,
         use_flash_attention: bool = False,
+        model_variant: Literal["apex", "prime"] = "apex",
         agent_channel: int = 0,
         customer_channel: int = 1,
+        use_preprocessing: bool = True,
         parent=None,
     ):
         """Initialize dual-channel Hindi STT worker.
@@ -186,21 +433,30 @@ class DualChannelHindiSTTWorker(BaseWorker):
             audio_path: Path to audio file.
             use_gpu: Whether to use GPU acceleration.
             use_flash_attention: Use Flash Attention 2 for faster inference.
+            model_variant: Which model to use - "apex" (fast, noisy audio) or "prime" (accurate, clean audio).
             agent_channel: Channel index for agent audio.
             customer_channel: Channel index for customer audio.
+            use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction).
             parent: Parent QObject.
         """
         super().__init__(parent)
         self._audio_path = Path(audio_path)
         self._use_gpu = use_gpu
         self._use_flash_attention = use_flash_attention
+        self._model_variant = model_variant
+        self._model_id = HINDI_MODELS[model_variant]
         self._agent_channel = agent_channel
         self._customer_channel = customer_channel
-        self._pipe = None
+        self._use_preprocessing = use_preprocessing
+        self._model = None
+        self._processor = None
+        self._device = None
+        self._dtype = None
 
     def do_work(self) -> TranscriptionResult:
         """Perform dual-channel Hindi-English transcription."""
-        self.report_progress(0, "Loading HindiSTT model...")
+        model_name = "Apex" if self._model_variant == "apex" else "Prime"
+        self.report_progress(0, f"Loading Hindi model ({model_name})...")
 
         if self.check_stop():
             return None
@@ -235,49 +491,30 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
         customer_result = self._transcribe_audio(customer_audio)
 
-        # Merge and sort segments
+        # Merge transcripts from chunked processing
         self.report_progress(85, "Merging transcripts...")
 
         all_segments = []
 
-        # Process agent segments
-        if "chunks" in agent_result:
-            for chunk in agent_result["chunks"]:
-                ts = chunk.get("timestamp", [0, 0])
-                all_segments.append(TranscriptionSegment(
-                    start=ts[0] or 0,
-                    end=ts[1] or 0,
-                    text=chunk.get("text", "").strip(),
-                    speaker="Agent",
-                ))
-        else:
+        # Add agent transcription
+        agent_text = agent_result.get("text", "").strip()
+        if agent_text:
             all_segments.append(TranscriptionSegment(
-                start=0,
-                end=0,
-                text=agent_result.get("text", "").strip(),
+                start=0.0,
+                end=0.0,
+                text=agent_text,
                 speaker="Agent",
             ))
 
-        # Process customer segments
-        if "chunks" in customer_result:
-            for chunk in customer_result["chunks"]:
-                ts = chunk.get("timestamp", [0, 0])
-                all_segments.append(TranscriptionSegment(
-                    start=ts[0] or 0,
-                    end=ts[1] or 0,
-                    text=chunk.get("text", "").strip(),
-                    speaker="Customer",
-                ))
-        else:
+        # Add customer transcription
+        customer_text = customer_result.get("text", "").strip()
+        if customer_text:
             all_segments.append(TranscriptionSegment(
-                start=0,
-                end=0,
-                text=customer_result.get("text", "").strip(),
+                start=0.0,
+                end=0.0,
+                text=customer_text,
                 speaker="Customer",
             ))
-
-        # Sort by start time
-        all_segments.sort(key=lambda s: s.start)
 
         # Build full text
         full_text = "\n".join(
@@ -295,12 +532,12 @@ class DualChannelHindiSTTWorker(BaseWorker):
         return transcription
 
     def _load_model(self) -> None:
-        """Load the HindiSTT model."""
+        """Load the HindiSTT model with optimized parameters."""
         import os
 
         try:
             import torch
-            from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+            from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
         except ImportError:
             raise ImportError(
                 "transformers not installed. Install with: pip install transformers torch"
@@ -309,23 +546,23 @@ class DualChannelHindiSTTWorker(BaseWorker):
         # Determine device and dtype
         if self._use_gpu:
             if torch.cuda.is_available():
-                device = "cuda:0"
-                torch_dtype = torch.float16
+                self._device = "cuda:0"
+                self._dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"  # Apple Silicon GPU
-                torch_dtype = torch.float16
+                self._device = "mps"  # Apple Silicon GPU
+                self._dtype = torch.float16
             else:
-                device = "cpu"
-                torch_dtype = torch.float32
+                self._device = "cpu"
+                self._dtype = torch.float32
         else:
-            device = "cpu"
-            torch_dtype = torch.float32
+            self._device = "cpu"
+            self._dtype = torch.float32
 
-        self.report_progress(10, f"Loading model on {device}...")
+        self.report_progress(3, f"Loading model on {self._device}...")
 
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
-        target_device = "cpu" if device == "mps" else device
+        target_device = "cpu" if self._device == "mps" else self._device
         def patched_load(*args, **kwargs):
             if 'map_location' not in kwargs:
                 kwargs['map_location'] = torch.device(target_device)
@@ -334,75 +571,225 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
         try:
             model_kwargs = {
-                "torch_dtype": torch_dtype,
+                "torch_dtype": self._dtype,
                 "low_cpu_mem_usage": True,
+                "use_safetensors": True,
             }
 
-            if self._use_flash_attention and device not in ("cpu", "mps"):
+            if self._use_flash_attention and self._device not in ("cpu", "mps"):
                 try:
                     model_kwargs["attn_implementation"] = "flash_attention_2"
                 except Exception:
                     pass
 
-            model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                self.MODEL_ID,
+            # Download and load model
+            self.report_progress(5, f"Downloading {self._model_id}...")
+
+            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                self._model_id,
                 **model_kwargs
             )
-            model.to(device)
 
-            processor = AutoProcessor.from_pretrained(self.MODEL_ID)
+            self.report_progress(10, "Moving model to device...")
+            self._model = self._model.to(self._device)
+            self._model.eval()
 
-            self._pipe = pipeline(
-                "automatic-speech-recognition",
-                model=model,
-                tokenizer=processor.tokenizer,
-                feature_extractor=processor.feature_extractor,
-                torch_dtype=torch_dtype,
-                device=device,
-                generate_kwargs={"task": "transcribe", "language": "en"},
-            )
+            self.report_progress(15, "Loading processor...")
+            self._processor = AutoProcessor.from_pretrained(self._model_id)
+
         finally:
             torch.load = original_load
 
         self.report_progress(18, "Model loaded successfully")
 
     def _load_channels(self):
-        """Load separate audio channels."""
+        """Load and optionally preprocess separate audio channels with independent normalization."""
+        import librosa
+        import tempfile
+        import soundfile as sf
+
         try:
-            import librosa
-            import numpy as np
-            import tempfile
-            import soundfile as sf
-        except ImportError:
-            raise ImportError(
-                "librosa and soundfile not installed. Install with: pip install librosa soundfile"
-            )
+            # Check if audio is stereo
+            audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=False)
+            is_stereo = audio.ndim == 2
+        except Exception as e:
+            raise RuntimeError(f"Failed to load audio: {e}")
 
-        # Load stereo audio
-        audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=False)
+        # Apply preprocessing if enabled
+        if self._use_preprocessing:
+            from localmind.audio.preprocessing import preprocess_dual_channel_audio, preprocess_audio_for_transcription
 
-        if audio.ndim == 1:
-            # Mono audio - duplicate to both channels
+            if not is_stereo:
+                # Mono audio - use single preprocessing
+                try:
+                    processed_audio, sr = preprocess_audio_for_transcription(
+                        str(self._audio_path),
+                        target_sr=16000,
+                        apply_compression=True,
+                        apply_gate=True,
+                        telephone_filter=False,  # Disabled - too aggressive for MP3/compressed audio
+                    )
+
+                    # Save to temp file
+                    import numpy as np
+                    temp_path = str(Path(tempfile.gettempdir()) / "preprocessed_mono.wav")
+                    # Ensure audio is float32 and in valid range [-1, 1]
+                    processed_audio = np.clip(processed_audio, -1.0, 1.0).astype(np.float32)
+                    sf.write(temp_path, processed_audio, sr, subtype='FLOAT')
+                    return temp_path, temp_path
+                except Exception as e:
+                    print(f"Warning: Audio preprocessing failed ({e}), using original audio")
+
+            else:
+                # Stereo audio - preprocess each channel independently (CRITICAL for uneven volumes)
+                try:
+                    agent_path, customer_path = preprocess_dual_channel_audio(
+                        str(self._audio_path),
+                        agent_channel=self._agent_channel,
+                        customer_channel=self._customer_channel,
+                        target_sr=16000,
+                    )
+                    return agent_path, customer_path
+                except Exception as e:
+                    print(f"Warning: Dual-channel preprocessing failed ({e}), using basic channel split")
+
+        # Fallback: No preprocessing or preprocessing failed
+        if not is_stereo:
+            # Mono - return same path for both channels
             return str(self._audio_path), str(self._audio_path)
 
-        # Extract channels and save to temp files
+        # Stereo - basic channel extraction without preprocessing
+        import numpy as np
         agent_audio = audio[self._agent_channel]
         customer_audio = audio[self._customer_channel]
 
-        # Save to temp files for the pipeline
         temp_dir = tempfile.gettempdir()
-        agent_path = Path(temp_dir) / "agent_channel.wav"
-        customer_path = Path(temp_dir) / "customer_channel.wav"
+        agent_path = str(Path(temp_dir) / "agent_channel.wav")
+        customer_path = str(Path(temp_dir) / "customer_channel.wav")
 
-        sf.write(str(agent_path), agent_audio, sr)
-        sf.write(str(customer_path), customer_audio, sr)
+        # Ensure audio is float32 and in valid range
+        agent_audio = np.clip(agent_audio, -1.0, 1.0).astype(np.float32)
+        customer_audio = np.clip(customer_audio, -1.0, 1.0).astype(np.float32)
 
-        return str(agent_path), str(customer_path)
+        sf.write(agent_path, agent_audio, sr, subtype='FLOAT')
+        sf.write(customer_path, customer_audio, sr, subtype='FLOAT')
+
+        return agent_path, customer_path
 
     def _transcribe_audio(self, audio_path: str) -> Dict[str, Any]:
-        """Transcribe audio file."""
-        result = self._pipe(
-            audio_path,
-            return_timestamps=True,
-        )
-        return result
+        """Transcribe audio file with overlapping chunks."""
+        import soundfile as sf
+        import numpy as np
+        import tempfile
+
+        # Load audio
+        audio, sr = sf.read(audio_path)
+
+        # Chunk with 5-second overlap
+        chunk_duration = 25  # seconds
+        overlap_duration = 5  # seconds
+        stride_duration = chunk_duration - overlap_duration  # 20 seconds
+
+        chunk_samples = chunk_duration * sr
+        stride_samples = stride_duration * sr
+        total_samples = len(audio)
+
+        num_chunks = max(1, int(np.ceil((total_samples - chunk_samples) / stride_samples)) + 1)
+
+        all_text = []
+        previous_text_end = ""
+
+        for i in range(num_chunks):
+            start_sample = i * stride_samples
+            end_sample = min(start_sample + chunk_samples, total_samples)
+
+            if i == num_chunks - 1:
+                end_sample = total_samples
+
+            chunk = audio[start_sample:end_sample]
+
+            # Pad chunk to 30 seconds (Whisper requirement)
+            target_length = 30 * sr
+            if len(chunk) < target_length:
+                padding = target_length - len(chunk)
+                chunk = np.pad(chunk, (0, padding), mode='constant', constant_values=0)
+
+            # Transcribe chunk with optimized parameters
+            try:
+                # Process audio through processor
+                inputs = self._processor(
+                    chunk,
+                    sampling_rate=sr,
+                    return_tensors="pt",
+                    return_attention_mask=True
+                )
+
+                input_features = inputs.input_features.to(self._device, dtype=self._dtype)
+
+                # CRITICAL generation parameters
+                generate_kwargs = {
+                    "language": "en",
+                    "task": "transcribe",
+                    "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
+                    "no_speech_threshold": 0.3,  # CRITICAL for capturing quiet speakers
+                    "compression_ratio_threshold": 2.4,
+                    "logprob_threshold": -1.0,
+                    "condition_on_prev_tokens": False,
+                    "max_new_tokens": 444,
+                    "num_beams": 1,
+                    "do_sample": False,
+                }
+
+                # Generate transcription
+                import torch
+                with torch.no_grad():
+                    try:
+                        generated_ids = self._model.generate(
+                            input_features,
+                            **generate_kwargs
+                        )
+                    except Exception:
+                        generated_ids = self._model.generate(
+                            input_features,
+                            max_new_tokens=444,
+                            num_beams=1,
+                            do_sample=False
+                        )
+
+                # Decode
+                text = self._processor.batch_decode(
+                    generated_ids,
+                    skip_special_tokens=True
+                )[0].strip()
+
+                if text:
+                    if i == 0:
+                        all_text.append(text)
+                        words = text.split()
+                        previous_text_end = " ".join(words[-10:]) if len(words) > 10 else text
+                    else:
+                        # Deduplicate overlap
+                        words = text.split()
+                        deduplicated = False
+
+                        for overlap_words in range(min(15, len(words)), 0, -1):
+                            chunk_start = " ".join(words[:overlap_words])
+                            if chunk_start in previous_text_end:
+                                remaining_text = " ".join(words[overlap_words:])
+                                if remaining_text:
+                                    all_text.append(remaining_text)
+                                    remaining_words = remaining_text.split()
+                                    previous_text_end = " ".join(remaining_words[-10:]) if len(remaining_words) > 10 else remaining_text
+                                deduplicated = True
+                                break
+
+                        if not deduplicated:
+                            all_text.append(text)
+                            previous_text_end = " ".join(words[-10:]) if len(words) > 10 else text
+
+            except Exception as e:
+                print(f"Warning: Dual-channel chunk {i} failed ({e}), skipping")
+
+        # Combine chunks
+        full_text = " ".join(all_text)
+        return {"text": full_text}

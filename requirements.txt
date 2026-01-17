@@ -15,6 +15,10 @@ torch>=2.5.0
 torchaudio>=2.5.0
 transformers>=4.47.0
 huggingface_hub>=0.27.0
+openai-whisper>=20231117  # Standard Whisper for all languages except Hindi-English
+
+# Speaker Diarization (OPTIONAL - requires Python 3.10 or create separate env)
+# pyannote.audio>=3.1.0  # Uncomment only if using Python 3.10 or install separately
 
 # Local LLM
 llama-cpp-python>=0.2.0
@@ -22,11 +26,6 @@ llama-cpp-python>=0.2.0
 # Cloud LLM APIs (optional)
 openai>=1.58.0
 anthropic>=0.40.0
-
-# PDF Generation
-weasyprint>=61.0
-matplotlib>=3.8.0
-Jinja2>=3.1.0
 
 # Utilities
 rich>=13.9.0

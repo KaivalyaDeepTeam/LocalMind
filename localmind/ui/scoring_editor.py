@@ -669,7 +669,7 @@ class ScoringEditorDialog(QDialog):
             <li><b>name</b>: Internal identifier (lowercase, underscores)</li>
             <li><b>display_name</b>: Human-readable name shown in UI</li>
             <li><b>description</b>: What this parameter measures</li>
-            <li><b>category</b>: "compliance", "quality", or "efficiency"</li>
+            <li><b>category</b>: "compliance", "quality", "communication", or "custom"</li>
             <li><b>max_score</b>: Maximum points (typically 10)</li>
             <li><b>weight</b>: Importance multiplier (0.1 to 3.0)</li>
             <li><b>enabled</b>: Whether to include in scoring</li>

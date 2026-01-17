@@ -138,11 +138,6 @@ class MainWindow(QMainWindow):
         export_json.triggered.connect(self._on_export_json)
         file_menu.addAction(export_json)
 
-        export_pdf = QAction(self.tr("Export as &PDF..."), self)
-        export_pdf.setShortcut("Ctrl+Shift+P")
-        export_pdf.triggered.connect(self._on_export_pdf)
-        file_menu.addAction(export_pdf)
-
         file_menu.addSeparator()
 
         quit_action = QAction(self.tr("&Quit"), self)
@@ -269,20 +264,59 @@ class MainWindow(QMainWindow):
             for p in profile.get_enabled_parameters()
         ]
 
+        # Language mode mapping
+        LANGUAGE_CODE_MAP = {
+            "auto": None,  # Auto-detect
+            "english": "en",
+            "hindi-english": "hi",  # Special: uses HindiSTT
+            "spanish": "es",
+            "french": "fr",
+            "german": "de",
+            "italian": "it",
+            "portuguese": "pt",
+            "russian": "ru",
+            "japanese": "ja",
+            "korean": "ko",
+            "chinese": "zh",
+            "arabic": "ar",
+            "turkish": "tr",
+            "dutch": "nl",
+        }
+
         # Check if Hindi mode is enabled from mode selector
         use_hindi_stt = False
+        hindi_model_variant = "apex"  # Default
+        use_preprocessing = True  # Default ON
+        language_code = None  # Default to auto-detect
+
         if self._mode_selector.get_mode() == ProcessingMode.OFFLINE:
-            use_hindi_stt = self._mode_selector.is_hindi_mode()
+            language_mode = self._mode_selector.get_language_mode()
+            use_hindi_stt = (language_mode == "hindi-english")
+
+            if use_hindi_stt:
+                hindi_model_variant = self._mode_selector.get_hindi_model_variant()
+
+            # Map language mode to Whisper language code
+            language_code = LANGUAGE_CODE_MAP.get(language_mode, None)
+
+            # Get audio preprocessing setting (applies to all modes)
+            use_preprocessing = self._mode_selector.is_preprocessing_enabled()
+
+        # Get diarization setting from app settings (not mode selector)
+        use_diarization = settings.transcription.enable_diarization
 
         # Get whisper model from mode selector (for offline mode)
         whisper_model = self._mode_selector.get_whisper_model()
 
         self._orchestrator.configure(
             whisper_model=whisper_model,
-            language=settings.transcription.language if settings.transcription.language != "auto" else None,
+            language=language_code,
             use_gpu=settings.transcription.use_gpu,
             dual_channel=True,
             use_hindi_stt=use_hindi_stt,
+            hindi_model_variant=hindi_model_variant,
+            use_diarization=use_diarization,
+            use_preprocessing=use_preprocessing,
             scoring_parameters=scoring_parameters,
             transcription_only=not self._mode_selector.is_scoring_enabled(),
         )
@@ -351,7 +385,9 @@ class MainWindow(QMainWindow):
         # Start processing
         mode = self._mode_selector.get_mode()
         if mode == ProcessingMode.OFFLINE and self._mode_selector.is_hindi_mode():
-            self._status_label.setText(f"Processing (Hindi-English): {self._current_file.name}")
+            variant = self._mode_selector.get_hindi_model_variant()
+            variant_name = "Apex" if variant == "apex" else "Prime"
+            self._status_label.setText(f"Processing (Hindi {variant_name}): {self._current_file.name}")
         else:
             self._status_label.setText(f"Processing: {self._current_file.name}")
 
@@ -537,14 +573,6 @@ class MainWindow(QMainWindow):
             self._results_viewer.export_json(filepath)
 
     @Slot()
-    def _on_export_pdf(self) -> None:
-        filepath, _ = QFileDialog.getSaveFileName(
-            self, "Export PDF", str(Path.home() / "report.pdf"), "PDF (*.pdf)"
-        )
-        if filepath:
-            self._results_viewer.export_pdf(filepath)
-
-    @Slot()
     def _on_edit_scoring(self) -> None:
         """Open the scoring parameters editor."""
         dialog = ScoringEditorDialog(self)
@@ -590,7 +618,6 @@ class MainWindow(QMainWindow):
             <tr><td><b>Escape</b></td><td>Stop processing</td></tr>
             <tr><td><b>Ctrl+Shift+T</b></td><td>Export transcript</td></tr>
             <tr><td><b>Ctrl+Shift+J</b></td><td>Export as JSON</td></tr>
-            <tr><td><b>Ctrl+Shift+P</b></td><td>Export as PDF</td></tr>
             <tr><td><b>Ctrl+Shift+S</b></td><td>Edit scoring parameters</td></tr>
             <tr><td><b>Ctrl+,</b></td><td>Open settings</td></tr>
             <tr><td><b>Ctrl+/</b></td><td>Show shortcuts</td></tr>

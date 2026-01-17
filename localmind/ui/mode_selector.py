@@ -242,8 +242,21 @@ class OfflineSettings(QFrame):
     settings_changed = Signal()
 
     LANGUAGE_MODES = [
-        ("english", "🇬🇧 English (Whisper)"),
-        ("hindi-english", "🇮🇳 Hindi-English (HindiSTT)"),
+        ("auto", "Auto-detect Language"),
+        ("english", "English"),
+        ("hindi-english", "Hindi-English (HindiSTT)"),
+        ("spanish", "Spanish"),
+        ("french", "French"),
+        ("german", "German"),
+        ("italian", "Italian"),
+        ("portuguese", "Portuguese"),
+        ("russian", "Russian"),
+        ("japanese", "Japanese"),
+        ("korean", "Korean"),
+        ("chinese", "Chinese"),
+        ("arabic", "Arabic"),
+        ("turkish", "Turkish"),
+        ("dutch", "Dutch"),
     ]
 
     WHISPER_MODELS = [
@@ -309,11 +322,52 @@ class OfflineSettings(QFrame):
         whisper_layout.addLayout(self._whisper_row)
         layout.addWidget(self._whisper_container)
 
+        # Hindi model variant selection (only shown for Hindi mode)
+        self._hindi_model_row = QHBoxLayout()
+        hindi_model_label = QLabel(self.tr("Hindi Model"))
+        hindi_model_label.setObjectName("fieldLabel")
+        self._hindi_model_row.addWidget(hindi_model_label)
+
+        self._hindi_model_combo = QComboBox()
+        self._hindi_model_combo.setObjectName("hindiModelCombo")
+        self._hindi_model_combo.addItem("Apex (Fast, Noisy Audio) - Recommended", "apex")
+        self._hindi_model_combo.addItem("Prime (Accurate, Clean Audio)", "prime")
+        self._hindi_model_combo.setCurrentIndex(0)  # Default to Apex
+        self._hindi_model_combo.currentIndexChanged.connect(lambda: self.settings_changed.emit())
+        self._hindi_model_row.addWidget(self._hindi_model_combo, stretch=1)
+
+        # Create a widget to hold the Hindi model row so we can show/hide it
+        self._hindi_model_container = QWidget()
+        hindi_model_layout = QHBoxLayout(self._hindi_model_container)
+        hindi_model_layout.setContentsMargins(0, 0, 0, 0)
+        hindi_model_layout.addLayout(self._hindi_model_row)
+        self._hindi_model_container.setVisible(False)
+        layout.addWidget(self._hindi_model_container)
+
+        # Note: Diarization moved to Settings dialog (File > Settings > Transcription)
+        # This simplifies the main UI and groups all transcription settings together
+
+        # Audio preprocessing toggle (shown for ALL modes)
+        self._preprocessing_checkbox = QCheckBox(
+            self.tr("Apply Audio Preprocessing (Volume leveling, noise reduction)")
+        )
+        self._preprocessing_checkbox.setObjectName("preprocessingCheckbox")
+        self._preprocessing_checkbox.setChecked(True)  # Default ON - recommended for call recordings
+        self._preprocessing_checkbox.setToolTip(
+            self.tr("Recommended for call recordings:\n"
+                    "• Volume leveling (even out quiet/loud speakers)\n"
+                    "• Noise reduction and filtering\n"
+                    "• Telephone bandwidth optimization\n"
+                    "• Dynamic range compression\n\n"
+                    "Improves transcription quality for all languages.")
+        )
+        self._preprocessing_checkbox.stateChanged.connect(lambda: self.settings_changed.emit())
+        layout.addWidget(self._preprocessing_checkbox)
+
         # Hindi-English info (only shown for Hindi mode)
         self._hindi_info = QLabel(
-            self.tr("HindiSTT Model Selected") + "\n\n" +
-            self.tr("Uses a specialized Hindi-English speech recognition model") + "\n" +
-            self.tr("instead of Whisper. Outputs romanized text (Hinglish).") + "\n" +
+            self.tr("Hindi-English Specialized Model") + "\n\n" +
+            self.tr("Outputs romanized text (Hinglish).") + "\n" +
             self.tr("Optimized for Indian call centers with code-switching.")
         )
         self._hindi_info.setObjectName("hindiInfo")
@@ -331,6 +385,7 @@ class OfflineSettings(QFrame):
         """Handle language mode change."""
         is_hindi = self._language_combo.currentData() == "hindi-english"
         self._whisper_container.setVisible(not is_hindi)
+        self._hindi_model_container.setVisible(is_hindi)
         self._hindi_info.setVisible(is_hindi)
         self.settings_changed.emit()
 
@@ -352,6 +407,24 @@ class OfflineSettings(QFrame):
 
     def is_hindi_mode(self) -> bool:
         return self._language_combo.currentData() == "hindi-english"
+
+    def get_hindi_model_variant(self) -> str:
+        """Get the selected Hindi model variant (apex or prime)."""
+        return self._hindi_model_combo.currentData() or "apex"
+
+    def set_hindi_model_variant(self, variant: str) -> None:
+        """Set the Hindi model variant."""
+        idx = self._hindi_model_combo.findData(variant)
+        if idx >= 0:
+            self._hindi_model_combo.setCurrentIndex(idx)
+
+    def is_preprocessing_enabled(self) -> bool:
+        """Check if audio preprocessing is enabled."""
+        return self._preprocessing_checkbox.isChecked()
+
+    def set_preprocessing_enabled(self, enabled: bool) -> None:
+        """Set audio preprocessing enabled state."""
+        self._preprocessing_checkbox.setChecked(enabled)
 
 
 class ModeSelector(QWidget):
@@ -450,6 +523,18 @@ class ModeSelector(QWidget):
 
     def is_hindi_mode(self) -> bool:
         return self._offline_settings.is_hindi_mode()
+
+    def get_hindi_model_variant(self) -> str:
+        """Get the selected Hindi model variant."""
+        return self._offline_settings.get_hindi_model_variant()
+
+    def is_preprocessing_enabled(self) -> bool:
+        """Check if audio preprocessing is enabled."""
+        return self._offline_settings.is_preprocessing_enabled()
+
+    def set_preprocessing_enabled(self, enabled: bool) -> None:
+        """Set audio preprocessing enabled state."""
+        self._offline_settings.set_preprocessing_enabled(enabled)
 
     def set_mode(self, mode: ProcessingMode) -> None:
         self._mode_toggle.set_mode(mode)

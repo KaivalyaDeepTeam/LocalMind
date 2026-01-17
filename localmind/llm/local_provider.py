@@ -179,10 +179,22 @@ class LocalProvider(BaseLLMProvider):
 
         model_path = self._get_model_path()
         if not model_path.exists():
-            raise FileNotFoundError(
-                f"Model not found: {model_path}. "
-                f"Call download_model() first or provide a valid path."
-            )
+            # Auto-download model if it doesn't exist
+            if self._model in LOCAL_MODELS:
+                print(f"Model not found locally. Downloading {self._model}...")
+                try:
+                    model_path = await self.download_model()
+                    print(f"Model downloaded successfully to: {model_path}")
+                except Exception as e:
+                    raise FileNotFoundError(
+                        f"Failed to download model {self._model}: {e}\n"
+                        f"Please download manually or use an API provider (OpenAI/Anthropic)."
+                    )
+            else:
+                raise FileNotFoundError(
+                    f"Model not found: {model_path}. "
+                    f"Call download_model() first or provide a valid path."
+                )
 
         config = self._get_model_config()
         n_ctx = self._n_ctx or config.get("context_length", 4096)

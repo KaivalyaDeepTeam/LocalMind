@@ -1,15 +1,6 @@
-"""LocalMind report generation."""
+"""LocalMind report generation.
 
-from localmind.reports.pdf_generator import (
-    PDFReportGenerator,
-    ReportOptions,
-    ScoreChartGenerator,
-    generate_report,
-)
+PDF generation has been removed. Reports are exported as JSON and TXT.
+"""
 
-__all__ = [
-    "PDFReportGenerator",
-    "ReportOptions",
-    "ScoreChartGenerator",
-    "generate_report",
-]
+__all__ = []

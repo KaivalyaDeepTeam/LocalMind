@@ -39,6 +39,12 @@ class BaseWorker(QThread):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # CRITICAL: Set larger stack size for worker threads
+        # Default 544KB is too small for numpy/torch imports which trigger
+        # OpenBLAS parallel matrix operations. 8MB is sufficient.
+        self.setStackSize(8 * 1024 * 1024)  # 8 MB
+
         self._state = WorkerState.IDLE
         self._mutex = QMutex()
         self._pause_condition = QWaitCondition()
