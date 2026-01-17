@@ -23,13 +23,6 @@ from dataclasses import dataclass, field
 from localmind.workers.base import BaseWorker
 from localmind.workers.transcription_worker import TranscriptionSegment, TranscriptionResult
 
-# Try to import diarization - it's optional
-try:
-    from localmind.workers.diarization_worker import DiarizationWorker, combine_diarization_with_transcription
-    DIARIZATION_AVAILABLE = True
-except ImportError:
-    DIARIZATION_AVAILABLE = False
-
 # Available Hindi models
 HINDI_MODELS = {
     "apex": "Oriserve/Whisper-Hindi2Hinglish-Apex",    # Default: 8x faster, better for noisy audio
@@ -46,7 +39,6 @@ class HindiSTTWorker(BaseWorker):
         use_gpu: bool = True,
         use_flash_attention: bool = False,
         model_variant: Literal["apex", "prime"] = "apex",
-        use_diarization: bool = False,
         num_speakers: Optional[int] = 2,
         use_preprocessing: bool = True,
         parent=None,
@@ -58,7 +50,6 @@ class HindiSTTWorker(BaseWorker):
             use_gpu: Whether to use GPU acceleration.
             use_flash_attention: Use Flash Attention 2 for faster inference.
             model_variant: Which model to use - "apex" (fast, noisy audio) or "prime" (accurate, clean audio).
-            use_diarization: Whether to use speaker diarization (auto-detects speakers).
             num_speakers: Expected number of speakers (None for auto-detection).
             use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction).
             parent: Parent QObject.
@@ -69,7 +60,6 @@ class HindiSTTWorker(BaseWorker):
         self._use_flash_attention = use_flash_attention
         self._model_variant = model_variant
         self._model_id = HINDI_MODELS[model_variant]
-        self._use_diarization = use_diarization
         self._num_speakers = num_speakers
         self._use_preprocessing = use_preprocessing
         self._pipe = None
@@ -105,13 +95,7 @@ class HindiSTTWorker(BaseWorker):
                 start=0.0,
                 end=0.0,
                 text=full_text,
-                speaker=None,  # Will be set by diarization if enabled
             ))
-
-        # Apply speaker diarization if enabled
-        if self._use_diarization and DIARIZATION_AVAILABLE and segments:
-            self.report_progress(70, "Running speaker diarization...")
-            segments = self._apply_diarization(segments)
 
         transcription = TranscriptionResult(
             text=result["text"].strip(),
@@ -121,61 +105,6 @@ class HindiSTTWorker(BaseWorker):
 
         self.report_progress(100, "Hindi-English transcription complete")
         return transcription
-
-    def _apply_diarization(self, segments: List[TranscriptionSegment]) -> List[TranscriptionSegment]:
-        """Apply speaker diarization to segments."""
-        try:
-            # Run diarization
-            diarization_worker = DiarizationWorker(
-                audio_path=str(self._audio_path),
-                num_speakers=self._num_speakers,
-                min_speakers=1,
-                max_speakers=10,
-                use_gpu=self._use_gpu,
-            )
-
-            diarization_result = diarization_worker.do_work()
-
-            if not diarization_result or not diarization_result.segments:
-                return segments  # Return original segments if diarization fails
-
-            # Combine transcription with diarization
-            segments_dicts = [
-                {"start": s.start, "end": s.end, "text": s.text}
-                for s in segments
-            ]
-
-            combined = combine_diarization_with_transcription(
-                segments_dicts,
-                diarization_result.segments
-            )
-
-            # Convert back to TranscriptionSegment objects
-            # Map SPEAKER_00 -> Agent, SPEAKER_01 -> Customer
-            speaker_map = {}
-            for i, speaker_label in enumerate(sorted(set(s["speaker"] for s in combined))):
-                if i == 0:
-                    speaker_map[speaker_label] = "Agent"
-                elif i == 1:
-                    speaker_map[speaker_label] = "Customer"
-                else:
-                    speaker_map[speaker_label] = f"Speaker_{i+1}"
-
-            result_segments = []
-            for seg in combined:
-                speaker = speaker_map.get(seg["speaker"], seg["speaker"])
-                result_segments.append(TranscriptionSegment(
-                    start=seg["start"],
-                    end=seg["end"],
-                    text=seg["text"],
-                    speaker=speaker,
-                ))
-
-            return result_segments
-
-        except Exception as e:
-            print(f"Diarization failed: {e}, continuing without speaker labels")
-            return segments  # Return original segments if diarization fails
 
     def _load_model(self) -> None:
         """Load the HindiSTT model with optimized parameters."""
@@ -196,7 +125,7 @@ class HindiSTTWorker(BaseWorker):
                 self._dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                 self._device = "mps"  # Apple Silicon GPU
-                self._dtype = torch.float16
+                self._dtype = torch.float32  # Use float32 on MPS to avoid NaN errors
             else:
                 self._device = "cpu"
                 self._dtype = torch.float32
@@ -414,7 +343,7 @@ class HindiSTTWorker(BaseWorker):
 
 
 class DualChannelHindiSTTWorker(BaseWorker):
-    """Worker for dual-channel Hindi-English transcription with speaker diarization."""
+    """Worker for dual-channel Hindi-English transcription with separate channel processing."""
 
     def __init__(
         self,
@@ -503,7 +432,7 @@ class DualChannelHindiSTTWorker(BaseWorker):
                 start=0.0,
                 end=0.0,
                 text=agent_text,
-                speaker="Agent",
+                speaker="Agent",  # Assigned from channel 0
             ))
 
         # Add customer transcription
@@ -513,10 +442,10 @@ class DualChannelHindiSTTWorker(BaseWorker):
                 start=0.0,
                 end=0.0,
                 text=customer_text,
-                speaker="Customer",
+                speaker="Customer",  # Assigned from channel 1
             ))
 
-        # Build full text
+        # Build full text - with speaker labels
         full_text = "\n".join(
             f"[{s.speaker}] {s.text}" for s in all_segments
         )
@@ -550,7 +479,7 @@ class DualChannelHindiSTTWorker(BaseWorker):
                 self._dtype = torch.float16
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                 self._device = "mps"  # Apple Silicon GPU
-                self._dtype = torch.float16
+                self._dtype = torch.float32  # Use float32 on MPS to avoid NaN errors
             else:
                 self._device = "cpu"
                 self._dtype = torch.float32

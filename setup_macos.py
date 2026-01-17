@@ -53,7 +53,6 @@ OPTIONS = {
         'torch',
         'transformers',
         'faster_whisper',
-        'pyannote',
     ],
     'includes': [
         'PySide6.QtCore',

@@ -131,7 +131,7 @@ class MergeWorker(BaseWorker):
             MergedSegment(
                 start=s.start,
                 end=s.end,
-                speaker=s.speaker or "Speaker",
+                speaker=s.speaker or "Speaker",  # Use speaker from segment or default
                 text=s.text,
             )
             for s in self._transcription.segments
@@ -164,7 +164,7 @@ class MergeWorker(BaseWorker):
             MergedSegment(
                 start=s.start,
                 end=s.end,
-                speaker=s.speaker or "Speaker",
+                speaker=s.speaker or "Speaker",  # Use speaker from segment or default
                 text=s.text,
             )
             for s in segments
@@ -230,6 +230,6 @@ class MergeWorker(BaseWorker):
         """Format transcript for LLM input."""
         lines = []
         for seg in self._transcription.segments:
-            speaker = seg.speaker or "Unknown"
+            speaker = seg.speaker or "Speaker"
             lines.append(f"[{seg.start:.1f}s - {seg.end:.1f}s] [{speaker}]: {seg.text}")
         return "\n".join(lines)

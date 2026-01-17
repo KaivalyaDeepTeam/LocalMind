@@ -18,7 +18,6 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 
 ### Audio Transcription
 - Multi-language support (English, Russian, Hindi, Arabic, Italian, Spanish)
-- Speaker diarization (identifies who said what)
 - Automatic language detection
 - Script romanization for non-Latin languages
 

@@ -302,9 +302,6 @@ class MainWindow(QMainWindow):
             # Get audio preprocessing setting (applies to all modes)
             use_preprocessing = self._mode_selector.is_preprocessing_enabled()
 
-        # Get diarization setting from app settings (not mode selector)
-        use_diarization = settings.transcription.enable_diarization
-
         # Get whisper model from mode selector (for offline mode)
         whisper_model = self._mode_selector.get_whisper_model()
 
@@ -315,7 +312,6 @@ class MainWindow(QMainWindow):
             dual_channel=True,
             use_hindi_stt=use_hindi_stt,
             hindi_model_variant=hindi_model_variant,
-            use_diarization=use_diarization,
             use_preprocessing=use_preprocessing,
             scoring_parameters=scoring_parameters,
             transcription_only=not self._mode_selector.is_scoring_enabled(),
@@ -466,7 +462,7 @@ class MainWindow(QMainWindow):
         if result.transcription and not result.audit:
             display_data["transcript"] = result.transcription.text
             display_data["segments"] = [
-                {"speaker": s.speaker, "text": s.text, "start": s.start, "end": s.end}
+                {"speaker": s.speaker or "Speaker", "text": s.text, "start": s.start, "end": s.end}
                 for s in result.transcription.segments
             ] if result.transcription.segments else []
             display_data["language"] = result.transcription.language
@@ -518,7 +514,8 @@ class MainWindow(QMainWindow):
                     f.write("=" * 50 + "\n\n")
                     if result.transcription.segments:
                         for seg in result.transcription.segments:
-                            f.write(f"[{seg.start:.1f}s - {seg.end:.1f}s] {seg.speaker}: {seg.text}\n\n")
+                            speaker_label = f"[{seg.speaker}] " if seg.speaker else ""
+                            f.write(f"[{seg.start:.1f}s - {seg.end:.1f}s] {speaker_label}{seg.text}\n\n")
                     else:
                         f.write(result.transcription.text)
                 self._toast_manager.show_info(f"Transcript saved: {transcript_path.name}")

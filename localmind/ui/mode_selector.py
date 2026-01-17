@@ -344,9 +344,6 @@ class OfflineSettings(QFrame):
         self._hindi_model_container.setVisible(False)
         layout.addWidget(self._hindi_model_container)
 
-        # Note: Diarization moved to Settings dialog (File > Settings > Transcription)
-        # This simplifies the main UI and groups all transcription settings together
-
         # Audio preprocessing toggle (shown for ALL modes)
         self._preprocessing_checkbox = QCheckBox(
             self.tr("Apply Audio Preprocessing (Volume leveling, noise reduction)")

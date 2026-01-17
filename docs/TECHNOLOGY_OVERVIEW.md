@@ -340,7 +340,6 @@ Accuracy depends on several factors:
 | **Inference** | When an AI uses its model to process new data |
 | **GPU Acceleration** | Using graphics card for faster AI processing |
 | **Transcription** | Converting audio speech into written text |
-| **Diarization** | Figuring out who said what in a recording |
 | **LLM (Large Language Model)** | AI that understands and generates human language |
 | **Local Processing** | Computing done on your machine, not in the cloud |
 | **API (Application Programming Interface)** | A way for programs to talk to each other |

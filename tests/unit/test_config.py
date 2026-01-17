@@ -34,7 +34,6 @@ class TestUserSettings:
         assert settings.llm.provider == LLMProviderType.LOCAL
         assert settings.llm.openai_model == "gpt-4o"
         assert settings.transcription.language == "auto"
-        assert settings.transcription.enable_diarization is True
         assert settings.app.first_run_complete is False
 
     def test_llm_settings(self):
@@ -54,13 +53,11 @@ class TestUserSettings:
         trans = TranscriptionSettings(
             language="en",
             romanize=True,
-            enable_diarization=False,
             device="cuda",
         )
 
         assert trans.language == "en"
         assert trans.romanize is True
-        assert trans.enable_diarization is False
         assert trans.device == "cuda"
 
     def test_settings_to_dict(self):
@@ -88,7 +85,6 @@ class TestUserSettings:
             "transcription": {
                 "language": "en",
                 "romanize": False,
-                "enable_diarization": True,
                 "device": "auto",
             },
         }

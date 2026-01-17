@@ -256,7 +256,6 @@ Quickly copy:
 | Term | Simple Explanation |
 |------|-------------------|
 | **Transcription** | Converting spoken words into written text |
-| **Diarization** | Identifying who said what in a conversation |
 | **AI/Artificial Intelligence** | Computer programs that can learn and make decisions |
 | **LLM (Language Model)** | AI that understands and generates human language |
 | **Local Processing** | Work done on your computer, not in the cloud |

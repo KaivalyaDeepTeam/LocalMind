@@ -17,7 +17,7 @@ from localmind.llm.base import (
 # Model configurations
 LOCAL_MODELS = {
     "phi-3.5-mini": {
-        "repo": "microsoft/Phi-3.5-mini-instruct-gguf",
+        "repo": "bartowski/Phi-3.5-mini-instruct-GGUF",
         "filename": "Phi-3.5-mini-instruct-Q4_K_M.gguf",
         "context_length": 4096,
         "chat_format": "chatml",

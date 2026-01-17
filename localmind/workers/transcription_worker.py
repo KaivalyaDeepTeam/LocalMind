@@ -10,13 +10,6 @@ from dataclasses import dataclass, field
 
 from localmind.workers.base import BaseWorker
 
-# Try to import diarization - it's optional
-try:
-    from localmind.workers.diarization_worker import DiarizationWorker, combine_diarization_with_transcription
-    DIARIZATION_AVAILABLE = True
-except ImportError:
-    DIARIZATION_AVAILABLE = False
-
 
 @dataclass
 class TranscriptionSegment:
@@ -24,7 +17,7 @@ class TranscriptionSegment:
     start: float
     end: float
     text: str
-    speaker: Optional[str] = None
+    speaker: Optional[str] = None  # Populated from channel info for dual-channel audio
     confidence: float = 1.0
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,8 +61,6 @@ class TranscriptionWorker(BaseWorker):
         language: Optional[str] = None,
         use_gpu: bool = True,
         use_preprocessing: bool = True,
-        use_diarization: bool = False,
-        num_speakers: Optional[int] = 2,
         parent=None,
     ):
         """Initialize transcription worker.
@@ -80,8 +71,6 @@ class TranscriptionWorker(BaseWorker):
             language: Language code or None for auto-detect.
             use_gpu: Whether to use GPU acceleration.
             use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction).
-            use_diarization: Whether to use speaker diarization (auto-detects speakers).
-            num_speakers: Expected number of speakers (None for auto-detection).
             parent: Parent QObject.
         """
         super().__init__(parent)
@@ -90,8 +79,6 @@ class TranscriptionWorker(BaseWorker):
         self._language = language
         self._use_gpu = use_gpu
         self._use_preprocessing = use_preprocessing
-        self._use_diarization = use_diarization
-        self._num_speakers = num_speakers
         self._model = None
 
     def do_work(self) -> TranscriptionResult:
@@ -133,13 +120,7 @@ class TranscriptionWorker(BaseWorker):
                 start=0.0,
                 end=len(audio) / sr,
                 text=full_text,
-                speaker=None,
             ))
-
-        # Apply speaker diarization if enabled
-        if self._use_diarization and DIARIZATION_AVAILABLE and segments:
-            self.report_progress(92, "Running speaker diarization...")
-            segments = self._apply_diarization(segments)
 
         transcription = TranscriptionResult(
             text=full_text,
@@ -150,61 +131,6 @@ class TranscriptionWorker(BaseWorker):
 
         self.report_progress(100, "Transcription complete")
         return transcription
-
-    def _apply_diarization(self, segments: List[TranscriptionSegment]) -> List[TranscriptionSegment]:
-        """Apply speaker diarization to segments."""
-        try:
-            # Run diarization
-            diarization_worker = DiarizationWorker(
-                audio_path=str(self._audio_path),
-                num_speakers=self._num_speakers,
-                min_speakers=1,
-                max_speakers=10,
-                use_gpu=self._use_gpu,
-            )
-
-            diarization_result = diarization_worker.do_work()
-
-            if not diarization_result or not diarization_result.segments:
-                return segments  # Return original segments if diarization fails
-
-            # Combine transcription with diarization
-            segments_dicts = [
-                {"start": s.start, "end": s.end, "text": s.text}
-                for s in segments
-            ]
-
-            combined = combine_diarization_with_transcription(
-                segments_dicts,
-                diarization_result.segments
-            )
-
-            # Convert back to TranscriptionSegment objects
-            # Map SPEAKER_00 -> Agent, SPEAKER_01 -> Customer
-            speaker_map = {}
-            for i, speaker_label in enumerate(sorted(set(s["speaker"] for s in combined))):
-                if i == 0:
-                    speaker_map[speaker_label] = "Agent"
-                elif i == 1:
-                    speaker_map[speaker_label] = "Customer"
-                else:
-                    speaker_map[speaker_label] = f"Speaker_{i+1}"
-
-            result_segments = []
-            for seg in combined:
-                speaker = speaker_map.get(seg["speaker"], seg["speaker"])
-                result_segments.append(TranscriptionSegment(
-                    start=seg["start"],
-                    end=seg["end"],
-                    text=seg["text"],
-                    speaker=speaker,
-                ))
-
-            return result_segments
-
-        except Exception as e:
-            print(f"Diarization failed: {e}, continuing without speaker labels")
-            return segments  # Return original segments if diarization fails
 
     def _load_model(self) -> None:
         """Load the Whisper model."""
@@ -316,7 +242,7 @@ class TranscriptionWorker(BaseWorker):
                 # Transcribe options with optimized parameters
                 transcribe_options = {
                     "verbose": False,
-                    "fp16": self._device != "cpu",
+                    "fp16": self._device == "cuda",  # Only use fp16 on CUDA, not MPS (causes NaN errors)
                     # CRITICAL parameters for maximum word capture
                     "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
                     "no_speech_threshold": 0.3,  # CRITICAL for quiet speakers
@@ -384,7 +310,7 @@ class TranscriptionWorker(BaseWorker):
 
 
 class DualChannelTranscriptionWorker(BaseWorker):
-    """Worker for transcribing dual-channel (stereo) audio with speaker diarization."""
+    """Worker for transcribing dual-channel (stereo) audio with separate channel processing."""
 
     def __init__(
         self,
@@ -465,7 +391,7 @@ class DualChannelTranscriptionWorker(BaseWorker):
                 start=seg["start"],
                 end=seg["end"],
                 text=seg["text"].strip(),
-                speaker="Agent",
+                speaker="Agent",  # Assigned from channel 0
             ))
 
         for seg in customer_result.get("segments", []):
@@ -473,13 +399,13 @@ class DualChannelTranscriptionWorker(BaseWorker):
                 start=seg["start"],
                 end=seg["end"],
                 text=seg["text"].strip(),
-                speaker="Customer",
+                speaker="Customer",  # Assigned from channel 1
             ))
 
         # Sort by start time
         all_segments.sort(key=lambda s: s.start)
 
-        # Build full text
+        # Build full text - chronological with speaker labels
         full_text = "\n".join(
             f"[{s.speaker}] {s.text}" for s in all_segments
         )
@@ -596,19 +522,27 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
     def _transcribe_channel(self, audio, speaker: str) -> Dict[str, Any]:
         """Transcribe a single channel."""
+        import torch
         import whisper
 
-        options = {}
+        # Determine device for fp16 setting
+        device = "cpu"
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            device = "mps"
+
+        options = {
+            "verbose": False,
+            "fp16": device == "cuda",  # Only use fp16 on CUDA, not MPS (causes NaN errors)
+        }
+
         if self._language and self._language != "auto":
             options["language"] = self._language
 
         # Pad/trim audio for Whisper
         audio = whisper.pad_or_trim(audio)
 
-        result = self._model.transcribe(
-            audio,
-            verbose=False,
-            **options,
-        )
+        result = self._model.transcribe(audio, **options)
 
         return result

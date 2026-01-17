@@ -38,7 +38,6 @@ class TranscriptionSettings:
     """Transcription configuration."""
     language: str = "auto"
     romanize: bool = False
-    enable_diarization: bool = True
     device: str = "auto"
     whisper_model: str = "large-v3"
     use_gpu: bool = True
@@ -210,13 +209,16 @@ class SettingsManager:
 
     def load(self) -> UserSettings:
         """Load settings from disk."""
+        settings = UserSettings()
+
         if self._config_file.exists():
             try:
                 with open(self._config_file, "r", encoding="utf-8") as f:
-                    return UserSettings.from_dict(json.load(f))
+                    settings = UserSettings.from_dict(json.load(f))
             except Exception:
-                return UserSettings()
-        return UserSettings()
+                pass
+
+        return settings
 
     def save(self, settings: Optional[UserSettings] = None) -> None:
         """Save settings to disk."""

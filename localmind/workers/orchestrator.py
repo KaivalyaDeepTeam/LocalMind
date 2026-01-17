@@ -83,7 +83,6 @@ class ProcessingOrchestrator(QObject):
         self._dual_channel = True
         self._use_hindi_stt = False  # Use HindiSTT for Hindi-English
         self._hindi_model_variant = "apex"  # "apex" (fast) or "prime" (accurate)
-        self._use_diarization = False  # Use speaker diarization
         self._use_preprocessing = True  # Apply audio preprocessing (default ON)
         self._parameters: Optional[List[Dict[str, Any]]] = None
         self._transcription_only = False  # Skip scoring, only transcribe
@@ -101,7 +100,6 @@ class ProcessingOrchestrator(QObject):
         dual_channel: bool = True,
         use_hindi_stt: bool = False,
         hindi_model_variant: str = "apex",
-        use_diarization: bool = False,
         use_preprocessing: bool = True,
         scoring_parameters: Optional[List[Dict[str, Any]]] = None,
         transcription_only: bool = False,
@@ -115,7 +113,6 @@ class ProcessingOrchestrator(QObject):
             dual_channel: Whether to process as dual-channel audio.
             use_hindi_stt: Use HindiSTT model for Hindi-English transcription.
             hindi_model_variant: "apex" (8x faster, noisy audio) or "prime" (accurate, clean audio).
-            use_diarization: Whether to use speaker diarization (auto-detects speakers in mono audio).
             use_preprocessing: Apply audio preprocessing (volume leveling, noise reduction). Default True.
             scoring_parameters: Custom scoring parameters.
             transcription_only: If True, skip scoring and only transcribe.
@@ -126,7 +123,6 @@ class ProcessingOrchestrator(QObject):
         self._dual_channel = dual_channel
         self._use_hindi_stt = use_hindi_stt
         self._hindi_model_variant = hindi_model_variant
-        self._use_diarization = use_diarization
         self._use_preprocessing = use_preprocessing
         self._parameters = scoring_parameters
         self._transcription_only = transcription_only
@@ -203,7 +199,6 @@ class ProcessingOrchestrator(QObject):
                     audio_path=str(self._audio_path),
                     use_gpu=self._use_gpu,
                     model_variant=self._hindi_model_variant,
-                    use_diarization=self._use_diarization,
                     num_speakers=2,  # Assume Agent + Customer
                     use_preprocessing=self._use_preprocessing,
                 )
@@ -228,8 +223,6 @@ class ProcessingOrchestrator(QObject):
                     language=self._language,
                     use_gpu=self._use_gpu,
                     use_preprocessing=self._use_preprocessing,
-                    use_diarization=self._use_diarization,
-                    num_speakers=2,  # Assume Agent + Customer
                 )
 
         self._transcription_worker.progress.connect(
