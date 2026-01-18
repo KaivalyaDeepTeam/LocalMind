@@ -58,10 +58,10 @@
     "label": "为什么选择LocalMind",
     "title": "LocalMind vs <span class='gradient-text'>云服务</span>",
     "subtitle": "看看LocalMind与Otter.ai、Rev和Descript等流行云转录服务的对比。",
-    "roi_title": "💰 计算你的年度节省",
-    "roi_cloud": "平均云服务：<strong>$30/月 × 12个月 = $360/年</strong>",
-    "roi_localmind": "LocalMind：<strong>$0/年</strong>",
-    "roi_savings": "你节省：<span class='gradient-text'>每年$360+</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "全球用户",
@@ -270,5 +270,43 @@
     "row8_feature": "开源",
     "row8_cloud": "❌ 专有",
     "row8_localmind": "✅ MIT许可证"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "加入运动",
+    "paragraph1": "LocalMind不仅仅是软件。它是一个声明，表明AI可以以不同的方式构建。隐私和权力并不相互排斥。开源可以与大型科技公司竞争。",
+    "paragraph2": "我们才刚刚开始。我们需要像你这样的人。",
+    "star_title": "为项目加星",
+    "star_desc": "在GitHub上展示你的支持",
+    "fork_title": "Fork并贡献",
+    "fork_desc": "帮助构建AI的未来",
+    "discussions_title": "加入讨论",
+    "discussions_desc": "与社区分享想法"
+  },
+  "final_cta": {
+    "heading": "AI的未来是本地的。<br>AI的未来是开放的。<br><span class='gradient-text'>未来从现在开始。</span>",
+    "download_btn": "下载LocalMind",
+    "source_btn": "查看源代码"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12及以上 (Intel和Apple Silicon)",
+    "macos_size": "约800 MB",
+    "windows_desc": "Windows 10及以上 (64位)",
+    "linux_desc": "Ubuntu 22.04及以上 / AppImage",
+    "system_req_heading": "系统要求",
+    "req_ram_label": "内存",
+    "req_ram_value": "最低8 GB，推荐16 GB",
+    "req_storage_label": "存储",
+    "req_storage_value": "10 GB可用空间",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "可选 - Apple Silicon或NVIDIA加速处理"
   }
 }

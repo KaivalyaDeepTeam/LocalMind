@@ -58,10 +58,10 @@
     "label": "Почему LocalMind",
     "title": "LocalMind против <span class='gradient-text'>Облачных Сервисов</span>",
     "subtitle": "Посмотрите, как LocalMind сравнивается с популярными облачными сервисами транскрипции, такими как Otter.ai, Rev и Descript.",
-    "roi_title": "💰 Рассчитайте Вашу Годовую Экономию",
-    "roi_cloud": "Средний облачный сервис: <strong>$30/месяц × 12 месяцев = $360/год</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/год</strong>",
-    "roi_savings": "Вы экономите: <span class='gradient-text'>$360+ каждый год</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "Глобальные Пользователи",
@@ -270,5 +270,43 @@
     "row8_feature": "Открытый Код",
     "row8_cloud": "❌ Проприетарный",
     "row8_localmind": "✅ Лицензия MIT"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "Присоединяйтесь к Движению",
+    "paragraph1": "LocalMind - это больше, чем программное обеспечение. Это заявление о том, что ИИ можно строить по-другому. Что конфиденциальность и власть не исключают друг друга. Что открытый исходный код может конкурировать с большими технологиями.",
+    "paragraph2": "Мы только начинаем. И нам нужны такие люди, как вы.",
+    "star_title": "Поставьте Звезду Проекту",
+    "star_desc": "Покажите свою поддержку на GitHub",
+    "fork_title": "Форкните и Внесите Вклад",
+    "fork_desc": "Помогите построить будущее ИИ",
+    "discussions_title": "Присоединяйтесь к Обсуждениям",
+    "discussions_desc": "Делитесь идеями с сообществом"
+  },
+  "final_cta": {
+    "heading": "Будущее ИИ - Локально.<br>Будущее ИИ - Открыто.<br><span class='gradient-text'>Будущее Начинается Сейчас.</span>",
+    "download_btn": "Скачать LocalMind",
+    "source_btn": "Посмотреть Исходный Код"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12+ (Intel и Apple Silicon)",
+    "macos_size": "~800 МБ",
+    "windows_desc": "Windows 10+ (64-бит)",
+    "linux_desc": "Ubuntu 22.04+ / AppImage",
+    "system_req_heading": "Системные Требования",
+    "req_ram_label": "ОЗУ",
+    "req_ram_value": "Минимум 8 ГБ, рекомендуется 16 ГБ",
+    "req_storage_label": "Хранилище",
+    "req_storage_value": "10 ГБ свободного места",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "Опционально - Apple Silicon или NVIDIA ускоряют обработку"
   }
 }

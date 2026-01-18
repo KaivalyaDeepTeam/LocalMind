@@ -59,10 +59,10 @@
     "label": "لماذا LocalMind",
     "title": "LocalMind مقابل <span class='gradient-text'>الخدمات السحابية</span>",
     "subtitle": "شاهد كيف يتفوق LocalMind على خدمات النسخ السحابية الشهيرة مثل Otter.ai و Rev و Descript.",
-    "roi_title": "💰 احسب مدخراتك السنوية",
-    "roi_cloud": "متوسط الخدمة السحابية: <strong>$30/شهر × 12 شهر = $360/سنة</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/سنة</strong>",
-    "roi_savings": "توفر: <span class='gradient-text'>$360+ كل عام</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "مستخدمون عالميون",
@@ -271,5 +271,43 @@
     "row8_feature": "مفتوح المصدر",
     "row8_cloud": "❌ ملكية خاصة",
     "row8_localmind": "✅ ترخيص MIT"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "انضم إلى الحركة",
+    "paragraph1": "LocalMind هو أكثر من مجرد برنامج. إنه بيان بأن الذكاء الاصطناعي يمكن بناؤه بشكل مختلف. أن الخصوصية والقوة ليسا متنافيين. أن المصدر المفتوح يمكنه المنافسة مع شركات التكنولوجيا الكبرى.",
+    "paragraph2": "لقد بدأنا للتو. ونحن بحاجة إلى أشخاص مثلك.",
+    "star_title": "ضع نجمة على المشروع",
+    "star_desc": "أظهر دعمك على GitHub",
+    "fork_title": "قم بالفورك والمساهمة",
+    "fork_desc": "ساعد في بناء مستقبل الذكاء الاصطناعي",
+    "discussions_title": "انضم إلى المناقشات",
+    "discussions_desc": "شارك الأفكار مع المجتمع"
+  },
+  "final_cta": {
+    "heading": "مستقبل الذكاء الاصطناعي محلي.<br>مستقبل الذكاء الاصطناعي مفتوح.<br><span class='gradient-text'>المستقبل يبدأ الآن.</span>",
+    "download_btn": "تحميل LocalMind",
+    "source_btn": "عرض الكود المصدري"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12 فما فوق (Intel و Apple Silicon)",
+    "macos_size": "حوالي 800 ميجابايت",
+    "windows_desc": "Windows 10 فما فوق (64 بت)",
+    "linux_desc": "Ubuntu 22.04 فما فوق / AppImage",
+    "system_req_heading": "متطلبات النظام",
+    "req_ram_label": "الذاكرة العشوائية",
+    "req_ram_value": "8 جيجابايت كحد أدنى، 16 جيجابايت موصى به",
+    "req_storage_label": "التخزين",
+    "req_storage_value": "10 جيجابايت مساحة فارغة",
+    "req_gpu_label": "معالج الرسومات",
+    "req_gpu_value": "اختياري - Apple Silicon أو NVIDIA يسرع المعالجة"
   }
 }

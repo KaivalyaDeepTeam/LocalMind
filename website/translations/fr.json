@@ -58,10 +58,10 @@
     "label": "Pourquoi LocalMind",
     "title": "LocalMind vs <span class='gradient-text'>Services Cloud</span>",
     "subtitle": "Découvrez comment LocalMind se compare aux services populaires de transcription cloud comme Otter.ai, Rev et Descript.",
-    "roi_title": "💰 Calculez Vos Économies Annuelles",
-    "roi_cloud": "Service cloud moyen : <strong>30$/mois × 12 mois = 360$/an</strong>",
-    "roi_localmind": "LocalMind : <strong>0$/an</strong>",
-    "roi_savings": "Vous économisez : <span class='gradient-text'>360$+ chaque année</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "Utilisateurs Mondiaux",
@@ -270,5 +270,43 @@
     "row8_feature": "Open Source",
     "row8_cloud": "❌ Propriétaire",
     "row8_localmind": "✅ Licence MIT"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "Rejoignez le Mouvement",
+    "paragraph1": "LocalMind est plus qu'un logiciel. C'est une déclaration selon laquelle l'IA peut être construite différemment. Que la vie privée et le pouvoir ne s'excluent pas mutuellement. Que l'open source peut rivaliser avec les grandes entreprises technologiques.",
+    "paragraph2": "Nous ne faisons que commencer. Et nous avons besoin de personnes comme vous.",
+    "star_title": "Donnez une Étoile au Projet",
+    "star_desc": "Montrez votre soutien sur GitHub",
+    "fork_title": "Forkez et Contribuez",
+    "fork_desc": "Aidez à construire l'avenir de l'IA",
+    "discussions_title": "Rejoignez les Discussions",
+    "discussions_desc": "Partagez des idées avec la communauté"
+  },
+  "final_cta": {
+    "heading": "L'Avenir de l'IA est Local.<br>L'Avenir de l'IA est Ouvert.<br><span class='gradient-text'>L'Avenir Commence Maintenant.</span>",
+    "download_btn": "Télécharger LocalMind",
+    "source_btn": "Voir le Code Source"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12+ (Intel et Apple Silicon)",
+    "macos_size": "~800 Mo",
+    "windows_desc": "Windows 10+ (64 bits)",
+    "linux_desc": "Ubuntu 22.04+ / AppImage",
+    "system_req_heading": "Configuration Requise",
+    "req_ram_label": "RAM",
+    "req_ram_value": "8 Go minimum, 16 Go recommandé",
+    "req_storage_label": "Stockage",
+    "req_storage_value": "10 Go d'espace libre",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "Optionnel - Apple Silicon ou NVIDIA accélère le traitement"
   }
 }

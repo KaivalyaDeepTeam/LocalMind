@@ -61,7 +61,7 @@
     "roi_title": "💰 Calculate Your Annual Savings",
     "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
     "roi_localmind": "LocalMind: <strong>$0/year</strong>",
-    "roi_savings": "You save: <span class='gradient-text'>$360+ every year</span>"
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "Global Users",
@@ -270,5 +270,43 @@
     "row8_feature": "Open Source",
     "row8_cloud": "❌ Proprietary",
     "row8_localmind": "✅ MIT License"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "Join the Movement",
+    "paragraph1": "LocalMind is more than software. It's a statement that AI can be built differently. That privacy and power aren't mutually exclusive. That open source can compete with Big Tech.",
+    "paragraph2": "We're just getting started. And we need people like you.",
+    "star_title": "Star the Project",
+    "star_desc": "Show your support on GitHub",
+    "fork_title": "Fork & Contribute",
+    "fork_desc": "Help build the future of AI",
+    "discussions_title": "Join Discussions",
+    "discussions_desc": "Share ideas with the community"
+  },
+  "final_cta": {
+    "heading": "The Future of AI is Local.<br>The Future of AI is Open.<br><span class='gradient-text'>The Future Starts Now.</span>",
+    "download_btn": "Download LocalMind",
+    "source_btn": "View Source Code"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12+ (Intel & Apple Silicon)",
+    "macos_size": "~800 MB",
+    "windows_desc": "Windows 10+ (64-bit)",
+    "linux_desc": "Ubuntu 22.04+ / AppImage",
+    "system_req_heading": "System Requirements",
+    "req_ram_label": "RAM",
+    "req_ram_value": "8 GB minimum, 16 GB recommended",
+    "req_storage_label": "Storage",
+    "req_storage_value": "10 GB free space",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "Optional - Apple Silicon or NVIDIA accelerates processing"
   }
 }

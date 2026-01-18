@@ -58,10 +58,10 @@
     "label": "LocalMindを選ぶ理由",
     "title": "LocalMind vs <span class='gradient-text'>クラウドサービス</span>",
     "subtitle": "LocalMindがOtter.ai、Rev、Descriptなどの人気クラウド文字起こしサービスとどう比較されるかをご覧ください。",
-    "roi_title": "💰 年間節約額を計算",
-    "roi_cloud": "平均的なクラウドサービス: <strong>$30/月 × 12ヶ月 = $360/年</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/年</strong>",
-    "roi_savings": "節約額: <span class='gradient-text'>毎年$360+</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "グローバルユーザー",
@@ -270,5 +270,43 @@
     "row8_feature": "オープンソース",
     "row8_cloud": "❌ プロプライエタリ",
     "row8_localmind": "✅ MITライセンス"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "運動に参加",
+    "paragraph1": "LocalMindは単なるソフトウェア以上のものです。AIを異なる方法で構築できるという宣言です。プライバシーとパワーは相互に排他的ではありません。オープンソースはビッグテックと競争できます。",
+    "paragraph2": "私たちは始まったばかりです。あなたのような人が必要です。",
+    "star_title": "プロジェクトにスター",
+    "star_desc": "GitHubでサポートを示す",
+    "fork_title": "フォークと貢献",
+    "fork_desc": "AIの未来を構築する手助け",
+    "discussions_title": "ディスカッションに参加",
+    "discussions_desc": "コミュニティとアイデアを共有"
+  },
+  "final_cta": {
+    "heading": "AIの未来はローカル。<br>AIの未来はオープン。<br><span class='gradient-text'>未来は今始まる。</span>",
+    "download_btn": "LocalMindをダウンロード",
+    "source_btn": "ソースコードを表示"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12以降 (IntelとApple Silicon)",
+    "macos_size": "約800 MB",
+    "windows_desc": "Windows 10以降 (64ビット)",
+    "linux_desc": "Ubuntu 22.04以降 / AppImage",
+    "system_req_heading": "システム要件",
+    "req_ram_label": "RAM",
+    "req_ram_value": "最小8 GB、推奨16 GB",
+    "req_storage_label": "ストレージ",
+    "req_storage_value": "10 GBの空き容量",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "オプション - Apple SiliconまたはNVIDIAが処理を高速化"
   }
 }

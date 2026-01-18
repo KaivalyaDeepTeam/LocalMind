@@ -58,10 +58,10 @@
     "label": "LocalMind क्यों",
     "title": "LocalMind vs <span class='gradient-text'>क्लाउड सेवाएं</span>",
     "subtitle": "देखें कि LocalMind Otter.ai, Rev और Descript जैसी लोकप्रिय क्लाउड ट्रांसक्रिप्शन सेवाओं से कैसे तुलना करता है।",
-    "roi_title": "💰 अपनी वार्षिक बचत की गणना करें",
-    "roi_cloud": "औसत क्लाउड सेवा: <strong>$30/माह × 12 माह = $360/वर्ष</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/वर्ष</strong>",
-    "roi_savings": "आप बचाते हैं: <span class='gradient-text'>हर साल $360+</span>"
+    "roi_title": "💰 Calculate Your Annual Savings",
+    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
+    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
   },
   "testimonials": {
     "label": "वैश्विक उपयोगकर्ता",
@@ -270,5 +270,43 @@
     "row8_feature": "ओपन सोर्स",
     "row8_cloud": "❌ मालिकाना",
     "row8_localmind": "✅ MIT लाइसेंस"
+  },
+  "product_extended": {
+    "lang_english": "English",
+    "lang_hindi": "Hindi",
+    "lang_spanish": "Spanish",
+    "lang_arabic": "Arabic",
+    "lang_russian": "Russian",
+    "lang_italian": "Italian",
+    "lang_many_more": "+ Many More"
+  },
+  "join": {
+    "heading": "आंदोलन में शामिल हों",
+    "paragraph1": "LocalMind केवल सॉफ़्टवेयर से अधिक है। यह एक बयान है कि AI को अलग तरीके से बनाया जा सकता है। कि गोपनीयता और शक्ति परस्पर अनन्य नहीं हैं। कि ओपन सोर्स बिग टेक के साथ प्रतिस्पर्धा कर सकता है।",
+    "paragraph2": "हमने अभी शुरुआत की है। और हमें आप जैसे लोगों की आवश्यकता है।",
+    "star_title": "प्रोजेक्ट को स्टार करें",
+    "star_desc": "GitHub पर अपना समर्थन दिखाएं",
+    "fork_title": "फोर्क और योगदान करें",
+    "fork_desc": "AI के भविष्य के निर्माण में मदद करें",
+    "discussions_title": "चर्चाओं में शामिल हों",
+    "discussions_desc": "समुदाय के साथ विचार साझा करें"
+  },
+  "final_cta": {
+    "heading": "AI का भविष्य स्थानीय है।<br>AI का भविष्य खुला है।<br><span class='gradient-text'>भविष्य अभी शुरू होता है।</span>",
+    "download_btn": "LocalMind डाउनलोड करें",
+    "source_btn": "सोर्स कोड देखें"
+  },
+  "download_details": {
+    "macos_desc": "macOS 12+ (Intel और Apple Silicon)",
+    "macos_size": "~800 MB",
+    "windows_desc": "Windows 10+ (64-बिट)",
+    "linux_desc": "Ubuntu 22.04+ / AppImage",
+    "system_req_heading": "सिस्टम आवश्यकताएं",
+    "req_ram_label": "RAM",
+    "req_ram_value": "न्यूनतम 8 GB, अनुशंसित 16 GB",
+    "req_storage_label": "स्टोरेज",
+    "req_storage_value": "10 GB खाली जगह",
+    "req_gpu_label": "GPU",
+    "req_gpu_value": "वैकल्पिक - Apple Silicon या NVIDIA प्रसंस्करण को तेज करता है"
   }
 }
