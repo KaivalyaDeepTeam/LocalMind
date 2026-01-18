@@ -225,11 +225,16 @@ class TestDefaultParameters:
 
     def test_default_parameters_structure(self):
         """Test default parameters have required fields."""
+        total_points = 0
         for param in DEFAULT_PARAMETERS:
             assert "name" in param
-            assert "max_score" in param
-            assert "weight" in param
+            assert "points" in param
             assert "description" in param
+            assert param["points"] > 0
+            total_points += param["points"]
+
+        # Verify total points sum to 100
+        assert total_points == 100, f"Total points should be 100, got {total_points}"
 
 
 class TestModelInfo:
