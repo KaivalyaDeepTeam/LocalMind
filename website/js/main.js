@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // e.g., gtag('event', 'download', { platform: platform });
         });
     });
-});
+
     // ================================================
     // Email Capture Modal Logic
     // ================================================
