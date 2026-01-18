@@ -296,11 +296,43 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
     return schema
 
 
-def create_audit_prompt(parameters: List[Dict[str, Any]], model_name: str = "phi-3.5-mini") -> str:
+def create_cot_analysis_prompt() -> str:
+    """Create Chain-of-Thought analysis prompt for reasoning phase.
+
+    Returns:
+        Prompt for LLM to analyze call before scoring
+    """
+    return """You are a call quality expert. Analyze this customer service call carefully.
+
+## Your Task
+
+Read the transcript and think through these questions step-by-step:
+
+1. **Opening & Greeting**: How did the agent start the call? Was it professional and warm?
+
+2. **Listening & Understanding**: Did the agent listen well? Did they understand the customer's needs?
+
+3. **Problem Solving**: How well did they identify and solve the customer's issue?
+
+4. **Communication**: Was the agent clear, professional, and easy to understand?
+
+5. **Customer Experience**: How did the customer likely feel during this call?
+
+6. **Closing**: How did the call end? Were next steps clear?
+
+## Instructions
+
+Write a detailed analysis covering what the agent did well and what needs improvement. Be specific with examples from the transcript.
+
+Focus on observable behaviors, not assumptions. This analysis will be used to score the call accurately."""
+
+
+def create_audit_prompt(parameters: List[Dict[str, Any]], analysis: str, model_name: str = "phi-3.5-mini") -> str:
     """Create universal audit prompt that works with all local LLMs.
 
     Args:
         parameters: List of scoring parameters with max_score and weight
+        analysis: Chain-of-thought analysis from reasoning phase
         model_name: Name of the LLM model (informational only)
 
     Returns:
@@ -330,7 +362,13 @@ def create_audit_prompt(parameters: List[Dict[str, Any]], model_name: str = "phi
         example_scores_json.append(f'    "{name}": {{"score": {data["score"]}, "feedback": "{data["feedback"]}"}}')
     example_scores_str = ",\n".join(example_scores_json)
 
-    return f"""You are a call quality auditor. Score this conversation based on the parameters below.
+    return f"""You are a call quality auditor. Based on the analysis below, score each parameter.
+
+## ANALYSIS FROM REASONING PHASE
+
+{analysis}
+
+## NOW SCORE BASED ON THIS ANALYSIS
 
 ## SCORING SYSTEM
 
@@ -430,7 +468,7 @@ class AuditWorker(BaseWorker):
         return result
 
     async def _llm_audit(self) -> AuditResult:
-        """Use LLM to audit the transcript."""
+        """Use LLM to audit the transcript with Chain-of-Thought reasoning."""
         from localmind.llm import create_provider, LLMConfig
 
         self.report_progress(20, "Loading LLM provider...")
@@ -441,9 +479,8 @@ class AuditWorker(BaseWorker):
         try:
             self.report_progress(30, "Analyzing transcript...")
 
-            # Get model name for optimized prompt
+            # Get model name
             model_name = getattr(provider, '_model', 'phi-3.5-mini')
-            system_prompt = create_audit_prompt(self._parameters, model_name)
             transcript = self._merge_result.merged_text
 
             # Truncate long transcripts to fit context window
@@ -466,29 +503,49 @@ class AuditWorker(BaseWorker):
                 )
                 self.report_progress(35, "Long call - sampling key sections...")
 
-            messages = [
-                provider.create_system_message(system_prompt),
+            # ========== PHASE 1: Chain-of-Thought Analysis ==========
+            self.report_progress(40, "Reasoning phase: Analyzing call quality...")
+
+            cot_prompt = create_cot_analysis_prompt()
+            cot_messages = [
+                provider.create_system_message(cot_prompt),
+                provider.create_user_message(f"Analyze this call transcript:\n\n{transcript}"),
+            ]
+
+            # Generate analysis with higher temperature for reasoning
+            cot_config = LLMConfig(
+                temperature=0.7,
+                max_tokens=800,  # Detailed analysis
+            )
+
+            analysis_response = await provider.generate(cot_messages, cot_config)
+            analysis = analysis_response.get("content", "No analysis generated")
+
+            self.report_progress(55, "Analysis complete. Now scoring...")
+
+            # ========== PHASE 2: Structured Scoring (based on analysis) ==========
+            scoring_prompt = create_audit_prompt(self._parameters, analysis, model_name)
+            scoring_messages = [
+                provider.create_system_message(scoring_prompt),
                 provider.create_user_message(
-                    f"Please audit this call transcript:\n\n{transcript}"
+                    "Based on the analysis above, provide structured scores for each parameter."
                 ),
             ]
 
             # Create JSON schema for constrained generation
             json_schema = create_audit_json_schema(self._parameters)
 
-            # Use moderate temperature for all LLMs
-            # 0.5 balances consistency with flexibility across different models
-            # Set max_tokens to 1536 to leave room for prompt in 4096 context window
-            config = LLMConfig(
-                temperature=0.5,
-                max_tokens=1536,
+            # Use lower temperature for consistent scoring
+            scoring_config = LLMConfig(
+                temperature=0.3,
+                max_tokens=1200,
                 json_mode=True,
-                json_schema=json_schema,  # Use schema-based constrained generation
+                json_schema=json_schema,
             )
 
-            self.report_progress(50, "Generating audit scores (schema-constrained)...")
+            self.report_progress(70, "Generating scores (CoT-enhanced)...")
 
-            response_data = await provider.generate_json(messages, config)
+            response_data = await provider.generate_json(scoring_messages, scoring_config)
 
             self.report_progress(80, "Processing audit results...")
 
