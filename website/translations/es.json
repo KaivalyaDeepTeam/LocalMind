@@ -58,10 +58,10 @@
     "label": "Por Qué LocalMind",
     "title": "LocalMind vs <span class='gradient-text'>Servicios en la Nube</span>",
     "subtitle": "Mira cómo LocalMind se compara con servicios populares de transcripción en la nube como Otter.ai, Rev y Descript.",
-    "roi_title": "💰 Calculate Your Annual Savings",
-    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
-    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
+    "roi_title": "💰 Calcula tus Ahorros Anuales",
+    "roi_cloud": "Servicio en la nube promedio: <strong>$30/mes × 12 meses = $360/año</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/año</strong>",
+    "roi_savings": "Ahorras: <span class=\"gradient-text\">$360+ cada año</span>"
   },
   "testimonials": {
     "label": "Usuarios Globales",
@@ -150,60 +150,60 @@
   },
   "faq_items": {
     "q1": {
-      "question": "How can this be completely free?",
-      "answer": "LocalMind runs entirely on your device, so we have zero cloud infrastructure costs. No servers to maintain, no bandwidth to pay for, no storage fees. We believe AI should be accessible to everyone, so we've built a truly free solution that doesn't rely on the \"freemium\" model. Our code is open source - if you don't trust us, you can audit and compile it yourself."
+      "question": "¿Cómo puede ser completamente gratis?",
+      "answer": "LocalMind se ejecuta completamente en tu dispositivo, por lo que no tenemos costos de infraestructura en la nube. Sin servidores que mantener, sin ancho de banda que pagar, sin tarifas de almacenamiento. Creemos que la IA debe ser accesible para todos, por eso hemos construido una solución verdaderamente gratuita que no depende del modelo \"freemium\". Nuestro código es de código abierto: si no confías en nosotros, puedes auditarlo y compilarlo tú mismo."
     },
     "q2": {
-      "question": "Is it really as accurate as cloud services?",
-      "answer": "Yes! LocalMind uses OpenAI's Whisper model - the same technology behind many commercial transcription services. We achieve 95%+ accuracy across 99 languages. Plus, our Chain-of-Thought quality scoring provides 20-30% better analysis accuracy than standard approaches. The only difference is your data stays on your device."
+      "question": "¿Es realmente tan preciso como los servicios en la nube?",
+      "answer": "¡Sí! LocalMind usa el modelo Whisper de OpenAI, la misma tecnología detrás de muchos servicios comerciales de transcripción. Logramos más del 95% de precisión en 99 idiomas. Además, nuestra puntuación de calidad Chain-of-Thought proporciona un 20-30% mejor precisión de análisis que los enfoques estándar. La única diferencia es que tus datos permanecen en tu dispositivo."
     },
     "q3": {
-      "question": "Will this work without an internet connection?",
-      "answer": "Absolutely! After the initial model download (one-time, happens on first run), LocalMind works 100% offline. Process audio files on airplanes, in remote locations, or anywhere without internet. Your workflow is never interrupted by connectivity issues."
+      "question": "¿Funcionará sin conexión a internet?",
+      "answer": "¡Absolutamente! Después de la descarga inicial del modelo (única vez, ocurre en la primera ejecución), LocalMind funciona 100% sin conexión. Procesa archivos de audio en aviones, en ubicaciones remotas o en cualquier lugar sin internet. Tu flujo de trabajo nunca se interrumpe por problemas de conectividad."
     },
     "q4": {
-      "question": "Can I use this commercially?",
-      "answer": "Yes! LocalMind is licensed under MIT - one of the most permissive open source licenses. Use it for personal projects, client work, commercial products, or anything else. No attribution required (though always appreciated). The only restriction: you can't hold us liable if something goes wrong."
+      "question": "¿Puedo usarlo comercialmente?",
+      "answer": "¡Sí! LocalMind tiene licencia MIT, una de las licencias de código abierto más permisivas. Úsalo para proyectos personales, trabajo con clientes, productos comerciales o cualquier otra cosa. No se requiere atribución (aunque siempre es apreciada). La única restricción: no puedes hacernos responsables si algo sale mal."
     },
     "q5": {
-      "question": "What about subtitle/SRT export for videos?",
-      "answer": "SRT/subtitle export is coming soon! We're actively developing this feature based on user feedback. Sign up for updates to be notified when we release multi-lingual subtitle export, including timecode synchronization and formatting options."
+      "question": "¿Qué pasa con la exportación de subtítulos/SRT para videos?",
+      "answer": "¡La exportación de SRT/subtítulos llegará pronto! Estamos desarrollando activamente esta función basándonos en los comentarios de los usuarios. Regístrate para recibir actualizaciones y ser notificado cuando lancemos la exportación de subtítulos multilingües, incluyendo sincronización de códigos de tiempo y opciones de formato."
     },
     "q6": {
-      "question": "What are the system requirements?",
-      "answer": "Minimum: 8GB RAM, 10GB free storage, macOS 10.15+ | Recommended: 16GB RAM, Apple Silicon or NVIDIA GPU for faster processing | Coming Soon: Windows 10+ and Linux (Ubuntu 22.04+)"
+      "question": "¿Cuáles son los requisitos del sistema?",
+      "answer": "Mínimo: 8GB RAM, 10GB de espacio libre, macOS 10.15+ | Recomendado: 16GB RAM, Apple Silicon o GPU NVIDIA para un procesamiento más rápido | Próximamente: Windows 10+ y Linux (Ubuntu 22.04+)"
     }
   },
   "use_cases_cards": {
     "journalists": {
-      "title": "Journalists & Podcasters",
-      "problem": "<strong>Pain Point:</strong> Cloud services expose sensitive source conversations to corporate servers and potential legal requests.",
-      "solution": "<strong>Solution:</strong> Protect sources with 100% offline transcription. No server logs. No data breaches. Complete confidentiality."
+      "title": "Periodistas y Podcasters",
+      "problem": "<strong>Punto de Dolor:</strong> Los servicios en la nube exponen conversaciones sensibles de fuentes a servidores corporativos y posibles solicitudes legales.",
+      "solution": "<strong>Solución:</strong> Protege las fuentes con transcripción 100% sin conexión. Sin registros de servidor. Sin filtraciones de datos. Confidencialidad completa."
     },
     "call_centers": {
-      "title": "Call Centers",
-      "problem": "<strong>Pain Point:</strong> Subscription services cost $400+/month for call quality auditing and agent training.",
-      "solution": "<strong>Solution:</strong> Audit 100% of calls with AI-powered quality scoring. Zero recurring costs. Unlimited usage."
+      "title": "Centros de Llamadas",
+      "problem": "<strong>Punto de Dolor:</strong> Los servicios de suscripción cuestan más de $400/mes para auditoría de calidad de llamadas y capacitación de agentes.",
+      "solution": "<strong>Solución:</strong> Audita el 100% de las llamadas con puntuación de calidad impulsada por IA. Cero costos recurrentes. Uso ilimitado."
     },
     "researchers": {
-      "title": "Researchers",
-      "problem": "<strong>Pain Point:</strong> HIPAA and GDPR compliance prohibits uploading patient/participant interviews to cloud services.",
-      "solution": "<strong>Solution:</strong> Process interviews locally. Data never leaves your secure systems. Automatic compliance."
+      "title": "Investigadores",
+      "problem": "<strong>Punto de Dolor:</strong> El cumplimiento de HIPAA y GDPR prohíbe cargar entrevistas de pacientes/participantes a servicios en la nube.",
+      "solution": "<strong>Solución:</strong> Procesa entrevistas localmente. Los datos nunca salen de tus sistemas seguros. Cumplimiento automático."
     },
     "legal": {
-      "title": "Legal Professionals",
-      "problem": "<strong>Pain Point:</strong> Attorney-client privilege at risk when transcribing sensitive depositions through third parties.",
-      "solution": "<strong>Solution:</strong> Maintain privilege with on-device processing. No third-party access. Court-ready security."
+      "title": "Profesionales Legales",
+      "problem": "<strong>Punto de Dolor:</strong> El privilegio abogado-cliente en riesgo al transcribir declaraciones sensibles a través de terceros.",
+      "solution": "<strong>Solución:</strong> Mantén el privilegio con procesamiento en el dispositivo. Sin acceso de terceros. Seguridad lista para tribunales."
     },
     "smb": {
-      "title": "Small Businesses",
-      "problem": "<strong>Pain Point:</strong> Transcription subscriptions cost $20-50/month ($240-600/year) - prohibitive for bootstrapped teams.",
-      "solution": "<strong>Solution:</strong> Professional AI for $0. Save $360+/year. Invest savings in growth, not software rent."
+      "title": "Pequeñas Empresas",
+      "problem": "<strong>Punto de Dolor:</strong> Las suscripciones de transcripción cuestan $20-50/mes ($240-600/año) - prohibitivo para equipos con presupuesto limitado.",
+      "solution": "<strong>Solución:</strong> IA profesional por $0. Ahorra $360+/año. Invierte los ahorros en crecimiento, no en alquiler de software."
     },
     "privacy": {
-      "title": "Privacy-Conscious Users",
-      "problem": "<strong>Pain Point:</strong> \"Trust us\" isn't good enough. Black-box AI services can't be verified or audited.",
-      "solution": "<strong>Solution:</strong> Audit every line of code yourself. Open-source transparency. No blind trust required."
+      "title": "Usuarios Conscientes de la Privacidad",
+      "problem": "<strong>Punto de Dolor:</strong> \"Confía en nosotros\" no es suficiente. Los servicios de IA de caja negra no pueden verificarse ni auditarse.",
+      "solution": "<strong>Solución:</strong> Audita cada línea de código tú mismo. Transparencia de código abierto. No se requiere confianza ciega."
     }
   },
   "manifesto": {
@@ -272,13 +272,13 @@
     "row8_localmind": "✅ Licencia MIT"
   },
   "product_extended": {
-    "lang_english": "English",
+    "lang_english": "Inglés",
     "lang_hindi": "Hindi",
-    "lang_spanish": "Spanish",
-    "lang_arabic": "Arabic",
-    "lang_russian": "Russian",
-    "lang_italian": "Italian",
-    "lang_many_more": "+ Many More"
+    "lang_spanish": "Español",
+    "lang_arabic": "Árabe",
+    "lang_russian": "Ruso",
+    "lang_italian": "Italiano",
+    "lang_many_more": "+ Muchos Más"
   },
   "join": {
     "heading": "Únete al Movimiento",

@@ -251,18 +251,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Accept': 'application/json'
                     }
                 });
-                
+
+                const data = await response.json();
+
                 if (response.ok) {
                     // Show success state
                     emailForm.style.display = 'none';
                     successState.style.display = 'block';
-                    
+
                     // Update download link in success state
                     const downloadLink = successState.querySelector('.btn-download-final');
                     if (downloadLink && downloadUrl) {
                         downloadLink.href = downloadUrl;
+                        downloadLink.setAttribute('download', '');
                     }
-                    
+
                     // Track successful email capture
                     trackEvent('Email Captured', {
                         has_name: !!name,
@@ -270,18 +273,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         feature_realtime: featureRealtime === 'yes',
                         feature_api: featureAPI === 'yes'
                     });
-                    
+
                     // Auto-trigger download after 2 seconds
                     setTimeout(() => {
                         triggerDownload();
+                        // Close modal after download starts
+                        setTimeout(() => closeModal(), 500);
                     }, 2000);
                 } else {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Submission failed');
+                    // Better error handling
+                    console.error('Formspree error:', data);
+                    throw new Error(data.error || data.errors?.[0]?.message || 'Submission failed');
                 }
             } catch (error) {
                 console.error('Form submission error:', error);
-                alert('Something went wrong. Please try again or click "Skip" to download directly.');
+                alert('Something went wrong. Please try again or click "Skip" to download directly.\n\nError: ' + error.message);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }

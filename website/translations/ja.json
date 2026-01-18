@@ -58,10 +58,10 @@
     "label": "LocalMindを選ぶ理由",
     "title": "LocalMind vs <span class='gradient-text'>クラウドサービス</span>",
     "subtitle": "LocalMindがOtter.ai、Rev、Descriptなどの人気クラウド文字起こしサービスとどう比較されるかをご覧ください。",
-    "roi_title": "💰 Calculate Your Annual Savings",
-    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
-    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
+    "roi_title": "💰 年間節約額を計算",
+    "roi_cloud": "平均的なクラウドサービス: <strong>$30/月 × 12ヶ月 = $360/年</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/年</strong>",
+    "roi_savings": "節約額: <span class=\"gradient-text\">$360+毎年</span>"
   },
   "testimonials": {
     "label": "グローバルユーザー",
@@ -150,60 +150,60 @@
   },
   "faq_items": {
     "q1": {
-      "question": "How can this be completely free?",
-      "answer": "LocalMind runs entirely on your device, so we have zero cloud infrastructure costs. No servers to maintain, no bandwidth to pay for, no storage fees. We believe AI should be accessible to everyone, so we've built a truly free solution that doesn't rely on the \"freemium\" model. Our code is open source - if you don't trust us, you can audit and compile it yourself."
+      "question": "なぜ完全無料なのですか？",
+      "answer": "LocalMindは完全にお使いのデバイス上で動作するため、クラウドインフラストラクチャのコストがゼロです。維持するサーバーも、支払う帯域幅も、ストレージ料金もありません。AIは誰もがアクセスできるべきだと考えているため、「freemium」モデルに依存しない本当に無料のソリューションを構築しました。私たちのコードはオープンソースです。信用できなければ、自分で監査してコンパイルできます。"
     },
     "q2": {
-      "question": "Is it really as accurate as cloud services?",
-      "answer": "Yes! LocalMind uses OpenAI's Whisper model - the same technology behind many commercial transcription services. We achieve 95%+ accuracy across 99 languages. Plus, our Chain-of-Thought quality scoring provides 20-30% better analysis accuracy than standard approaches. The only difference is your data stays on your device."
+      "question": "クラウドサービスと同じくらい正確ですか？",
+      "answer": "はい！LocalMindはOpenAIのWhisperモデルを使用しています。これは多くの商用文字起こしサービスの背後にある同じ技術です。99言語で95%以上の精度を達成しています。さらに、Chain-of-Thought品質スコアリングは、標準的なアプローチよりも20〜30%優れた分析精度を提供します。唯一の違いは、データがデバイス上に留まることです。"
     },
     "q3": {
-      "question": "Will this work without an internet connection?",
-      "answer": "Absolutely! After the initial model download (one-time, happens on first run), LocalMind works 100% offline. Process audio files on airplanes, in remote locations, or anywhere without internet. Your workflow is never interrupted by connectivity issues."
+      "question": "インターネット接続なしで動作しますか？",
+      "answer": "もちろんです！初回のモデルダウンロード（1回のみ、初回実行時に発生）の後、LocalMindは100%オフラインで動作します。飛行機、リモートロケーション、またはインターネットのない場所でオーディオファイルを処理できます。接続の問題によってワークフローが中断されることはありません。"
     },
     "q4": {
-      "question": "Can I use this commercially?",
-      "answer": "Yes! LocalMind is licensed under MIT - one of the most permissive open source licenses. Use it for personal projects, client work, commercial products, or anything else. No attribution required (though always appreciated). The only restriction: you can't hold us liable if something goes wrong."
+      "question": "商用利用できますか？",
+      "answer": "はい！LocalMindはMITライセンスで提供されています。これは最も寛容なオープンソースライセンスの1つです。個人プロジェクト、クライアントワーク、商用製品、またはその他の目的に使用できます。帰属表示は不要です（ただし常に歓迎されます）。唯一の制限：何か問題が発生した場合、私たちを責任者とすることはできません。"
     },
     "q5": {
-      "question": "What about subtitle/SRT export for videos?",
-      "answer": "SRT/subtitle export is coming soon! We're actively developing this feature based on user feedback. Sign up for updates to be notified when we release multi-lingual subtitle export, including timecode synchronization and formatting options."
+      "question": "ビデオ用の字幕/SRTエクスポートはありますか？",
+      "answer": "SRT/字幕エクスポートは近日公開予定です！ユーザーフィードバックに基づいてこの機能を積極的に開発しています。多言語字幕エクスポート（タイムコード同期とフォーマットオプションを含む）のリリース通知を受け取るには、更新に登録してください。"
     },
     "q6": {
-      "question": "What are the system requirements?",
-      "answer": "Minimum: 8GB RAM, 10GB free storage, macOS 10.15+ | Recommended: 16GB RAM, Apple Silicon or NVIDIA GPU for faster processing | Coming Soon: Windows 10+ and Linux (Ubuntu 22.04+)"
+      "question": "システム要件は何ですか？",
+      "answer": "最小: 8GB RAM、10GB空き容量、macOS 10.15+ | 推奨: 16GB RAM、Apple SiliconまたはNVIDIA GPUでより高速な処理 | 近日公開: Windows 10+およびLinux（Ubuntu 22.04+）"
     }
   },
   "use_cases_cards": {
     "journalists": {
-      "title": "Journalists & Podcasters",
-      "problem": "<strong>Pain Point:</strong> Cloud services expose sensitive source conversations to corporate servers and potential legal requests.",
-      "solution": "<strong>Solution:</strong> Protect sources with 100% offline transcription. No server logs. No data breaches. Complete confidentiality."
+      "title": "ジャーナリストとポッドキャスター",
+      "problem": "<strong>課題:</strong> クラウドサービスは機密性の高い情報源の会話を企業サーバーや潜在的な法的要求にさらします。",
+      "solution": "<strong>解決策:</strong> 100%オフラインの文字起こしで情報源を保護。サーバーログなし。データ漏洩なし。完全な機密性。"
     },
     "call_centers": {
-      "title": "Call Centers",
-      "problem": "<strong>Pain Point:</strong> Subscription services cost $400+/month for call quality auditing and agent training.",
-      "solution": "<strong>Solution:</strong> Audit 100% of calls with AI-powered quality scoring. Zero recurring costs. Unlimited usage."
+      "title": "コールセンター",
+      "problem": "<strong>課題:</strong> サブスクリプションサービスは、通話品質監査とエージェントトレーニングに月額$400以上かかります。",
+      "solution": "<strong>解決策:</strong> AI駆動の品質スコアリングで100%の通話を監査。継続費用ゼロ。無制限使用。"
     },
     "researchers": {
-      "title": "Researchers",
-      "problem": "<strong>Pain Point:</strong> HIPAA and GDPR compliance prohibits uploading patient/participant interviews to cloud services.",
-      "solution": "<strong>Solution:</strong> Process interviews locally. Data never leaves your secure systems. Automatic compliance."
+      "title": "研究者",
+      "problem": "<strong>課題:</strong> HIPAAおよびGDPRコンプライアンスは、患者/参加者のインタビューをクラウドサービスにアップロードすることを禁止しています。",
+      "solution": "<strong>解決策:</strong> インタビューをローカルで処理。データは安全なシステムから出ません。自動コンプライアンス。"
     },
     "legal": {
-      "title": "Legal Professionals",
-      "problem": "<strong>Pain Point:</strong> Attorney-client privilege at risk when transcribing sensitive depositions through third parties.",
-      "solution": "<strong>Solution:</strong> Maintain privilege with on-device processing. No third-party access. Court-ready security."
+      "title": "法律専門家",
+      "problem": "<strong>課題:</strong> 第三者を通じて機密性の高い証言録取を文字起こしする際、弁護士・依頼人間の秘匿特権がリスクにさらされます。",
+      "solution": "<strong>解決策:</strong> デバイス上での処理で特権を維持。第三者アクセスなし。法廷対応のセキュリティ。"
     },
     "smb": {
-      "title": "Small Businesses",
-      "problem": "<strong>Pain Point:</strong> Transcription subscriptions cost $20-50/month ($240-600/year) - prohibitive for bootstrapped teams.",
-      "solution": "<strong>Solution:</strong> Professional AI for $0. Save $360+/year. Invest savings in growth, not software rent."
+      "title": "中小企業",
+      "problem": "<strong>課題:</strong> 文字起こしサブスクリプションは月額$20〜50（年間$240〜600）かかり、ブートストラップチームには高額です。",
+      "solution": "<strong>解決策:</strong> プロフェッショナルAIを$0で。年間$360以上節約。節約分をソフトウェアレンタルではなく成長に投資。"
     },
     "privacy": {
-      "title": "Privacy-Conscious Users",
-      "problem": "<strong>Pain Point:</strong> \"Trust us\" isn't good enough. Black-box AI services can't be verified or audited.",
-      "solution": "<strong>Solution:</strong> Audit every line of code yourself. Open-source transparency. No blind trust required."
+      "title": "プライバシー重視のユーザー",
+      "problem": "<strong>課題:</strong> 「信頼してください」では不十分。ブラックボックスAIサービスは検証または監査できません。",
+      "solution": "<strong>解決策:</strong> コードのすべての行を自分で監査。オープンソースの透明性。盲目的な信頼は不要。"
     }
   },
   "manifesto": {
@@ -272,13 +272,13 @@
     "row8_localmind": "✅ MITライセンス"
   },
   "product_extended": {
-    "lang_english": "English",
-    "lang_hindi": "Hindi",
-    "lang_spanish": "Spanish",
-    "lang_arabic": "Arabic",
-    "lang_russian": "Russian",
-    "lang_italian": "Italian",
-    "lang_many_more": "+ Many More"
+    "lang_english": "英語",
+    "lang_hindi": "ヒンディー語",
+    "lang_spanish": "スペイン語",
+    "lang_arabic": "アラビア語",
+    "lang_russian": "ロシア語",
+    "lang_italian": "イタリア語",
+    "lang_many_more": "+ その他多数"
   },
   "join": {
     "heading": "運動に参加",

@@ -59,10 +59,10 @@
     "label": "لماذا LocalMind",
     "title": "LocalMind مقابل <span class='gradient-text'>الخدمات السحابية</span>",
     "subtitle": "شاهد كيف يتفوق LocalMind على خدمات النسخ السحابية الشهيرة مثل Otter.ai و Rev و Descript.",
-    "roi_title": "💰 Calculate Your Annual Savings",
-    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
-    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
+    "roi_title": "💰 احسب مدخراتك السنوية",
+    "roi_cloud": "متوسط الخدمة السحابية: <strong>$30/شهر × 12 شهر = $360/سنة</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/سنة</strong>",
+    "roi_savings": "توفر: <span class=\"gradient-text\">$360+ كل عام</span>"
   },
   "testimonials": {
     "label": "مستخدمون عالميون",
@@ -151,60 +151,60 @@
   },
   "faq_items": {
     "q1": {
-      "question": "How can this be completely free?",
-      "answer": "LocalMind runs entirely on your device, so we have zero cloud infrastructure costs. No servers to maintain, no bandwidth to pay for, no storage fees. We believe AI should be accessible to everyone, so we've built a truly free solution that doesn't rely on the \"freemium\" model. Our code is open source - if you don't trust us, you can audit and compile it yourself."
+      "question": "كيف يمكن أن يكون مجانيًا تمامًا؟",
+      "answer": "يعمل LocalMind بالكامل على جهازك، لذلك ليس لدينا تكاليف للبنية التحتية السحابية. لا توجد خوادم للصيانة، ولا نطاق ترددي للدفع، ولا رسوم تخزين. نحن نؤمن بأن الذكاء الاصطناعي يجب أن يكون متاحًا للجميع، لذلك قمنا ببناء حل مجاني حقًا لا يعتمد على نموذج \"freemium\". كودنا مفتوح المصدر - إذا كنت لا تثق بنا، يمكنك مراجعته وتجميعه بنفسك."
     },
     "q2": {
-      "question": "Is it really as accurate as cloud services?",
-      "answer": "Yes! LocalMind uses OpenAI's Whisper model - the same technology behind many commercial transcription services. We achieve 95%+ accuracy across 99 languages. Plus, our Chain-of-Thought quality scoring provides 20-30% better analysis accuracy than standard approaches. The only difference is your data stays on your device."
+      "question": "هل هو دقيق حقًا مثل الخدمات السحابية؟",
+      "answer": "نعم! يستخدم LocalMind نموذج Whisper من OpenAI - نفس التكنولوجيا وراء العديد من خدمات النسخ التجارية. نحقق دقة تزيد عن 95٪ عبر 99 لغة. بالإضافة إلى ذلك، توفر تقييم الجودة Chain-of-Thought دقة تحليل أفضل بنسبة 20-30٪ من الأساليب القياسية. الفرق الوحيد هو أن بياناتك تبقى على جهازك."
     },
     "q3": {
-      "question": "Will this work without an internet connection?",
-      "answer": "Absolutely! After the initial model download (one-time, happens on first run), LocalMind works 100% offline. Process audio files on airplanes, in remote locations, or anywhere without internet. Your workflow is never interrupted by connectivity issues."
+      "question": "هل سيعمل بدون اتصال بالإنترنت؟",
+      "answer": "بالتأكيد! بعد تنزيل النموذج الأولي (مرة واحدة، يحدث في التشغيل الأول)، يعمل LocalMind بنسبة 100٪ دون اتصال. معالجة ملفات الصوت على الطائرات، في المواقع النائية، أو في أي مكان بدون إنترنت. لن يتم مقاطعة سير عملك أبدًا بسبب مشاكل الاتصال."
     },
     "q4": {
-      "question": "Can I use this commercially?",
-      "answer": "Yes! LocalMind is licensed under MIT - one of the most permissive open source licenses. Use it for personal projects, client work, commercial products, or anything else. No attribution required (though always appreciated). The only restriction: you can't hold us liable if something goes wrong."
+      "question": "هل يمكنني استخدامه تجاريًا؟",
+      "answer": "نعم! LocalMind مرخص تحت MIT - واحدة من أكثر تراخيص المصدر المفتوح تساهلاً. استخدمه للمشاريع الشخصية، عمل العملاء، المنتجات التجارية، أو أي شيء آخر. لا يلزم الإسناد (على الرغم من أنه موضع تقدير دائمًا). القيد الوحيد: لا يمكنك تحميلنا المسؤولية إذا حدث خطأ ما."
     },
     "q5": {
-      "question": "What about subtitle/SRT export for videos?",
-      "answer": "SRT/subtitle export is coming soon! We're actively developing this feature based on user feedback. Sign up for updates to be notified when we release multi-lingual subtitle export, including timecode synchronization and formatting options."
+      "question": "ماذا عن تصدير الترجمة/SRT لمقاطع الفيديو؟",
+      "answer": "تصدير SRT/الترجمة قادم قريبًا! نحن نطور هذه الميزة بنشاط بناءً على ملاحظات المستخدمين. اشترك للحصول على التحديثات ليتم إعلامك عندما نطلق تصدير الترجمة متعدد اللغات، بما في ذلك مزامنة الرموز الزمنية وخيارات التنسيق."
     },
     "q6": {
-      "question": "What are the system requirements?",
-      "answer": "Minimum: 8GB RAM, 10GB free storage, macOS 10.15+ | Recommended: 16GB RAM, Apple Silicon or NVIDIA GPU for faster processing | Coming Soon: Windows 10+ and Linux (Ubuntu 22.04+)"
+      "question": "ما هي متطلبات النظام؟",
+      "answer": "الحد الأدنى: 8GB RAM، 10GB مساحة خالية، macOS 10.15+ | الموصى به: 16GB RAM، Apple Silicon أو NVIDIA GPU لمعالجة أسرع | قريبًا: Windows 10+ و Linux (Ubuntu 22.04+)"
     }
   },
   "use_cases_cards": {
     "journalists": {
-      "title": "Journalists & Podcasters",
-      "problem": "<strong>Pain Point:</strong> Cloud services expose sensitive source conversations to corporate servers and potential legal requests.",
-      "solution": "<strong>Solution:</strong> Protect sources with 100% offline transcription. No server logs. No data breaches. Complete confidentiality."
+      "title": "الصحفيون والبودكاسترز",
+      "problem": "<strong>نقطة الألم:</strong> تعرض الخدمات السحابية محادثات المصادر الحساسة لخوادم الشركات والطلبات القانونية المحتملة.",
+      "solution": "<strong>الحل:</strong> حماية المصادر بنسخ 100٪ دون اتصال. لا سجلات خادم. لا اختراقات بيانات. سرية تامة."
     },
     "call_centers": {
-      "title": "Call Centers",
-      "problem": "<strong>Pain Point:</strong> Subscription services cost $400+/month for call quality auditing and agent training.",
-      "solution": "<strong>Solution:</strong> Audit 100% of calls with AI-powered quality scoring. Zero recurring costs. Unlimited usage."
+      "title": "مراكز الاتصال",
+      "problem": "<strong>نقطة الألم:</strong> تكلف خدمات الاشتراك أكثر من $400/شهر لمراجعة جودة المكالمات وتدريب الوكلاء.",
+      "solution": "<strong>الحل:</strong> مراجعة 100٪ من المكالمات بتقييم جودة مدعوم بالذكاء الاصطناعي. صفر تكاليف متكررة. استخدام غير محدود."
     },
     "researchers": {
-      "title": "Researchers",
-      "problem": "<strong>Pain Point:</strong> HIPAA and GDPR compliance prohibits uploading patient/participant interviews to cloud services.",
-      "solution": "<strong>Solution:</strong> Process interviews locally. Data never leaves your secure systems. Automatic compliance."
+      "title": "الباحثون",
+      "problem": "<strong>نقطة الألم:</strong> يحظر الامتثال لـ HIPAA و GDPR تحميل مقابلات المرضى/المشاركين إلى الخدمات السحابية.",
+      "solution": "<strong>الحل:</strong> معالجة المقابلات محليًا. لا تغادر البيانات أنظمتك الآمنة أبدًا. امتثال تلقائي."
     },
     "legal": {
-      "title": "Legal Professionals",
-      "problem": "<strong>Pain Point:</strong> Attorney-client privilege at risk when transcribing sensitive depositions through third parties.",
-      "solution": "<strong>Solution:</strong> Maintain privilege with on-device processing. No third-party access. Court-ready security."
+      "title": "المهنيون القانونيون",
+      "problem": "<strong>نقطة الألم:</strong> امتياز المحامي-العميل معرض للخطر عند نسخ الشهادات الحساسة من خلال أطراف ثالثة.",
+      "solution": "<strong>الحل:</strong> الحفاظ على الامتياز بمعالجة على الجهاز. لا وصول لطرف ثالث. أمان جاهز للمحكمة."
     },
     "smb": {
-      "title": "Small Businesses",
-      "problem": "<strong>Pain Point:</strong> Transcription subscriptions cost $20-50/month ($240-600/year) - prohibitive for bootstrapped teams.",
-      "solution": "<strong>Solution:</strong> Professional AI for $0. Save $360+/year. Invest savings in growth, not software rent."
+      "title": "الشركات الصغيرة",
+      "problem": "<strong>نقطة الألم:</strong> تكلف اشتراكات النسخ $20-50/شهر ($240-600/سنة) - باهظة للفرق ذات الميزانية المحدودة.",
+      "solution": "<strong>الحل:</strong> ذكاء اصطناعي محترف مقابل $0. وفر $360+/سنة. استثمر المدخرات في النمو، وليس في استئجار البرمجيات."
     },
     "privacy": {
-      "title": "Privacy-Conscious Users",
-      "problem": "<strong>Pain Point:</strong> \"Trust us\" isn't good enough. Black-box AI services can't be verified or audited.",
-      "solution": "<strong>Solution:</strong> Audit every line of code yourself. Open-source transparency. No blind trust required."
+      "title": "المستخدمون الواعون بالخصوصية",
+      "problem": "<strong>نقطة الألم:</strong> \"ثق بنا\" ليس كافيًا. لا يمكن التحقق من خدمات الذكاء الاصطناعي ذات الصندوق الأسود أو مراجعتها.",
+      "solution": "<strong>الحل:</strong> راجع كل سطر من الكود بنفسك. شفافية المصدر المفتوح. لا حاجة للثقة العمياء."
     }
   },
   "manifesto": {
@@ -273,13 +273,13 @@
     "row8_localmind": "✅ ترخيص MIT"
   },
   "product_extended": {
-    "lang_english": "English",
-    "lang_hindi": "Hindi",
-    "lang_spanish": "Spanish",
-    "lang_arabic": "Arabic",
-    "lang_russian": "Russian",
-    "lang_italian": "Italian",
-    "lang_many_more": "+ Many More"
+    "lang_english": "الإنجليزية",
+    "lang_hindi": "الهندية",
+    "lang_spanish": "الإسبانية",
+    "lang_arabic": "العربية",
+    "lang_russian": "الروسية",
+    "lang_italian": "الإيطالية",
+    "lang_many_more": "+ المزيد"
   },
   "join": {
     "heading": "انضم إلى الحركة",

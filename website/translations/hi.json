@@ -58,10 +58,10 @@
     "label": "LocalMind क्यों",
     "title": "LocalMind vs <span class='gradient-text'>क्लाउड सेवाएं</span>",
     "subtitle": "देखें कि LocalMind Otter.ai, Rev और Descript जैसी लोकप्रिय क्लाउड ट्रांसक्रिप्शन सेवाओं से कैसे तुलना करता है।",
-    "roi_title": "💰 Calculate Your Annual Savings",
-    "roi_cloud": "Average cloud service: <strong>$30/month × 12 months = $360/year</strong>",
-    "roi_localmind": "LocalMind: <strong>$0/year</strong>",
-    "roi_savings": "You save: <span class=\"gradient-text\">$360+ every year</span>"
+    "roi_title": "💰 अपनी वार्षिक बचत की गणना करें",
+    "roi_cloud": "औसत क्लाउड सेवा: <strong>$30/माह × 12 महीने = $360/वर्ष</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/वर्ष</strong>",
+    "roi_savings": "आप बचाते हैं: <span class=\"gradient-text\">हर साल $360+</span>"
   },
   "testimonials": {
     "label": "वैश्विक उपयोगकर्ता",
@@ -272,13 +272,13 @@
     "row8_localmind": "✅ MIT लाइसेंस"
   },
   "product_extended": {
-    "lang_english": "English",
-    "lang_hindi": "Hindi",
-    "lang_spanish": "Spanish",
-    "lang_arabic": "Arabic",
-    "lang_russian": "Russian",
-    "lang_italian": "Italian",
-    "lang_many_more": "+ Many More"
+    "lang_english": "अंग्रेज़ी",
+    "lang_hindi": "हिंदी",
+    "lang_spanish": "स्पेनिश",
+    "lang_arabic": "अरबी",
+    "lang_russian": "रूसी",
+    "lang_italian": "इतालवी",
+    "lang_many_more": "+ और भी बहुत कुछ"
   },
   "join": {
     "heading": "आंदोलन में शामिल हों",
