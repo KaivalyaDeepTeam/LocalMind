@@ -169,44 +169,64 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
 def create_audit_prompt(parameters: List[Dict[str, Any]]) -> str:
     """Create the audit system prompt based on parameters."""
     param_list = "\n".join(
-        f"- {p['name']} (max: {p['max_score']}, weight: {p['weight']}): {p['description']}"
+        f"- {p['name']}: {p['description']} (Score 0-{p['max_score']})"
         for p in parameters
     )
 
-    # Create example with all parameter names
-    example_scores = {p['name']: f'{{"score": 8, "feedback": "Example feedback"}}' for p in parameters}
+    # Create realistic example scores (7-9 range for good performance)
+    example_scores = {
+        p['name']: f'{{"score": {7 + (hash(p["name"]) % 3)}, "feedback": "Good performance with minor areas for improvement"}}'
+        for p in parameters
+    }
     example_scores_str = ",\n    ".join(f'"{name}": {score}' for name, score in example_scores.items())
 
-    return f"""You are a call quality auditor. Your task is to SCORE the call transcript, NOT to transcribe or restructure it.
+    return f"""You are a call quality auditor. Analyze the call transcript and provide scores.
 
 SCORING PARAMETERS:
 {param_list}
 
-YOUR TASK:
-1. Read the call transcript provided by the user
-2. Score each parameter from 0 to max score
-3. Provide brief feedback for each score
-4. List 2-4 strengths and 2-4 improvements
-5. Write a brief summary
+SCORING GUIDE - Use the FULL 0-10 scale:
+• 9-10: Excellent - Exceptional performance, best practices followed
+• 7-8: Good - Strong performance with minor improvements possible
+• 5-6: Average - Acceptable but needs improvement
+• 3-4: Below Average - Significant issues present
+• 0-2: Poor - Major problems, unacceptable performance
 
-OUTPUT FORMAT - You MUST return ONLY this exact JSON structure with NO additional text:
+IMPORTANT: Most typical customer service calls should score in the 6-8 range. Only use very low scores (0-3) for calls with serious problems like rudeness, incorrect information, or policy violations.
+
+YOUR TASK:
+1. Read the entire call transcript carefully
+2. Score EACH parameter using the FULL 0-10 scale based on actual performance
+3. Provide specific feedback explaining each score
+4. Identify 2-4 concrete strengths observed in the call
+5. Identify 2-4 specific areas for improvement
+6. Write a brief overall summary
+
+EXAMPLE - A typical good sales call might score:
+{{
+  "parameter_scores": {{
+    "greeting": {{"score": 8, "feedback": "Professional greeting with name and company"}},
+    "active_listening": {{"score": 7, "feedback": "Good acknowledgment but could ask more clarifying questions"}},
+    "solution_provided": {{"score": 9, "feedback": "Comprehensive explanation of product benefits and features"}}
+  }}
+}}
+
+OUTPUT FORMAT - Return ONLY valid JSON (no markdown, no explanations):
 
 {{
   "parameter_scores": {{
     {example_scores_str}
   }},
-  "strengths": ["First strength", "Second strength", "Third strength"],
-  "improvements": ["First improvement", "Second improvement", "Third improvement"],
-  "summary": "Overall assessment of call quality"
+  "strengths": ["Specific strength 1", "Specific strength 2", "Specific strength 3"],
+  "improvements": ["Specific improvement 1", "Specific improvement 2", "Specific improvement 3"],
+  "summary": "Brief overall assessment of the call quality and agent performance"
 }}
 
-CRITICAL RULES:
-- Output ONLY the JSON object above
-- NO markdown formatting (no ```json)
-- NO explanations before or after
-- NO transcript restructuring
-- Just the raw JSON object
-- All parameter names must match exactly as shown above"""
+CRITICAL:
+- Use realistic scores (most calls score 5-9, not 0-2)
+- Score based on ACTUAL performance, not idealized perfection
+- Output ONLY the JSON object (no markdown, no extra text)
+- All parameter names must match exactly as listed above"""
 
 
 class AuditWorker(BaseWorker):
