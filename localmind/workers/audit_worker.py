@@ -330,151 +330,58 @@ def create_audit_prompt(parameters: List[Dict[str, Any]], model_name: str = "phi
         example_scores_json.append(f'    "{name}": {{"score": {data["score"]}, "feedback": "{data["feedback"]}"}}')
     example_scores_str = ",\n".join(example_scores_json)
 
-    return f"""You are an expert call quality auditor. Score this customer service conversation accurately.
+    return f"""You are a call quality auditor. Score this conversation based on the parameters below.
 
-## CRITICAL SCORING INSTRUCTIONS
+## SCORING SYSTEM
 
-**UNDERSTAND THE SCALE:**
-- Each parameter is scored from 0 to max_score (typically 0-10)
-- Scores are weighted by importance, then normalized to 100 total points
-- Your job: Score each parameter honestly from 0 to its maximum
+Each parameter is scored 0-10, then weighted and combined for a final score out of 100.
 
-**WHAT EACH SCORE MEANS (for 0-10 scale):**
+**What each score means (final weighted score out of 100):**
+- **70-80/100 = GOOD** ← Most professional calls score here
+- **85-100/100 = EXCELLENT** - Exceptional service
+- **50-60/100 = ACCEPTABLE** - Adequate but needs work
+- **30-40/100 = BELOW AVERAGE** - Significant issues
+- **0-20/100 = POOR** - Unacceptable, only for truly terrible calls
 
-**9-10 / 10 = EXCELLENT** (90-100%)
-- Exceptional, flawless execution
-- Exceeds all expectations
-- Minimal to no room for improvement
-
-**7-8 / 10 = GOOD** (70-80%)  ← **MOST PROFESSIONAL CALLS FALL HERE**
-- Professional, competent service
-- Meets expectations with minor flaws
-- Effective but has room to improve
-
-**5-6 / 10 = ACCEPTABLE** (50-60%)
-- Adequate but needs work
-- Noticeable gaps or issues
-- Barely meets minimum standards
-
-**3-4 / 10 = BELOW AVERAGE** (30-40%)
-- Significant problems present
-- Falls short of expectations
-- Needs serious improvement
-
-**0-2 / 10 = POOR** (0-20%)
-- Unacceptable performance
-- Major failures or omissions
-- Completely missed the mark
-
-## PARAMETERS TO SCORE
+## PARAMETERS (scored 0 to max, weighted by importance)
 
 {param_list}
 
-## SCORING EXAMPLES
+## EXAMPLE: Good Professional Call (final score: ~80/100)
 
-### Example 1: GOOD Professional Call (Target: 70-85%)
-
-A sales agent handles a customer inquiry professionally with good product knowledge and communication.
+Score each parameter honestly, aiming for 7-9 out of 10 for professional service:
 
 ```json
 {{
   "parameter_scores": {{
 {example_scores_str}
   }},
-  "strengths": ["Clear communication", "Good product knowledge", "Professional demeanor"],
-  "improvements": ["Could probe deeper on needs", "Close could be stronger"],
-  "summary": "Professional call with effective service delivery and good customer engagement"
+  "strengths": ["Clear communication", "Good problem resolution", "Professional tone"],
+  "improvements": ["Could probe deeper", "Closing could be stronger"],
+  "summary": "Professional call with effective service delivery"
 }}
 ```
 
-**This scores around 80/100 = GOOD professional service.**
+**This example would score approximately 80/100 after weighting = GOOD professional service.**
 
-### Example 2: POOR Call (10-20%)
+## CRITICAL RULES
 
-An agent who is rude, doesn't listen, provides wrong information, and hangs up abruptly.
+1. **Professional calls score 70-85 out of 100 overall** - NOT 10 out of 100!
+2. **70-80 out of 100 = GOOD service** - This is the norm for competent agents
+3. **10-20 out of 100 = TERRIBLE** - Only use for truly unacceptable calls
+4. **Score realistically** - A good call with minor flaws should score 75-80 out of 100, not 10 out of 100!
+5. **Provide specific feedback** for each parameter
 
-```json
-{{
-  "parameter_scores": {{
-    "greeting": {{"score": 1, "feedback": "No proper greeting, abrupt start"}},
-    "active_listening": {{"score": 2, "feedback": "Interrupted customer constantly"}},
-    "problem_identification": {{"score": 1, "feedback": "Failed to understand issue"}},
-    "solution_provided": {{"score": 0, "feedback": "Gave incorrect information"}},
-    "product_knowledge": {{"score": 2, "feedback": "Major knowledge gaps"}},
-    "communication_clarity": {{"score": 3, "feedback": "Confusing explanations"}},
-    "empathy": {{"score": 1, "feedback": "Showed no understanding"}},
-    "call_control": {{"score": 2, "feedback": "Lost control early"}},
-    "closing": {{"score": 0, "feedback": "Hung up without proper closing"}},
-    "compliance": {{"score": 1, "feedback": "Violated multiple policies"}}
-  }},
-  "strengths": [],
-  "improvements": ["Everything needs major improvement"],
-  "summary": "Unacceptable service with multiple policy violations and poor customer treatment"
-}}
-```
+## OUTPUT
 
-**This scores around 13/100 = POOR unacceptable service.**
-
-### Example 3: EXCELLENT Call (85-95%)
-
-An expert agent who anticipates needs, provides perfect solution, builds rapport, and creates a wow experience.
-
-```json
-{{
-  "parameter_scores": {{
-    "greeting": {{"score": 10, "feedback": "Warm, personalized greeting"}},
-    "active_listening": {{"score": 9, "feedback": "Excellent listening with acknowledgments"}},
-    "problem_identification": {{"score": 10, "feedback": "Identified root cause immediately"}},
-    "solution_provided": {{"score": 9, "feedback": "Perfect solution with clear steps"}},
-    "product_knowledge": {{"score": 10, "feedback": "Expert level knowledge"}},
-    "communication_clarity": {{"score": 9, "feedback": "Crystal clear explanations"}},
-    "empathy": {{"score": 10, "feedback": "Exceptional empathy and rapport"}},
-    "call_control": {{"score": 9, "feedback": "Perfect control throughout"}},
-    "closing": {{"score": 9, "feedback": "Comprehensive closing with follow-up"}},
-    "compliance": {{"score": 10, "feedback": "Perfect compliance adherence"}}
-  }},
-  "strengths": ["Exceptional service", "Perfect problem resolution", "Outstanding customer rapport"],
-  "improvements": ["Minor: could have offered additional products"],
-  "summary": "Outstanding call demonstrating expert-level service and creating exceptional customer experience"
-}}
-```
-
-**This scores around 95/100 = EXCELLENT exceptional service.**
-
-## KEY REMINDERS
-
-1. **Most professional calls score 70-85%** (7-8.5 out of 10 on average)
-2. **Scores of 1-2 out of 10 mean TERRIBLE service** - only use for truly bad calls
-3. **Score each parameter independently** based on what you heard
-4. **Be realistic** - perfection (10/10) is rare, good service is 7-8/10
-5. **Consider the context** - a good agent may have 1-2 minor flaws and still score 75-80%
-
-## OUTPUT FORMAT
-
-Return ONLY valid JSON matching the schema. No markdown code blocks, no explanations, just the JSON object.
-
-Return ONLY this JSON structure:
+Return ONLY valid JSON (no markdown, no explanations):
 
 {{
-  "parameter_scores": {{
-    "greeting": {{"score": X, "feedback": "..."}},
-    "active_listening": {{"score": X, "feedback": "..."}},
-    ...all {len(parameters)} parameters...
-  }},
-  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "parameter_scores": {{ ...all parameters with score and feedback... }},
+  "strengths": ["strength 1", "strength 2"],
   "improvements": ["improvement 1", "improvement 2"],
-  "summary": "brief overall assessment"
-}}
-
-**Critical Rules:**
-- Scores must be realistic (professional calls score 70-85%, NOT 10%)
-- DO NOT score everything as 1 point - that means 10% which is TERRIBLE
-- If the call is professional, score it 70-85% of each parameter's max
-- Each score reflects actual performance vs. maximum points
-- Provide specific, actionable feedback for each parameter
-- List 2-4 concrete strengths and improvements
-
-REMEMBER: Professional calls = 70-85% overall, NOT 10%!"""
+  "summary": "brief assessment"
+}}"""
 
 
 class AuditWorker(BaseWorker):
