@@ -478,8 +478,10 @@ class AuditWorker(BaseWorker):
 
             # Use moderate temperature for all LLMs
             # 0.5 balances consistency with flexibility across different models
+            # Set max_tokens to 1536 to leave room for prompt in 4096 context window
             config = LLMConfig(
                 temperature=0.5,
+                max_tokens=1536,
                 json_mode=True,
                 json_schema=json_schema,  # Use schema-based constrained generation
             )
