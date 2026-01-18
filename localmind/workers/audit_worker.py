@@ -469,14 +469,12 @@ Return ONLY this JSON structure:
 **Critical Rules:**
 - Scores must be realistic (professional calls score 70-85%, NOT 10%)
 - DO NOT score everything as 1 point - that means 10% which is TERRIBLE
-- A good call should get 6-7 points out of 7, 9-11 out of 11, 12-15 out of 15
 - If the call is professional, score it 70-85% of each parameter's max
 - Each score reflects actual performance vs. maximum points
 - Provide specific, actionable feedback for each parameter
 - List 2-4 concrete strengths and improvements
 
-REMEMBER: Professional calls = 70-85% overall, NOT 10%!
-{chat_end}"""
+REMEMBER: Professional calls = 70-85% overall, NOT 10%!"""
 
 
 class AuditWorker(BaseWorker):
