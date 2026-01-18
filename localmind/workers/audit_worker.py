@@ -296,6 +296,54 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
     return schema
 
 
+def create_single_shot_audit_prompt(parameters: List[Dict[str, Any]]) -> str:
+    """Create single-shot audit prompt for powerful API models (GPT-4, Claude, etc.).
+
+    Args:
+        parameters: List of scoring parameters with max_score and weight
+
+    Returns:
+        Optimized single-shot prompt for API models
+    """
+    # Build parameter list
+    param_list = "\n".join(
+        f"- **{p['name']}** (0-{p.get('max_score', 10)}, weight: {p.get('weight', 1.0)}): {p['description']}"
+        for p in parameters
+    )
+
+    return f"""You are an expert call quality auditor. Analyze and score this customer service call.
+
+## PARAMETERS TO SCORE
+
+{param_list}
+
+## SCORING GUIDELINES
+
+**Final weighted score ranges (out of 100):**
+- **70-85/100 = GOOD** - Professional, competent service (most calls)
+- **85-100/100 = EXCELLENT** - Exceptional service
+- **50-65/100 = ACCEPTABLE** - Adequate but needs improvement
+- **30-45/100 = BELOW AVERAGE** - Significant issues
+- **0-25/100 = POOR** - Unacceptable performance
+
+**How to score each parameter (0-10 scale):**
+- 8-9 = Good professional performance
+- 9-10 = Excellent/exceptional
+- 6-7 = Acceptable with gaps
+- 3-5 = Below average
+- 0-2 = Poor/unacceptable
+
+## OUTPUT FORMAT
+
+Return valid JSON with:
+- `parameter_scores`: Object with each parameter scored (score + feedback)
+- `strengths`: Array of 2-4 key strengths observed
+- `improvements`: Array of 2-4 areas for improvement
+- `summary`: Brief overall assessment (2-3 sentences)
+
+**Important**: Professional calls typically score 70-85/100 overall. Only score below 50 if there are serious issues."""
+
+
 def create_cot_analysis_prompt() -> str:
     """Create Chain-of-Thought analysis prompt for reasoning phase.
 
@@ -468,13 +516,31 @@ class AuditWorker(BaseWorker):
         return result
 
     async def _llm_audit(self) -> AuditResult:
-        """Use LLM to audit the transcript with Chain-of-Thought reasoning."""
+        """Use LLM to audit the transcript.
+
+        Uses Chain-of-Thought (CoT) for local models, single-shot for API models.
+        """
         from localmind.llm import create_provider, LLMConfig
 
         self.report_progress(20, "Loading LLM provider...")
 
         provider = create_provider()
         await provider.initialize()
+
+        # Detect provider type
+        provider_name = provider.provider_name.lower()
+        use_cot = provider_name == "local"
+
+        if use_cot:
+            # Local models benefit from Chain-of-Thought reasoning
+            return await self._llm_audit_with_cot(provider)
+        else:
+            # API models (GPT-4, Claude, Groq) are powerful enough for single-shot
+            return await self._llm_audit_single_shot(provider)
+
+    async def _llm_audit_with_cot(self, provider) -> AuditResult:
+        """Use Chain-of-Thought reasoning for local LLMs (2-phase approach)."""
+        from localmind.llm import LLMConfig
 
         try:
             self.report_progress(30, "Analyzing transcript...")
@@ -569,6 +635,108 @@ class AuditWorker(BaseWorker):
 
             # Calculate overall scores using weighted system
             # Each score is multiplied by its weight, then summed
+            total_score = sum(p.score * p.weight for p in parameter_scores)
+            total_max = sum(p.max_score * p.weight for p in parameter_scores)
+
+            # Calculate compliance and quality subscores
+            compliance_params = ["greeting", "closing", "compliance"]
+            quality_params = ["active_listening", "problem_identification", "solution_provided",
+                            "product_knowledge", "communication_clarity", "empathy", "call_control"]
+
+            compliance_score = self._calculate_subscore(parameter_scores, compliance_params)
+            quality_score = self._calculate_subscore(parameter_scores, quality_params)
+
+            return AuditResult(
+                overall_score=total_score,
+                max_score=total_max,
+                parameter_scores=parameter_scores,
+                strengths=response_data.get("strengths", []),
+                improvements=response_data.get("improvements", []),
+                summary=response_data.get("summary", ""),
+                compliance_score=compliance_score,
+                quality_score=quality_score,
+                transcript=transcript,
+            )
+
+        finally:
+            await provider.close()
+
+    async def _llm_audit_single_shot(self, provider) -> AuditResult:
+        """Use single-shot prompting for powerful API models (GPT-4, Claude, etc.)."""
+        from localmind.llm import LLMConfig
+
+        try:
+            self.report_progress(30, "Analyzing transcript...")
+
+            # Get model name
+            model_name = getattr(provider, '_model', 'gpt-4')
+            transcript = self._merge_result.merged_text
+
+            # Truncate long transcripts to fit context window
+            max_transcript_chars = 10000  # ~2850 tokens
+
+            if len(transcript) > max_transcript_chars:
+                # Sample beginning (greeting), middle (main), end (closing)
+                part_size = max_transcript_chars // 3
+
+                begin = transcript[:part_size]
+                middle_start = (len(transcript) - part_size) // 2
+                middle = transcript[middle_start:middle_start + part_size]
+                end = transcript[-part_size:]
+
+                transcript = (
+                    f"[CALL BEGINNING]\n{begin}\n\n"
+                    f"[CALL MIDDLE - Representative Sample]\n{middle}\n\n"
+                    f"[CALL ENDING]\n{end}"
+                )
+                self.report_progress(35, "Long call - sampling key sections...")
+
+            # Single-shot prompt (no CoT analysis phase)
+            # API models are powerful enough to reason internally
+            system_prompt = create_single_shot_audit_prompt(self._parameters)
+            messages = [
+                provider.create_system_message(system_prompt),
+                provider.create_user_message(
+                    f"Analyze and score this call transcript:\n\n{transcript}"
+                ),
+            ]
+
+            # Create JSON schema for constrained generation
+            json_schema = create_audit_json_schema(self._parameters)
+
+            # Use moderate temperature for API models
+            config = LLMConfig(
+                temperature=0.5,
+                max_tokens=1536,
+                json_mode=True,
+                json_schema=json_schema,
+            )
+
+            self.report_progress(50, "Generating audit scores...")
+
+            response_data = await provider.generate_json(messages, config)
+
+            self.report_progress(80, "Processing audit results...")
+
+            # Parse parameter scores
+            parameter_scores = []
+            param_data = response_data.get("parameter_scores", {})
+
+            for param in self._parameters:
+                name = param["name"]
+                score_data = param_data.get(name, {})
+                max_score = param.get("max_score", 10)
+                weight = param.get("weight", 1.0)
+
+                parameter_scores.append(ParameterScore(
+                    name=name,
+                    score=float(score_data.get("score", 0)),
+                    max_score=float(max_score),
+                    weight=float(weight),
+                    feedback=score_data.get("feedback", ""),
+                ))
+
+            # Calculate overall scores using weighted system
             total_score = sum(p.score * p.weight for p in parameter_scores)
             total_max = sum(p.max_score * p.weight for p in parameter_scores)
 
