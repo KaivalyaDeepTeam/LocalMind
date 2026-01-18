@@ -1,0 +1,151 @@
+{
+  "lang": "ja",
+  "name": "日本語",
+  "nav": {
+    "mission": "私たちの使命",
+    "product": "製品",
+    "download": "ダウンロード",
+    "github": "GitHub"
+  },
+  "hero": {
+    "title": "AIは無料であるべき。<br>AIはプライベートであるべき。<br><span class='gradient-text'>AIはあなたのものであるべき。</span>",
+    "subtitle": "私たちは単にソフトウェアを作っているのではありません。人工知能が人類に奉仕する未来のために戦っています。あなたの会話があなたのものであり続ける未来のために。強力な技術が監視という代償を払わない未来のために。",
+    "cta_mission": "使命を読む",
+    "cta_download": "LocalMindをダウンロード"
+  },
+  "social_proof": {
+    "launch": "リリース！",
+    "free": "永久無料",
+    "languages": "言語",
+    "opensource": "オープンソース"
+  },
+  "mission": {
+    "label": "私たちの使命",
+    "title": "AIの民主化。<br>プライバシーの保護。<br><span class='gradient-text'>すべての人に力を。</span>"
+  },
+  "use_cases": {
+    "label": "使用例",
+    "title": "<span class='gradient-text'>実在する人々</span>のために作られた",
+    "subtitle": "情報源を守るジャーナリストからコストを節約する企業まで - LocalMindは、データがあなたのものであり続けるという核心的な約束で、多様なニーズに応えます。"
+  },
+  "product": {
+    "label": "製品",
+    "title": "LocalMind:<br><span class='gradient-text'>あなたを尊重するAI文字起こし</span>",
+    "subtitle": "AI自由のための最初のツール。完全にあなたのマシン上で動作するプロフェッショナルグレードのオーディオ文字起こしと分析。",
+    "feature_transcription_title": "文字起こし",
+    "feature_transcription_desc": "Whisperを搭載した最先端の音声認識。アクセント、ノイズ、複数の言語を驚くべき精度で処理します。",
+    "feature_speaker_title": "話者検出",
+    "feature_speaker_desc": "誰が話しているかを自動的に識別します。会議、インタビュー、ポッドキャスト、複数人の録音に最適です。",
+    "feature_quality_title": "品質分析",
+    "feature_quality_desc": "Chain-of-Thought推論によるAI駆動のインサイトで20-30%の精度向上。通話品質、カスタマーサービス、コンプライアンスを分析します。ニーズに合わせてスコアリングをカスタマイズできます。",
+    "feature_export_title": "エクスポートの自由",
+    "feature_export_desc": "あなたのデータ、あなたのフォーマット。PDFレポート、開発者向けJSON、またはプレーンテキストにエクスポート。ベンダーロックインなし。",
+    "feature_multilang_title": "多言語UI",
+    "feature_multilang_desc": "母国語でLocalMindを使用できます。英語、ロシア語、スペイン語、ヒンディー語などでインターフェースが利用可能です。",
+    "languages_heading": "サポート言語"
+  },
+  "how_it_works": {
+    "title": "シンプルな設計",
+    "subtitle": "アカウント不要。APIキー不要。設定不要。ダウンロードして、開いて、使うだけ。",
+    "step1_title": "ダウンロード",
+    "step1_desc": "プラットフォーム用のLocalMindを入手。1つのファイル、依存関係なし。",
+    "step2_title": "音声をドロップ",
+    "step2_desc": "任意の音声ファイルをアプリにドラッグ。MP3、WAV、M4Aなど。",
+    "step3_title": "結果を取得",
+    "step3_desc": "正確な文字起こしとインサイト。好きな方法でエクスポート。"
+  },
+  "comparison": {
+    "label": "LocalMindを選ぶ理由",
+    "title": "LocalMind vs <span class='gradient-text'>クラウドサービス</span>",
+    "subtitle": "LocalMindがOtter.ai、Rev、Descriptなどの人気クラウド文字起こしサービスとどう比較されるかをご覧ください。",
+    "roi_title": "💰 年間節約額を計算",
+    "roi_cloud": "平均的なクラウドサービス: <strong>$30/月 × 12ヶ月 = $360/年</strong>",
+    "roi_localmind": "LocalMind: <strong>$0/年</strong>",
+    "roi_savings": "節約額: <span class='gradient-text'>毎年$360+</span>"
+  },
+  "testimonials": {
+    "label": "グローバルユーザー",
+    "title": "世界中で信頼され、<span class='gradient-text'>あらゆる言語で</span>",
+    "subtitle": "LocalMindは世界中の多様なユーザーにサービスを提供しています - メキシコのポッドキャスターから日本の研究者まで。"
+  },
+  "faq": {
+    "label": "よくある質問",
+    "title": "よくある<span class='gradient-text'>質問</span>"
+  },
+  "download": {
+    "label": "始める",
+    "title": "ダウンロード<br><span class='gradient-text'>LocalMind</span>",
+    "subtitle": "現在macOSで利用可能。WindowsとLinuxは近日公開。",
+    "macos": "macOS v1.2.0",
+    "windows": "Windows",
+    "linux": "Linux",
+    "coming_soon": "近日公開"
+  },
+  "modal": {
+    "title": "ダウンロードの準備ができました！",
+    "subtitle": "<strong>字幕エクスポート（SRT）</strong>、Windowsサポート、品質改善などの新機能をリリースする際に通知を受け取ります。",
+    "email_placeholder": "your@email.com",
+    "name_placeholder": "名前（任意）",
+    "survey_question": "最も使いたい機能は？",
+    "feature_srt": "字幕/SRTエクスポート",
+    "feature_srt_desc": "動画字幕用",
+    "feature_realtime": "リアルタイム文字起こし",
+    "feature_realtime_desc": "ライブ音声処理",
+    "feature_api": "開発者API",
+    "feature_api_desc": "プログラムアクセス",
+    "privacy_text": "🛡️ スパムなし。いつでも解除可能。",
+    "privacy_link": "プライバシーポリシー",
+    "submit_btn": "更新情報を受け取りダウンロード",
+    "skip_btn": "スキップしてダウンロード",
+    "success_title": "✓ ありがとうございます！",
+    "success_text": "新機能と改善についてお知らせします。",
+    "download_btn": "今すぐLocalMindをダウンロード"
+  },
+  "footer": {
+    "tagline": "無料でプライベート、あなたのAI。",
+    "company": "<strong>Svetozar Technologies</strong>のプロジェクト",
+    "mission_title": "使命",
+    "community_title": "コミュニティ",
+    "legal_title": "法的情報",
+    "copyright": "&copy; 2025 Svetozar Technologies",
+    "footer_tagline": "企業ではなく人類に奉仕するAIを構築。"
+  },
+  "testimonials_list": {
+    "maria": {
+      "name": "Maria González",
+      "role": "ポッドキャスター、メキシコ 🇲🇽",
+      "lang_label": "スペイン語",
+      "quote": "LocalMindのスペイン語文字起こしは驚くほど正確です。毎週10時間以上のインタビューをサブスクリプション料金なしで処理しています。プライバシー保証により、機密性の高いトピックについて完全な自信を持って議論できます。"
+    },
+    "yuki": {
+      "name": "Dr. Yuki Tanaka",
+      "role": "医学研究者、日本 🇯🇵",
+      "lang_label": "日本語",
+      "quote": "患者インタビューの文字起こしには、HIPAA準拠が不可欠でした。LocalMindはすべてをローカルで処理するため、データが私たちの安全なシステムから出ることはありません。品質スコアリングは医療記録の正確性を確保するのに役立ちます。"
+    },
+    "ahmed": {
+      "name": "Ahmed Hassan",
+      "role": "法律専門家、UAE 🇦🇪",
+      "lang_label": "アラビア語",
+      "quote": "RTLテキストを使用したアラビア語のサポートは、文字起こしツールでは珍しいです。LocalMindは完璧に処理します。音声がクラウドに触れることがないため、弁護士と依頼人の特権は無傷のままです。すべてのペニーに値します - それはゼロです！"
+    },
+    "priya": {
+      "name": "Priya Sharma",
+      "role": "コールセンターマネージャー、インド 🇮🇳",
+      "lang_label": "ヒンディー語",
+      "quote": "毎月500以上のカスタマーサービスコールを監査しています。LocalMindはクラウドサービスと比較して月額400ドル節約できます。CoT推論を使用した品質スコアリングは、エージェントの共感と解決スキルのトレーニングに役立ちます。"
+    },
+    "dmitry": {
+      "name": "Dmitry Volkov",
+      "role": "ジャーナリスト、ロシア 🇷🇺",
+      "lang_label": "ロシア語",
+      "quote": "情報源のアイデンティティの保護は譲れません。LocalMindのオフライン文字起こしは、サーバーログなし、データ侵害なし、政府のアクセス要求なしを意味します。ついに信頼できる文字起こしです。"
+    },
+    "sophie": {
+      "name": "Sophie Martin",
+      "role": "中小企業オーナー、フランス 🇫🇷",
+      "lang_label": "フランス語",
+      "quote": "データがラップトップから出ない場合、GDPR準拠は自動的です。クライアントミーティング、チームスタンドアップ、戦略セッションを文字起こしします - すべて無制限、すべて無料、すべてプライベート。LocalMindはゲームチェンジャーです。"
+    }
+  }
+}

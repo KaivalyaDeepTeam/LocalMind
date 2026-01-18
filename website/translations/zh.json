@@ -1,0 +1,151 @@
+{
+  "lang": "zh",
+  "name": "中文",
+  "nav": {
+    "mission": "我们的使命",
+    "product": "产品",
+    "download": "下载",
+    "github": "GitHub"
+  },
+  "hero": {
+    "title": "AI应当免费。<br>AI应当私密。<br><span class='gradient-text'>AI应当属于你。</span>",
+    "subtitle": "我们不仅仅在构建软件。我们在为人工智能服务人类而非相反的未来而战。为你的对话保持私密而战。为强大的技术不附带监控代价而战。",
+    "cta_mission": "阅读我们的使命",
+    "cta_download": "下载LocalMind"
+  },
+  "social_proof": {
+    "launch": "刚刚发布！",
+    "free": "永久免费",
+    "languages": "种语言",
+    "opensource": "开源"
+  },
+  "mission": {
+    "label": "我们的使命",
+    "title": "AI民主化。<br>隐私保护。<br><span class='gradient-text'>赋能每个人。</span>"
+  },
+  "use_cases": {
+    "label": "应用场景",
+    "title": "为<span class='gradient-text'>真实用户</span>打造",
+    "subtitle": "从保护信息源的记者到节省成本的企业 - LocalMind以一个核心承诺服务于多样化需求：你的数据始终属于你。"
+  },
+  "product": {
+    "label": "产品",
+    "title": "LocalMind：<br><span class='gradient-text'>尊重你的AI转录</span>",
+    "subtitle": "我们为AI自由而战的第一个工具。完全在你的设备上运行的专业级音频转录和分析。",
+    "feature_transcription_title": "语音转录",
+    "feature_transcription_desc": "由Whisper驱动的最先进语音识别。以卓越的准确度处理口音、噪音和多种语言。",
+    "feature_speaker_title": "说话人识别",
+    "feature_speaker_desc": "自动识别谁在说话。非常适合会议、访谈、播客和任何多人录音。",
+    "feature_quality_title": "质量分析",
+    "feature_quality_desc": "通过思维链推理实现AI驱动的洞察，准确度提高20-30%。分析通话质量、客户服务和合规性。自定义评分以满足你的需求。",
+    "feature_export_title": "导出自由",
+    "feature_export_desc": "你的数据，你的格式。导出为PDF报告、开发者JSON或纯文本。无供应商锁定。",
+    "feature_multilang_title": "多语言界面",
+    "feature_multilang_desc": "使用你的母语操作LocalMind。界面支持英语、俄语、西班牙语、印地语等多种语言。",
+    "languages_heading": "支持的语言"
+  },
+  "how_it_works": {
+    "title": "简洁设计",
+    "subtitle": "无需账户。无需API密钥。无需配置。只需下载、打开并使用。",
+    "step1_title": "下载",
+    "step1_desc": "获取适合你平台的LocalMind。单个文件，无依赖项。",
+    "step2_title": "拖入音频",
+    "step2_desc": "将任何音频文件拖入应用。支持MP3、WAV、M4A等格式。",
+    "step3_title": "获取结果",
+    "step3_desc": "准确的转录和洞察。按你喜欢的方式导出。"
+  },
+  "comparison": {
+    "label": "为什么选择LocalMind",
+    "title": "LocalMind vs <span class='gradient-text'>云服务</span>",
+    "subtitle": "看看LocalMind与Otter.ai、Rev和Descript等流行云转录服务的对比。",
+    "roi_title": "💰 计算你的年度节省",
+    "roi_cloud": "平均云服务：<strong>$30/月 × 12个月 = $360/年</strong>",
+    "roi_localmind": "LocalMind：<strong>$0/年</strong>",
+    "roi_savings": "你节省：<span class='gradient-text'>每年$360+</span>"
+  },
+  "testimonials": {
+    "label": "全球用户",
+    "title": "全球信赖，<span class='gradient-text'>支持所有语言</span>",
+    "subtitle": "LocalMind为全球各地的多元化用户提供服务 - 从墨西哥的播客主到日本的研究人员。"
+  },
+  "faq": {
+    "label": "常见问题",
+    "title": "常见<span class='gradient-text'>问题</span>"
+  },
+  "download": {
+    "label": "开始使用",
+    "title": "下载<br><span class='gradient-text'>LocalMind</span>",
+    "subtitle": "现已支持macOS。Windows和Linux即将推出。",
+    "macos": "macOS v1.2.0",
+    "windows": "Windows",
+    "linux": "Linux",
+    "coming_soon": "即将推出"
+  },
+  "modal": {
+    "title": "下载已准备好！",
+    "subtitle": "当我们发布<strong>字幕导出(SRT)</strong>、Windows支持和质量改进等新功能时获得通知。",
+    "email_placeholder": "your@email.com",
+    "name_placeholder": "名字（可选）",
+    "survey_question": "你最常用哪个功能？",
+    "feature_srt": "字幕/SRT导出",
+    "feature_srt_desc": "用于视频字幕",
+    "feature_realtime": "实时转录",
+    "feature_realtime_desc": "实时音频处理",
+    "feature_api": "开发者API",
+    "feature_api_desc": "程序化访问",
+    "privacy_text": "🛡️ 无垃圾邮件。随时取消订阅。",
+    "privacy_link": "隐私政策",
+    "submit_btn": "获取更新并下载",
+    "skip_btn": "跳过，直接下载",
+    "success_title": "✓ 谢谢！",
+    "success_text": "我们将向你通报新功能和改进。",
+    "download_btn": "立即下载LocalMind"
+  },
+  "footer": {
+    "tagline": "免费、私密且属于你的AI。",
+    "company": "<strong>Svetozar Technologies</strong>项目",
+    "mission_title": "使命",
+    "community_title": "社区",
+    "legal_title": "法律",
+    "copyright": "&copy; 2025 Svetozar Technologies",
+    "footer_tagline": "构建服务人类而非企业的AI。"
+  },
+  "testimonials_list": {
+    "maria": {
+      "name": "Maria González",
+      "role": "播客主，墨西哥 🇲🇽",
+      "lang_label": "西班牙语",
+      "quote": "LocalMind的西班牙语转录非常准确。我每周处理10多个小时的访谈，无需支付订阅费。隐私保证意味着我可以完全放心地讨论敏感话题。"
+    },
+    "yuki": {
+      "name": "Dr. Yuki Tanaka",
+      "role": "医学研究员，日本 🇯🇵",
+      "lang_label": "日语",
+      "quote": "HIPAA合规对于我们的患者访谈转录至关重要。LocalMind在本地处理所有内容 - 数据永远不会离开我们的安全系统。质量评分有助于确保医疗记录的准确性。"
+    },
+    "ahmed": {
+      "name": "Ahmed Hassan",
+      "role": "法律专业人士，阿联酋 🇦🇪",
+      "lang_label": "阿拉伯语",
+      "quote": "转录工具中很少支持从右到左的阿拉伯语文本。LocalMind处理得非常完美。因为音频永远不会接触云端，律师-客户特权得以保持完整。物有所值 - 而且是零成本！"
+    },
+    "priya": {
+      "name": "Priya Sharma",
+      "role": "呼叫中心经理，印度 🇮🇳",
+      "lang_label": "印地语",
+      "quote": "我们每月审核500多个客户服务电话。与云服务相比，LocalMind为我们每月节省$400。具有CoT推理的质量评分帮助培训我们的客服人员的同理心和解决问题的技能。"
+    },
+    "dmitry": {
+      "name": "Dmitry Volkov",
+      "role": "记者，俄罗斯 🇷🇺",
+      "lang_label": "俄语",
+      "quote": "保护信息来源身份是不可协商的。LocalMind的离线转录意味着没有服务器日志、没有数据泄露、没有政府访问请求。终于有了我可以信任的转录工具。"
+    },
+    "sophie": {
+      "name": "Sophie Martin",
+      "role": "小企业主，法国 🇫🇷",
+      "lang_label": "法语",
+      "quote": "当数据永远不离开我的笔记本电脑时，GDPR合规是自动的。我转录客户会议、团队站会和战略会议 - 全部无限制、全部免费、全部私密。LocalMind是游戏规则改变者。"
+    }
+  }
+}

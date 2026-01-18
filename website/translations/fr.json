@@ -1,0 +1,151 @@
+{
+  "lang": "fr",
+  "name": "Français",
+  "nav": {
+    "mission": "Notre Mission",
+    "product": "Produit",
+    "download": "Télécharger",
+    "github": "GitHub"
+  },
+  "hero": {
+    "title": "L'IA Doit Être Gratuite.<br>L'IA Doit Être Privée.<br><span class='gradient-text'>L'IA Doit Être Vôtre.</span>",
+    "subtitle": "Nous ne construisons pas seulement des logiciels. Nous luttons pour un avenir où l'intelligence artificielle sert l'humanité - et non l'inverse. Où vos conversations restent les vôtres. Où la technologie puissante ne s'accompagne pas d'un prix de surveillance.",
+    "cta_mission": "Lire Notre Mission",
+    "cta_download": "Télécharger LocalMind"
+  },
+  "social_proof": {
+    "launch": "Tout Juste Lancé!",
+    "free": "Gratuit Pour Toujours",
+    "languages": "Langues",
+    "opensource": "Open Source"
+  },
+  "mission": {
+    "label": "Notre Mission",
+    "title": "Démocratiser l'IA.<br>Protéger la Vie Privée.<br><span class='gradient-text'>Autonomiser Tout le Monde.</span>"
+  },
+  "use_cases": {
+    "label": "Cas d'Usage",
+    "title": "Conçu pour des <span class='gradient-text'>Personnes Réelles</span>",
+    "subtitle": "Des journalistes protégeant leurs sources aux entreprises réduisant leurs coûts - LocalMind répond à des besoins divers avec une promesse centrale : vos données restent les vôtres."
+  },
+  "product": {
+    "label": "Le Produit",
+    "title": "LocalMind:<br><span class='gradient-text'>Transcription IA Qui Vous Respecte</span>",
+    "subtitle": "Notre premier outil dans la lutte pour la liberté de l'IA. Transcription et analyse audio de qualité professionnelle fonctionnant entièrement sur votre machine.",
+    "feature_transcription_title": "Transcription",
+    "feature_transcription_desc": "Reconnaissance vocale de pointe alimentée par Whisper. Gère les accents, le bruit et plusieurs langues avec une précision remarquable.",
+    "feature_speaker_title": "Détection du Locuteur",
+    "feature_speaker_desc": "Identifie automatiquement qui parle. Parfait pour les réunions, entretiens, podcasts et tout enregistrement multi-personnes.",
+    "feature_quality_title": "Analyse de Qualité",
+    "feature_quality_desc": "Informations alimentées par l'IA avec raisonnement Chain-of-Thought pour une précision 20-30% meilleure. Analyse la qualité des appels, le service client et la conformité. Personnalisez le scoring selon vos besoins.",
+    "feature_export_title": "Liberté d'Exportation",
+    "feature_export_desc": "Vos données, votre format. Exportez vers des rapports PDF, JSON pour développeurs ou texte brut. Pas de verrouillage fournisseur.",
+    "feature_multilang_title": "Interface Multilingue",
+    "feature_multilang_desc": "Utilisez LocalMind dans votre langue maternelle. Interface disponible en anglais, russe, espagnol, hindi et plus encore.",
+    "languages_heading": "Langues Prises en Charge"
+  },
+  "how_it_works": {
+    "title": "Simple par Conception",
+    "subtitle": "Pas de comptes. Pas de clés API. Pas de configuration. Téléchargez, ouvrez et utilisez.",
+    "step1_title": "Télécharger",
+    "step1_desc": "Obtenez LocalMind pour votre plateforme. Un fichier, aucune dépendance.",
+    "step2_title": "Déposer l'Audio",
+    "step2_desc": "Glissez n'importe quel fichier audio dans l'application. MP3, WAV, M4A et plus.",
+    "step3_title": "Obtenir les Résultats",
+    "step3_desc": "Transcription précise et informations. Exportez comme vous voulez."
+  },
+  "comparison": {
+    "label": "Pourquoi LocalMind",
+    "title": "LocalMind vs <span class='gradient-text'>Services Cloud</span>",
+    "subtitle": "Découvrez comment LocalMind se compare aux services populaires de transcription cloud comme Otter.ai, Rev et Descript.",
+    "roi_title": "💰 Calculez Vos Économies Annuelles",
+    "roi_cloud": "Service cloud moyen : <strong>30$/mois × 12 mois = 360$/an</strong>",
+    "roi_localmind": "LocalMind : <strong>0$/an</strong>",
+    "roi_savings": "Vous économisez : <span class='gradient-text'>360$+ chaque année</span>"
+  },
+  "testimonials": {
+    "label": "Utilisateurs Mondiaux",
+    "title": "Fiable Dans Le Monde Entier, <span class='gradient-text'>Dans Toutes Les Langues</span>",
+    "subtitle": "LocalMind sert des utilisateurs diversifiés à travers le monde - des podcasters au Mexique aux chercheurs au Japon."
+  },
+  "faq": {
+    "label": "Questions Fréquentes",
+    "title": "Questions <span class='gradient-text'>Fréquemment Posées</span>"
+  },
+  "download": {
+    "label": "Commencer",
+    "title": "Télécharger<br><span class='gradient-text'>LocalMind</span>",
+    "subtitle": "Disponible maintenant pour macOS. Windows et Linux bientôt disponibles.",
+    "macos": "macOS v1.2.0",
+    "windows": "Windows",
+    "linux": "Linux",
+    "coming_soon": "Bientôt Disponible"
+  },
+  "modal": {
+    "title": "Votre Téléchargement Est Prêt !",
+    "subtitle": "Recevez des notifications lors de la sortie de nouvelles fonctionnalités comme <strong>l'export de sous-titres (SRT)</strong>, le support Windows et les améliorations de qualité.",
+    "email_placeholder": "votre@email.com",
+    "name_placeholder": "Prénom (facultatif)",
+    "survey_question": "Quelle fonctionnalité utiliseriez-vous le plus ?",
+    "feature_srt": "Export de sous-titres/SRT",
+    "feature_srt_desc": "Pour les sous-titres vidéo",
+    "feature_realtime": "Transcription en temps réel",
+    "feature_realtime_desc": "Traitement audio en direct",
+    "feature_api": "API développeur",
+    "feature_api_desc": "Accès programmatique",
+    "privacy_text": "🛡️ Pas de spam. Désabonnement à tout moment.",
+    "privacy_link": "Politique de Confidentialité",
+    "submit_btn": "Recevoir les Mises à Jour et Télécharger",
+    "skip_btn": "Passer, juste télécharger",
+    "success_title": "✓ Merci !",
+    "success_text": "Nous vous tiendrons informé des nouvelles fonctionnalités et améliorations.",
+    "download_btn": "Télécharger LocalMind Maintenant"
+  },
+  "footer": {
+    "tagline": "IA gratuite, privée et vôtre.",
+    "company": "Un Projet <strong>Svetozar Technologies</strong>",
+    "mission_title": "Mission",
+    "community_title": "Communauté",
+    "legal_title": "Légal",
+    "copyright": "&copy; 2025 Svetozar Technologies",
+    "footer_tagline": "Construire une IA qui sert l'humanité, pas les entreprises."
+  },
+  "testimonials_list": {
+    "maria": {
+      "name": "Maria González",
+      "role": "Podcasteuse, Mexique 🇲🇽",
+      "lang_label": "Espagnol",
+      "quote": "La transcription en espagnol de LocalMind est incroyablement précise. Je traite plus de 10 heures d'entretiens par semaine sans payer de frais d'abonnement. La garantie de confidentialité signifie que je peux discuter de sujets sensibles en toute confiance."
+    },
+    "yuki": {
+      "name": "Dr. Yuki Tanaka",
+      "role": "Chercheure Médicale, Japon 🇯🇵",
+      "lang_label": "Japonais",
+      "quote": "La conformité HIPAA était essentielle pour les transcriptions d'entretiens avec les patients. LocalMind traite tout localement - aucune donnée ne quitte nos systèmes sécurisés. Le score de qualité aide à garantir l'exactitude des dossiers médicaux."
+    },
+    "ahmed": {
+      "name": "Ahmed Hassan",
+      "role": "Professionnel Juridique, EAU 🇦🇪",
+      "lang_label": "Arabe",
+      "quote": "Le support de l'arabe avec texte RTL est rare dans les outils de transcription. LocalMind le gère parfaitement. Le privilège avocat-client reste intact car l'audio ne touche jamais le cloud. Vaut chaque centime - qui est zéro !"
+    },
+    "priya": {
+      "name": "Priya Sharma",
+      "role": "Responsable Centre d'Appels, Inde 🇮🇳",
+      "lang_label": "Hindi",
+      "quote": "Nous auditons plus de 500 appels de service client mensuellement. LocalMind nous fait économiser 400$/mois par rapport aux services cloud. Le score de qualité avec raisonnement CoT aide à former nos agents sur l'empathie et les compétences de résolution."
+    },
+    "dmitry": {
+      "name": "Dmitry Volkov",
+      "role": "Journaliste, Russie 🇷🇺",
+      "lang_label": "Russe",
+      "quote": "La protection de l'identité des sources n'est pas négociable. La transcription hors ligne de LocalMind signifie pas de journaux de serveur, pas de violations de données, pas de demandes d'accès gouvernementales. Enfin, une transcription en laquelle je peux avoir confiance."
+    },
+    "sophie": {
+      "name": "Sophie Martin",
+      "role": "Propriétaire de Petite Entreprise, France 🇫🇷",
+      "lang_label": "Français",
+      "quote": "La conformité RGPD est automatique lorsque les données ne quittent jamais mon ordinateur portable. Je transcris les réunions clients, les standups d'équipe et les sessions stratégiques - tout illimité, tout gratuit, tout privé. LocalMind change la donne."
+    }
+  }
+}
