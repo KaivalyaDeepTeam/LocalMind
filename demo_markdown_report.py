@@ -130,7 +130,7 @@ def main():
     print("=" * 70)
     print()
 
-    print("✅ Markdown report successfully generated!")
+    print("[+] Markdown report successfully generated!")
     print()
     print("This report can be:")
     print("- Exported to .md file (File > Export Markdown Report)")
