@@ -4,6 +4,35 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // ================================================
+    // Initialize i18n (Multi-language Support)
+    // ================================================
+
+    // Initialize i18n system
+    if (typeof I18n !== 'undefined') {
+        window.i18n = new I18n();
+
+        // Detect browser language or use saved preference
+        const savedLang = localStorage.getItem('localmind-lang');
+        const browserLang = navigator.language.split('-')[0]; // e.g., 'en' from 'en-US'
+        const supportedLangs = ['en', 'es', 'ja', 'ar', 'hi', 'ru', 'fr', 'zh'];
+
+        // Determine which language to load
+        let initialLang = 'en'; // default
+        if (savedLang && supportedLangs.includes(savedLang)) {
+            initialLang = savedLang;
+        } else if (supportedLangs.includes(browserLang)) {
+            initialLang = browserLang;
+        }
+
+        // Load the language
+        window.i18n.loadLanguage(initialLang);
+
+        console.log('i18n initialized with language:', initialLang);
+    } else {
+        console.error('I18n class not found. Make sure i18n.js is loaded before main.js');
+    }
+
     // Mobile menu toggle
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const navLinks = document.querySelector('.nav-links');
