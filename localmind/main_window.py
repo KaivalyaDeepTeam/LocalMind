@@ -138,6 +138,11 @@ class MainWindow(QMainWindow):
         export_json.triggered.connect(self._on_export_json)
         file_menu.addAction(export_json)
 
+        export_markdown = QAction(self.tr("Export &Markdown Report..."), self)
+        export_markdown.setShortcut("Ctrl+Shift+M")
+        export_markdown.triggered.connect(self._on_export_markdown_report)
+        file_menu.addAction(export_markdown)
+
         file_menu.addSeparator()
 
         quit_action = QAction(self.tr("&Quit"), self)
@@ -254,15 +259,28 @@ class MainWindow(QMainWindow):
         # Get scoring parameters from profile
         profile_manager = get_profile_manager()
         profile = profile_manager.get_current_profile()
-        scoring_parameters = [
-            {
+        enabled_params = profile.get_enabled_parameters()
+
+        # Convert weighted parameters to point allocation out of 100
+        # Calculate total weighted score
+        total_weighted = sum(p.max_score * p.weight for p in enabled_params)
+
+        # Convert each parameter to points out of 100
+        scoring_parameters = []
+        for p in enabled_params:
+            # Calculate points: (max_score * weight / total_weighted) * 100
+            if total_weighted > 0:
+                points = (p.max_score * p.weight / total_weighted) * 100
+            else:
+                points = 0
+
+            scoring_parameters.append({
                 "name": p.name,
-                "max_score": p.max_score,
-                "weight": p.weight,
+                "points": points,  # Use new points format
+                "max_score": p.max_score,  # Keep for backward compatibility
+                "weight": p.weight,  # Keep for backward compatibility
                 "description": p.description,
-            }
-            for p in profile.get_enabled_parameters()
-        ]
+            })
 
         # Language mode mapping
         LANGUAGE_CODE_MAP = {
@@ -570,6 +588,19 @@ class MainWindow(QMainWindow):
             self._results_viewer.export_json(filepath)
 
     @Slot()
+    def _on_export_markdown_report(self) -> None:
+        """Export audit report as markdown file for skill improvement."""
+        default_name = "audit_report.md"
+        if self._current_file:
+            default_name = f"{self._current_file.stem}_audit_report.md"
+
+        filepath, _ = QFileDialog.getSaveFileName(
+            self, "Export Markdown Report", str(Path.home() / default_name), "Markdown Files (*.md)"
+        )
+        if filepath:
+            self._results_viewer.export_markdown_report(filepath)
+
+    @Slot()
     def _on_edit_scoring(self) -> None:
         """Open the scoring parameters editor."""
         dialog = ScoringEditorDialog(self)
@@ -582,15 +613,27 @@ class MainWindow(QMainWindow):
         # Update orchestrator with new parameters
         profile_manager = get_profile_manager()
         profile = profile_manager.get_current_profile()
-        parameters = [
-            {
+        enabled_params = profile.get_enabled_parameters()
+
+        # Convert weighted parameters to point allocation out of 100
+        total_weighted = sum(p.max_score * p.weight for p in enabled_params)
+
+        parameters = []
+        for p in enabled_params:
+            # Calculate points: (max_score * weight / total_weighted) * 100
+            if total_weighted > 0:
+                points = (p.max_score * p.weight / total_weighted) * 100
+            else:
+                points = 0
+
+            parameters.append({
                 "name": p.name,
-                "max_score": p.max_score,
-                "weight": p.weight,
+                "points": points,  # Use new points format
+                "max_score": p.max_score,  # Keep for backward compatibility
+                "weight": p.weight,  # Keep for backward compatibility
                 "description": p.description,
-            }
-            for p in profile.get_enabled_parameters()
-        ]
+            })
+
         self._orchestrator.configure(scoring_parameters=parameters)
         self._status_label.setText(f"Scoring profile '{profile_name}' loaded")
 

@@ -69,6 +69,7 @@ class AuditResult:
             "improvements": self.improvements,
             "summary": self.summary,
             "transcript": self.transcript,
+            "markdown_report": self.generate_markdown_report(),  # Add markdown report
             "feedback": {
                 "summary": self.summary,
                 "strengths": self.strengths,
@@ -84,6 +85,127 @@ class AuditResult:
         if self.max_score == 0:
             return 0.0
         return (self.overall_score / self.max_score) * 100
+
+    def generate_markdown_report(self) -> str:
+        """Generate a beautiful markdown report for the audit results.
+
+        Creates a human-readable report with scores, feedback, and improvement suggestions.
+        Goal: Help users read and improve their calls/selling/support skills.
+
+        Returns:
+            Formatted markdown string with complete audit feedback.
+        """
+        percentage = self.percentage
+
+        # Determine performance level and emoji
+        if percentage >= 85:
+            level = "Excellent Performance"
+            emoji = "🌟"
+        elif percentage >= 70:
+            level = "Good Performance"
+            emoji = "✅"
+        elif percentage >= 55:
+            level = "Acceptable Performance"
+            emoji = "👍"
+        elif percentage >= 40:
+            level = "Below Average"
+            emoji = "⚠️"
+        else:
+            level = "Needs Improvement"
+            emoji = "❌"
+
+        # Build markdown report
+        lines = [
+            "# 📞 Call Quality Audit Report",
+            "",
+            f"**Overall Score: {self.overall_score:.1f}/{self.max_score:.0f}** ({percentage:.1f}%)",
+            f"**Performance Level: {emoji} {level}**",
+            "",
+        ]
+
+        # Add compliance and quality subscores if available
+        if self.compliance_score > 0 or self.quality_score > 0:
+            lines.extend([
+                "## 📊 Score Breakdown",
+                "",
+            ])
+            if self.compliance_score > 0:
+                lines.append(f"- **Compliance Score:** {self.compliance_score:.1f}%")
+            if self.quality_score > 0:
+                lines.append(f"- **Quality Score:** {self.quality_score:.1f}%")
+            lines.append("")
+
+        # Parameter scores section
+        lines.extend([
+            "## 📋 Detailed Parameter Scores",
+            "",
+        ])
+
+        for param in self.parameter_scores:
+            param_percentage = (param.score / param.max_score * 100) if param.max_score > 0 else 0
+
+            # Choose emoji based on parameter score
+            if param_percentage >= 85:
+                param_emoji = "🌟"
+            elif param_percentage >= 70:
+                param_emoji = "✅"
+            elif param_percentage >= 55:
+                param_emoji = "👍"
+            else:
+                param_emoji = "⚠️"
+
+            # Format parameter name (capitalize and replace underscores)
+            param_name = param.name.replace("_", " ").title()
+
+            lines.extend([
+                f"### {param_emoji} {param_name}: {param.score:.1f}/{param.max_score:.0f} ({param_percentage:.0f}%)",
+                "",
+            ])
+
+            if param.feedback:
+                lines.extend([
+                    f"**Feedback:** {param.feedback}",
+                    "",
+                ])
+
+        # Strengths section
+        if self.strengths:
+            lines.extend([
+                "## ✨ Key Strengths",
+                "",
+            ])
+            for strength in self.strengths:
+                lines.append(f"- {strength}")
+            lines.append("")
+
+        # Improvements section
+        if self.improvements:
+            lines.extend([
+                "## 🎯 Areas for Improvement",
+                "",
+            ])
+            for improvement in self.improvements:
+                lines.append(f"- {improvement}")
+            lines.append("")
+
+        # Summary section
+        if self.summary:
+            lines.extend([
+                "## 📝 Summary",
+                "",
+                self.summary,
+                "",
+            ])
+
+        # Footer with encouragement
+        lines.extend([
+            "---",
+            "",
+            "_This report is generated to help you improve your communication skills._",
+            "_Focus on the areas for improvement while building on your strengths._",
+        ])
+
+        return "\n".join(lines)
 
 
 # Default scoring parameters - Total points = 100

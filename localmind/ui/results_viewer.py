@@ -841,6 +841,92 @@ class ResultsViewer(QWidget):
                 f"Failed to export transcript:\n{str(e)}\n\nPlease try again or choose a different location."
             )
 
+    def export_markdown_report(self, filepath: str) -> None:
+        """Export audit report as beautiful markdown file for skill improvement.
+
+        Creates a human-readable markdown report showing scores, feedback,
+        strengths, and areas for improvement to help users improve their
+        communication, sales, or support skills.
+        """
+        if not self._results:
+            QMessageBox.warning(self, "No Results", "No audit report to export.")
+            return
+
+        # Check if markdown report exists
+        markdown_report = self._results.get("markdown_report")
+
+        if not markdown_report:
+            QMessageBox.warning(
+                self, "No Report Available",
+                "No markdown report available to export.\n\n"
+                "Please process an audio file with scoring enabled first."
+            )
+            return
+
+        try:
+            # Validate filepath
+            if not filepath:
+                QMessageBox.warning(self, "Invalid Path", "Please provide a valid file path.")
+                return
+
+            # Ensure .md extension
+            if not filepath.endswith('.md'):
+                filepath += '.md'
+
+            # Create parent directory if it doesn't exist
+            from pathlib import Path
+            parent_dir = Path(filepath).parent
+            parent_dir.mkdir(parents=True, exist_ok=True)
+
+            # Write markdown report
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(markdown_report)
+
+            QMessageBox.information(
+                self, "Export Complete",
+                f"Audit report exported to:\n{filepath}\n\n"
+                "Open this file in any markdown viewer to see beautifully "
+                "formatted feedback to help improve your skills."
+            )
+
+        except PermissionError:
+            QMessageBox.critical(
+                self, "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\n"
+                "Please check file permissions or choose a different location."
+            )
+        except OSError as e:
+            if "No space left on device" in str(e):
+                QMessageBox.critical(
+                    self, "Disk Full",
+                    "Not enough disk space to save the file.\n\n"
+                    "Please free up some space and try again."
+                )
+            else:
+                QMessageBox.critical(
+                    self, "File System Error",
+                    f"Cannot save file:\n{e}\n\n"
+                    "Please check the file path and try again."
+                )
+        except UnicodeEncodeError as e:
+            QMessageBox.critical(
+                self, "Encoding Error",
+                f"Failed to encode report text:\n{e}\n\n"
+                "Some characters may not be supported."
+            )
+        except MemoryError:
+            QMessageBox.critical(
+                self, "Memory Error",
+                "Not enough memory to export report.\n\n"
+                "Try closing other applications and try again."
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Export Error",
+                f"Failed to export report:\n{str(e)}\n\n"
+                "Please try again or choose a different location."
+            )
+
     def get_results(self) -> Optional[Dict[str, Any]]:
         """Get the current results."""
         return self._results
