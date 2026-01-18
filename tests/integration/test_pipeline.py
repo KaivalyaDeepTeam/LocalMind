@@ -25,7 +25,7 @@ class TestTranscriptionWorkerIntegration:
             model_name="whisper-large-v3",
         )
 
-        assert worker._audio_path == "/path/to/audio.wav"
+        assert worker._audio_path == Path("/path/to/audio.wav")
         assert worker._model_name == "whisper-large-v3"
 
     def test_worker_signals(self, qapp):
@@ -37,9 +37,10 @@ class TestTranscriptionWorkerIntegration:
 
         # Check signals exist
         assert hasattr(worker, "progress")
-        assert hasattr(worker, "result_ready")
+        assert hasattr(worker, "finished_work")
         assert hasattr(worker, "error")
-        assert hasattr(worker, "finished")
+        assert hasattr(worker, "started_work")
+        assert hasattr(worker, "status_changed")
 
 
 class TestMergeWorkerIntegration:
@@ -47,25 +48,39 @@ class TestMergeWorkerIntegration:
 
     def test_worker_creation(self, qapp, sample_transcription_result):
         """Test creating merge worker."""
-        worker = MergeWorker(
-            agent_result=sample_transcription_result,
-            customer_result=sample_transcription_result,
+        from localmind.workers.transcription_worker import TranscriptionResult
+
+        # Create a proper TranscriptionResult object
+        result = TranscriptionResult(
+            text="Test transcript",
+            segments=[],
+            language="en",
         )
 
-        assert worker._agent_result == sample_transcription_result
-        assert worker._customer_result == sample_transcription_result
-
-    def test_worker_with_llm_provider(self, qapp, sample_transcription_result):
-        """Test merge worker with LLM provider."""
-        mock_provider = MagicMock()
-
         worker = MergeWorker(
-            agent_result=sample_transcription_result,
-            customer_result=sample_transcription_result,
-            llm_provider=mock_provider,
+            transcription=result,
         )
 
-        assert worker._llm_provider == mock_provider
+        assert worker._transcription == result
+
+    def test_worker_signals(self, qapp, sample_transcription_result):
+        """Test merge worker signals are properly defined."""
+        from localmind.workers.transcription_worker import TranscriptionResult
+
+        result = TranscriptionResult(
+            text="Test transcript",
+            segments=[],
+            language="en",
+        )
+
+        worker = MergeWorker(
+            transcription=result,
+        )
+
+        # Check signals exist (inherited from BaseWorker)
+        assert hasattr(worker, "progress")
+        assert hasattr(worker, "finished_work")
+        assert hasattr(worker, "error")
 
 
 class TestAuditWorkerIntegration:
@@ -229,25 +244,33 @@ class TestReportGenerationIntegration:
 class TestConfigIntegration:
     """Integration tests for configuration management."""
 
-    def test_settings_persistence(self, temp_dir):
+    def test_settings_persistence(self, temp_dir, monkeypatch):
         """Test settings are persisted correctly."""
         from localmind.config import SettingsManager, UserSettings
 
-        settings_file = temp_dir / "settings.json"
+        # Mock the config directory to use temp_dir
+        def mock_get_config_dir():
+            return temp_dir
+
+        monkeypatch.setattr(
+            "localmind.config.settings.SettingsManager._get_config_dir",
+            staticmethod(mock_get_config_dir)
+        )
 
         # Create and save settings
-        manager = SettingsManager(settings_file)
+        manager = SettingsManager()
         settings = UserSettings()
-        settings.openai_api_key = "test-key-123"
-        settings.theme = "dark"
+        settings.llm.openai_api_key = "test-key-123"
+        settings.app.theme = "dark"
 
         manager.save(settings)
 
-        # Load settings
-        loaded = manager.load()
+        # Load settings with new manager instance
+        manager2 = SettingsManager()
+        loaded = manager2.load()
 
-        assert loaded.openai_api_key == "test-key-123"
-        assert loaded.theme == "dark"
+        assert loaded.llm.openai_api_key == "test-key-123"
+        assert loaded.app.theme == "dark"
 
     def test_scoring_profile_persistence(self, temp_dir):
         """Test scoring profiles are persisted correctly."""
@@ -256,6 +279,7 @@ class TestConfigIntegration:
         profiles_dir = temp_dir / "profiles"
         profiles_dir.mkdir()
 
+        # Create manager with custom profiles directory
         manager = ScoringProfileManager(profiles_dir)
 
         # Create profile
@@ -274,7 +298,11 @@ class TestConfigIntegration:
 
         # Save and load
         manager.save_profile(profile)
-        loaded = manager.load_profile("Test Profile")
+
+        # Create new manager instance to test persistence
+        # Note: profile is saved as "test_profile.json" (lowercase with underscores)
+        manager2 = ScoringProfileManager(profiles_dir)
+        loaded = manager2.load_profile("test_profile")
 
         assert loaded is not None
         assert loaded.name == "Test Profile"
