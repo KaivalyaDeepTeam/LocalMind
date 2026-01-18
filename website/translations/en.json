@@ -308,5 +308,9 @@
     "req_storage_value": "10 GB free space",
     "req_gpu_label": "GPU",
     "req_gpu_value": "Optional - Apple Silicon or NVIDIA accelerates processing"
+  },
+  "docs": {
+    "heading": "📚 Technical Guide",
+    "description": "Comprehensive documentation covering installation, model selection, transcription, quality scoring, and troubleshooting."
   }
 }

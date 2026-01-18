@@ -308,5 +308,9 @@
     "req_storage_value": "10 GBの空き容量",
     "req_gpu_label": "GPU",
     "req_gpu_value": "オプション - Apple SiliconまたはNVIDIAが処理を高速化"
+  },
+  "docs": {
+    "heading": "📚 技術ガイド",
+    "description": "インストール、モデル選択、文字起こし、品質スコアリング、トラブルシューティングを網羅した包括的なドキュメント。"
   }
 }

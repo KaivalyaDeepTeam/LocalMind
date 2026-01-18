@@ -2380,3 +2380,72 @@ body.rtl .footer-grid {
         right: 0;
     }
 }
+
+/* ================================================
+   Documentation Section
+   ================================================ */
+
+.documentation-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.documentation-section h4 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+}
+
+.documentation-section p {
+    color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.docs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.doc-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all var(--transition-fast);
+}
+
+.doc-link:hover {
+    background: var(--color-bg-card-hover);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.doc-flag {
+    font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .docs-grid {
+        gap: 0.75rem;
+    }
+
+    .doc-link {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+}

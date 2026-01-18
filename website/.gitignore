@@ -1,0 +1,29 @@
+# Backup files
+*.bak
+*.bak2
+*.backup
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment files (if any are added later)
+.env
+.env.local
+
+# Dependencies (if npm/node is added later)
+node_modules/
+
+# Build outputs (if build process is added later)
+dist/
+build/

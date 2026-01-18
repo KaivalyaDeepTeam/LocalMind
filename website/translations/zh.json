@@ -308,5 +308,9 @@
     "req_storage_value": "10 GB可用空间",
     "req_gpu_label": "GPU",
     "req_gpu_value": "可选 - Apple Silicon或NVIDIA加速处理"
+  },
+  "docs": {
+    "heading": "📚 技术指南",
+    "description": "涵盖安装、模型选择、转录、质量评分和故障排除的全面文档。"
   }
 }

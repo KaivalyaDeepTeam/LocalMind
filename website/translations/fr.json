@@ -308,5 +308,9 @@
     "req_storage_value": "10 Go d'espace libre",
     "req_gpu_label": "GPU",
     "req_gpu_value": "Optionnel - Apple Silicon ou NVIDIA accélère le traitement"
+  },
+  "docs": {
+    "heading": "📚 Guide Technique",
+    "description": "Documentation complète couvrant l'installation, la sélection des modèles, la transcription, l'évaluation de la qualité et le dépannage."
   }
 }
