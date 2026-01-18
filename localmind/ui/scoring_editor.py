@@ -360,8 +360,19 @@ class ScoringEditorDialog(QDialog):
         self._total_weight_label = QLabel("Total Weight: 0.0")
         summary_layout.addWidget(self._total_weight_label)
 
-        self._max_score_label = QLabel("Max Possible Score: 0.0")
+        self._max_score_label = QLabel("Max Weighted Score: 0.0")
         summary_layout.addWidget(self._max_score_label)
+
+        self._normalized_label = QLabel("→ Normalized: 100")
+        self._normalized_label.setStyleSheet("""
+            QLabel {
+                font-weight: bold;
+                color: #059669;
+                font-size: 11pt;
+            }
+        """)
+        self._normalized_label.setToolTip("All scores normalize to 100 for easier interpretation")
+        summary_layout.addWidget(self._normalized_label)
 
         self._param_count_label = QLabel("Parameters: 0 enabled")
         summary_layout.addWidget(self._param_count_label)
@@ -451,8 +462,9 @@ class ScoringEditorDialog(QDialog):
         max_score = self._current_profile.get_max_possible_score()
 
         self._total_weight_label.setText(f"Total Weight: {total_weight:.1f}")
-        self._max_score_label.setText(f"Max Possible Score: {max_score:.1f}")
-        self._param_count_label.setText(f"Parameters: {len(enabled)} enabled")
+        self._max_score_label.setText(f"Max Weighted Score: {max_score:.1f}")
+        self._normalized_label.setText("→ Normalized: 100")
+        self._param_count_label.setText(f"{len(enabled)} parameters enabled")
 
     @Slot()
     def _on_profile_selected(self) -> None:

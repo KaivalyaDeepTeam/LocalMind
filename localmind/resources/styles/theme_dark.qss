@@ -1104,15 +1104,6 @@ QLabel#offlineInfo {
     border-radius: 8px;
 }
 
-QLabel#hindiInfo {
-    font-size: 12px;
-    color: #FBBF24;
-    font-weight: 500;
-    padding: 8px;
-    background-color: #78350F;
-    border-radius: 8px;
-}
-
 QLabel#downloadStatus {
     font-size: 12px;
     color: #94A3B8;

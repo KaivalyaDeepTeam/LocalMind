@@ -361,18 +361,6 @@ class OfflineSettings(QFrame):
         self._preprocessing_checkbox.stateChanged.connect(lambda: self.settings_changed.emit())
         layout.addWidget(self._preprocessing_checkbox)
 
-        # Hindi-English info (only shown for Hindi mode)
-        self._hindi_info = QLabel(
-            self.tr("Hindi-English Specialized Model") + "\n\n" +
-            self.tr("Outputs romanized text (Hinglish).") + "\n" +
-            self.tr("Optimized for Indian call centers with code-switching.")
-        )
-        self._hindi_info.setObjectName("hindiInfo")
-        self._hindi_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._hindi_info.setWordWrap(True)
-        self._hindi_info.setVisible(False)
-        layout.addWidget(self._hindi_info)
-
         # Download status
         self._status_label = QLabel(self.tr("Model will be downloaded on first use"))
         self._status_label.setObjectName("downloadStatus")
@@ -383,7 +371,6 @@ class OfflineSettings(QFrame):
         is_hindi = self._language_combo.currentData() == "hindi-english"
         self._whisper_container.setVisible(not is_hindi)
         self._hindi_model_container.setVisible(is_hindi)
-        self._hindi_info.setVisible(is_hindi)
         self.settings_changed.emit()
 
     def get_language_mode(self) -> str:

@@ -102,8 +102,26 @@ class ScoringProfile:
         return sum(p.weight for p in self.get_enabled_parameters())
 
     def get_max_possible_score(self) -> float:
-        """Get maximum possible weighted score."""
+        """Get maximum possible weighted score (before normalization)."""
         return sum(p.max_score * p.weight for p in self.get_enabled_parameters())
+
+    def get_normalized_max(self) -> float:
+        """Get normalized maximum score (always 100 for percentage display)."""
+        return 100.0
+
+    def normalize_score(self, weighted_score: float) -> float:
+        """Convert weighted score to normalized 0-100 scale.
+
+        Args:
+            weighted_score: The weighted score to normalize.
+
+        Returns:
+            Normalized score out of 100.
+        """
+        max_score = self.get_max_possible_score()
+        if max_score == 0:
+            return 0.0
+        return (weighted_score / max_score) * 100.0
 
 
 # Default parameters for call quality auditing

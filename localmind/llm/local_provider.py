@@ -15,24 +15,47 @@ from localmind.llm.base import (
 
 
 # Model configurations
+# Recommended models for call quality auditing (ordered by quality for JSON tasks)
 LOCAL_MODELS = {
     "phi-3.5-mini": {
         "repo": "bartowski/Phi-3.5-mini-instruct-GGUF",
         "filename": "Phi-3.5-mini-instruct-Q4_K_M.gguf",
         "context_length": 4096,
         "chat_format": "chatml",
+        "size_gb": 2.4,
+        "description": "Best for auditing - excellent JSON, fast (Recommended)",
     },
-    "llama-3.2-3b": {
-        "repo": "hugging-quants/Llama-3.2-3B-Instruct-Q4_K_M-GGUF",
-        "filename": "llama-3.2-3b-instruct-q4_k_m.gguf",
-        "context_length": 4096,
-        "chat_format": "llama-3",
+    "qwen-2.5-7b": {
+        "repo": "Qwen/Qwen2.5-7B-Instruct-GGUF",
+        "filename": "qwen2.5-7b-instruct-q4_k_m.gguf",
+        "context_length": 8192,
+        "chat_format": "chatml",
+        "size_gb": 4.4,
+        "description": "High quality audits - larger, more accurate",
+    },
+    "mistral-7b-v0.3": {
+        "repo": "bartowski/Mistral-7B-Instruct-v0.3-GGUF",
+        "filename": "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf",
+        "context_length": 8192,
+        "chat_format": "mistral-instruct",
+        "size_gb": 4.4,
+        "description": "Excellent structured output, good reasoning",
     },
     "qwen-2.5-3b": {
         "repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
         "filename": "qwen2.5-3b-instruct-q4_k_m.gguf",
         "context_length": 4096,
         "chat_format": "chatml",
+        "size_gb": 2.0,
+        "description": "Good balance - smaller, decent JSON quality",
+    },
+    "gemma-2-2b": {
+        "repo": "bartowski/gemma-2-2b-it-GGUF",
+        "filename": "gemma-2-2b-it-Q4_K_M.gguf",
+        "context_length": 8192,
+        "chat_format": "gemma",
+        "size_gb": 1.6,
+        "description": "Very fast, small size, good for simple audits",
     },
 }
 
@@ -229,13 +252,19 @@ class LocalProvider(BaseLLMProvider):
 
         # Generate in a thread to not block
         def do_generate():
-            response = self._llm.create_chat_completion(
-                messages=llama_messages,
-                temperature=config.temperature,
-                max_tokens=config.max_tokens,
-                top_p=config.top_p,
-                stop=config.stop_sequences,
-            )
+            kwargs = {
+                "messages": llama_messages,
+                "temperature": config.temperature,
+                "max_tokens": config.max_tokens,
+                "top_p": config.top_p,
+                "stop": config.stop_sequences,
+            }
+
+            # Enable JSON mode if requested
+            if config.json_mode:
+                kwargs["response_format"] = {"type": "json_object"}
+
+            response = self._llm.create_chat_completion(**kwargs)
             return response
 
         response = await asyncio.to_thread(do_generate)

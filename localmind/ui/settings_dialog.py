@@ -18,6 +18,7 @@ from localmind.config import (
     get_settings, save_settings, UserSettings, LLMProviderType,
 )
 from localmind.ui.loading_indicator import LoadingButton, InlineLoadingIndicator
+from localmind.llm.local_provider import LOCAL_MODELS, LocalProvider
 
 
 class LLMSettingsTab(QWidget):
@@ -51,9 +52,13 @@ class LLMSettingsTab(QWidget):
         local_layout = QFormLayout(self._local_group)
 
         self._local_model_combo = QComboBox()
-        self._local_model_combo.addItem(self.tr("Phi-3.5-mini (2.4 GB) - Recommended"), "phi-3.5-mini")
-        self._local_model_combo.addItem(self.tr("Llama 3.2 (3B) (2.0 GB)"), "llama-3.2-3b")
-        self._local_model_combo.addItem(self.tr("Qwen 2.5 (3B) (2.0 GB)"), "qwen-2.5-3b")
+        # Dynamically load models from LOCAL_MODELS
+        for model_id, config in LOCAL_MODELS.items():
+            size = config.get("size_gb", 0)
+            desc = config.get("description", "")
+            display_name = f"{model_id} ({size}GB) - {desc}"
+            self._local_model_combo.addItem(self.tr(display_name), model_id)
+        self._local_model_combo.currentIndexChanged.connect(self._on_local_model_changed)
         local_layout.addRow(self.tr("Model:"), self._local_model_combo)
 
         self._download_button = QPushButton(self.tr("Download Model"))
@@ -145,6 +150,7 @@ class LLMSettingsTab(QWidget):
             self._local_model_combo.setCurrentIndex(local_idx)
 
         self._on_provider_changed()
+        self._update_local_model_status()
 
     def save_settings(self) -> None:
         """Save settings from UI."""
@@ -165,13 +171,97 @@ class LLMSettingsTab(QWidget):
         self._anthropic_group.setVisible(provider == LLMProviderType.ANTHROPIC)
 
     @Slot()
+    def _on_local_model_changed(self) -> None:
+        """Handle local model selection change."""
+        self._update_local_model_status()
+
+    def _update_local_model_status(self) -> None:
+        """Update the local model download status."""
+        model_id = self._local_model_combo.currentData()
+        if not model_id:
+            return
+
+        try:
+            provider = LocalProvider(model=model_id)
+            is_downloaded = provider.is_model_downloaded()
+
+            if is_downloaded:
+                self._local_status.setText(self.tr("✓ Downloaded and ready"))
+                self._local_status.setStyleSheet("color: #059669;")
+                self._download_button.setEnabled(False)
+                self._download_button.setText(self.tr("Downloaded"))
+            else:
+                config = LOCAL_MODELS.get(model_id, {})
+                size = config.get("size_gb", 0)
+                self._local_status.setText(self.tr(f"○ Not downloaded (~{size}GB)"))
+                self._local_status.setStyleSheet("color: #D97706;")
+                self._download_button.setEnabled(True)
+                self._download_button.setText(self.tr("Download Model"))
+        except Exception as e:
+            self._local_status.setText(self.tr(f"Error: {str(e)}"))
+            self._local_status.setStyleSheet("color: #DC2626;")
+
+    @Slot()
     def _on_download_model(self) -> None:
         """Handle model download."""
-        # TODO: Implement model download
-        QMessageBox.information(
-            self, self.tr("Download Model"),
-            self.tr("Model download will be implemented in a future update.")
+        model_id = self._local_model_combo.currentData()
+        if not model_id:
+            return
+
+        config = LOCAL_MODELS.get(model_id, {})
+        size = config.get("size_gb", 0)
+
+        # Confirm download
+        reply = QMessageBox.question(
+            self,
+            self.tr("Download Model"),
+            self.tr(f"Download {model_id}?\n\nSize: ~{size}GB\nThis will download from Hugging Face."),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
         )
+
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        # Update UI for downloading
+        self._download_button.setEnabled(False)
+        self._download_button.setText(self.tr("Downloading..."))
+        self._local_status.setText(self.tr("Downloading model..."))
+        self._local_status.setStyleSheet("color: #2563EB;")
+
+        # Start download in background thread
+        import asyncio
+        import threading
+
+        def download_thread():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                provider = LocalProvider(model=model_id)
+
+                # Simple progress callback
+                def progress(current, total):
+                    if total > 0:
+                        percent = int((current / total) * 100)
+                        self._local_status.setText(self.tr(f"Downloading... {percent}%"))
+
+                # Download the model
+                loop.run_until_complete(provider.download_model(progress_callback=progress))
+
+                # Update UI on success
+                self._local_status.setText(self.tr("✓ Download complete!"))
+                self._local_status.setStyleSheet("color: #059669;")
+                self._download_button.setText(self.tr("Downloaded"))
+
+            except Exception as e:
+                self._local_status.setText(self.tr(f"Download failed: {str(e)}"))
+                self._local_status.setStyleSheet("color: #DC2626;")
+                self._download_button.setEnabled(True)
+                self._download_button.setText(self.tr("Retry Download"))
+
+        thread = threading.Thread(target=download_thread, daemon=True)
+        thread.start()
 
     @Slot()
     def _test_openai(self) -> None:

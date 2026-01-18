@@ -60,6 +60,8 @@ class AuditResult:
         return {
             "overall_score": self.overall_score,
             "max_score": self.max_score,
+            "percentage": self.percentage,
+            "normalized_score": self.percentage,  # Alias for clarity
             "compliance_score": self.compliance_score,
             "quality_score": self.quality_score,
             "parameter_scores": {p.name: p.to_dict() for p in self.parameter_scores},
@@ -106,32 +108,40 @@ def create_audit_prompt(parameters: List[Dict[str, Any]]) -> str:
         for p in parameters
     )
 
-    return f"""You are an expert call quality auditor. Analyze the provided call transcript and score it based on the following parameters:
+    # Create example with all parameter names
+    example_scores = {p['name']: f'{{"score": 8, "feedback": "Example feedback"}}' for p in parameters}
+    example_scores_str = ",\n    ".join(f'"{name}": {score}' for name, score in example_scores.items())
 
+    return f"""You are a call quality auditor. Your task is to SCORE the call transcript, NOT to transcribe or restructure it.
+
+SCORING PARAMETERS:
 {param_list}
 
-For each parameter, provide:
-1. A score from 0 to the max score
-2. Brief feedback explaining the score
+YOUR TASK:
+1. Read the call transcript provided by the user
+2. Score each parameter from 0 to max score
+3. Provide brief feedback for each score
+4. List 2-4 strengths and 2-4 improvements
+5. Write a brief summary
 
-Also provide:
-- Overall strengths (list of 2-4 items)
-- Areas for improvement (list of 2-4 items)
-- A brief summary of the call quality
+OUTPUT FORMAT - You MUST return ONLY this exact JSON structure with NO additional text:
 
-Output your analysis as a JSON object with this structure:
 {{
   "parameter_scores": {{
-    "greeting": {{"score": 8, "feedback": "Good greeting but missed company name"}},
-    "active_listening": {{"score": 9, "feedback": "Excellent paraphrasing and acknowledgment"}},
-    ...
+    {example_scores_str}
   }},
-  "strengths": ["Strength 1", "Strength 2"],
-  "improvements": ["Improvement 1", "Improvement 2"],
-  "summary": "Brief overall assessment"
+  "strengths": ["First strength", "Second strength", "Third strength"],
+  "improvements": ["First improvement", "Second improvement", "Third improvement"],
+  "summary": "Overall assessment of call quality"
 }}
 
-Be fair but rigorous in your assessment. Provide constructive feedback."""
+CRITICAL RULES:
+- Output ONLY the JSON object above
+- NO markdown formatting (no ```json)
+- NO explanations before or after
+- NO transcript restructuring
+- Just the raw JSON object
+- All parameter names must match exactly as shown above"""
 
 
 class AuditWorker(BaseWorker):
@@ -193,6 +203,26 @@ class AuditWorker(BaseWorker):
 
             system_prompt = create_audit_prompt(self._parameters)
             transcript = self._merge_result.merged_text
+
+            # Truncate long transcripts to fit context window
+            # Estimate ~3.5 chars per token, leave room for prompt
+            max_transcript_chars = 10000  # ~2850 tokens (safe for 4K-8K context models)
+
+            if len(transcript) > max_transcript_chars:
+                # Sample beginning (greeting), middle (main), end (closing)
+                part_size = max_transcript_chars // 3
+
+                begin = transcript[:part_size]
+                middle_start = (len(transcript) - part_size) // 2
+                middle = transcript[middle_start:middle_start + part_size]
+                end = transcript[-part_size:]
+
+                transcript = (
+                    f"[CALL BEGINNING]\n{begin}\n\n"
+                    f"[CALL MIDDLE - Representative Sample]\n{middle}\n\n"
+                    f"[CALL ENDING]\n{end}"
+                )
+                self.report_progress(35, "Long call - sampling key sections...")
 
             messages = [
                 provider.create_system_message(system_prompt),

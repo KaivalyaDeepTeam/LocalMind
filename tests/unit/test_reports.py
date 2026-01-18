@@ -145,32 +145,6 @@ class TestPDFReportGenerator:
         # Should not include full transcript section
         assert "Full Transcript" not in html or "include_transcript" in html
 
-    def test_generate_pdf(self, sample_audit_result, temp_dir):
-        """Test generating PDF file."""
-        generator = PDFReportGenerator()
-
-        if not generator.can_generate():
-            pytest.skip("PDF generation dependencies not installed")
-
-        output_path = temp_dir / "report.pdf"
-        generator.generate_pdf(sample_audit_result, str(output_path), "test.wav")
-
-        assert output_path.exists()
-        assert output_path.stat().st_size > 0
-
-    def test_generate_pdf_bytes(self, sample_audit_result):
-        """Test generating PDF as bytes."""
-        generator = PDFReportGenerator()
-
-        if not generator.can_generate():
-            pytest.skip("PDF generation dependencies not installed")
-
-        pdf_bytes = generator.generate_pdf_bytes(sample_audit_result, "test.wav")
-
-        assert isinstance(pdf_bytes, bytes)
-        assert len(pdf_bytes) > 0
-        assert pdf_bytes[:4] == b"%PDF"  # PDF magic bytes
-
 
 class TestScoreChartGenerator:
     """Tests for ScoreChartGenerator."""

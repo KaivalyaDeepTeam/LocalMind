@@ -160,7 +160,19 @@ class BaseLLMProvider(ABC):
         if content.endswith("```"):
             content = content[:-3]
 
-        return json.loads(content.strip())
+        content = content.strip()
+
+        # Try to parse JSON
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            # Better error message showing what the LLM actually returned
+            preview = content[:200] if content else "(empty response)"
+            raise ValueError(
+                f"LLM did not return valid JSON. Error: {e}\n"
+                f"Response preview: {preview}\n"
+                f"Make sure the model supports JSON mode and the prompt is clear."
+            )
 
     def create_system_message(self, content: str) -> LLMMessage:
         """Create a system message."""

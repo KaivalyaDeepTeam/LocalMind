@@ -629,18 +629,18 @@ class ResultsViewer(QWidget):
 
         self._update_visibility(has_results=True, transcription_only=is_transcription_only)
 
-        # Update gauges with actual max_score from results (only if not transcription-only)
+        # Update gauges with normalized scores out of 100 (only if not transcription-only)
         if not is_transcription_only:
-            max_score = results.get("max_score", 100.0)
+            # Use percentage (normalized to 100) for display
+            overall = results.get("percentage", results.get("normalized_score", 0))
+            self._overall_gauge.set_score(overall, 100.0)
 
-            overall = results.get("overall_score", 0)
-            self._overall_gauge.set_score(overall, max_score)
-
+            # Compliance and quality are already percentages (0-100)
             compliance = results.get("compliance_score", 0)
-            self._compliance_gauge.set_score(compliance, max_score)
+            self._compliance_gauge.set_score(compliance, 100.0)
 
             quality = results.get("quality_score", 0)
-            self._quality_gauge.set_score(quality, max_score)
+            self._quality_gauge.set_score(quality, 100.0)
 
         # Update transcript
         if "transcript" in results:
