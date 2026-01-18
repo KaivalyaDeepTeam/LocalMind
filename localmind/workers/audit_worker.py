@@ -323,18 +323,21 @@ def create_audit_prompt(parameters: List[Dict[str, Any]], model_name: str = "phi
 
     example_scores_str = ",\n    ".join(f'"{name}": {score}' for name, score in example_scores.items())
 
-    # Model-specific optimizations
+    # Model-specific optimizations and chat format
     if "qwen" in model_name.lower():
-        # Qwen excels at structured output and detailed instructions
+        chat_start = "<|system|>"
+        chat_end = "<|end|>"
         format_note = "Note: Qwen models excel at JSON output - use your strength!"
     elif "mistral" in model_name.lower():
-        # Mistral benefits from markdown formatting
-        format_note = "Note: Use markdown structure principles for clarity"
+        chat_start = "[INST]"
+        chat_end = "[/INST]"
+        format_note = "CRITICAL: Mistral, score realistically! A good professional call scores 70-85%, NOT 10%!"
     else:  # phi-3.5-mini and others
-        # Phi needs explicit format and validation reminders
+        chat_start = "<|system|>"
+        chat_end = "<|end|>"
         format_note = "Note: Return ONLY the JSON object, no code blocks or explanations"
 
-    return f"""<|system|>
+    return f"""{chat_start}
 You are a professional call quality auditor. Your task is to score a customer service call.
 
 ## SCORING SYSTEM
@@ -377,6 +380,34 @@ A professional sales call with good rapport and service should score **70-85%** 
 }}
 ```
 
+## COMMON MISTAKE TO AVOID
+
+**WRONG (10% = terrible service):**
+```json
+{{
+  "parameter_scores": {{
+    "greeting": {{"score": 1, "feedback": "..."}},
+    "active_listening": {{"score": 1, "feedback": "..."}},
+    "problem_identification": {{"score": 1, "feedback": "..."}},
+    ...
+  }}
+}}
+```
+This is 10/100 = 10% = UNACCEPTABLE SERVICE. Only use this for truly terrible calls.
+
+**CORRECT (80% = good professional service):**
+```json
+{{
+  "parameter_scores": {{
+    "greeting": {{"score": 6, "feedback": "Professional greeting"}},
+    "active_listening": {{"score": 9, "feedback": "Good listening"}},
+    "problem_identification": {{"score": 9, "feedback": "Identified issue"}},
+    ...
+  }}
+}}
+```
+This is 80/100 = 80% = GOOD SERVICE. Use this range for professional calls.
+
 ## OUTPUT REQUIREMENTS
 
 {format_note}
@@ -395,11 +426,16 @@ Return ONLY this JSON structure:
 }}
 
 **Critical Rules:**
-- Scores must be realistic (professional calls score 70-85%, not 10%)
+- Scores must be realistic (professional calls score 70-85%, NOT 10%)
+- DO NOT score everything as 1 point - that means 10% which is TERRIBLE
+- A good call should get 6-7 points out of 7, 9-11 out of 11, 12-15 out of 15
+- If the call is professional, score it 70-85% of each parameter's max
 - Each score reflects actual performance vs. maximum points
 - Provide specific, actionable feedback for each parameter
 - List 2-4 concrete strengths and improvements
-<|end|>"""
+
+REMEMBER: Professional calls = 70-85% overall, NOT 10%!
+{chat_end}"""
 
 
 class AuditWorker(BaseWorker):
