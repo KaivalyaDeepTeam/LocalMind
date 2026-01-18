@@ -101,6 +101,71 @@ DEFAULT_PARAMETERS = [
 ]
 
 
+def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Create JSON schema for audit results based on parameters.
+
+    This schema is used for constrained generation to guarantee valid JSON output.
+    """
+    # Build parameter_scores schema with all parameter names
+    parameter_properties = {}
+    required_params = []
+
+    for param in parameters:
+        param_name = param["name"]
+        parameter_properties[param_name] = {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": param["max_score"],
+                    "description": f"Score from 0 to {param['max_score']}",
+                },
+                "feedback": {
+                    "type": "string",
+                    "description": "Brief explanation of the score",
+                },
+            },
+            "required": ["score", "feedback"],
+        }
+        required_params.append(param_name)
+
+    # Complete JSON schema
+    schema = {
+        "type": "object",
+        "properties": {
+            "parameter_scores": {
+                "type": "object",
+                "properties": parameter_properties,
+                "required": required_params,
+                "additionalProperties": False,
+            },
+            "strengths": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 2,
+                "maxItems": 4,
+                "description": "List of 2-4 strengths",
+            },
+            "improvements": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 2,
+                "maxItems": 4,
+                "description": "List of 2-4 areas for improvement",
+            },
+            "summary": {
+                "type": "string",
+                "description": "Brief overall assessment of call quality",
+            },
+        },
+        "required": ["parameter_scores", "strengths", "improvements", "summary"],
+        "additionalProperties": False,
+    }
+
+    return schema
+
+
 def create_audit_prompt(parameters: List[Dict[str, Any]]) -> str:
     """Create the audit system prompt based on parameters."""
     param_list = "\n".join(
@@ -231,9 +296,16 @@ class AuditWorker(BaseWorker):
                 ),
             ]
 
-            config = LLMConfig(temperature=0.3, json_mode=True)
+            # Create JSON schema for constrained generation
+            json_schema = create_audit_json_schema(self._parameters)
 
-            self.report_progress(50, "Generating audit scores...")
+            config = LLMConfig(
+                temperature=0.3,
+                json_mode=True,
+                json_schema=json_schema,  # Use schema-based constrained generation
+            )
+
+            self.report_progress(50, "Generating audit scores (schema-constrained)...")
 
             response_data = await provider.generate_json(messages, config)
 

@@ -260,9 +260,17 @@ class LocalProvider(BaseLLMProvider):
                 "stop": config.stop_sequences,
             }
 
-            # Enable JSON mode if requested
+            # Enable JSON mode with schema-based constrained generation
             if config.json_mode:
-                kwargs["response_format"] = {"type": "json_object"}
+                if config.json_schema:
+                    # Use JSON schema for constrained generation (guarantees valid JSON)
+                    kwargs["response_format"] = {
+                        "type": "json_object",
+                        "schema": config.json_schema,
+                    }
+                else:
+                    # Fallback to basic JSON mode
+                    kwargs["response_format"] = {"type": "json_object"}
 
             response = self._llm.create_chat_completion(**kwargs)
             return response

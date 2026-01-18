@@ -62,6 +62,7 @@ class LLMConfig:
     top_p: float = 1.0
     stop_sequences: Optional[List[str]] = None
     json_mode: bool = False
+    json_schema: Optional[Dict[str, Any]] = None  # JSON schema for constrained generation
 
 
 class BaseLLMProvider(ABC):
