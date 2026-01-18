@@ -143,8 +143,8 @@ app = BUNDLE(
         # Basic app info
         'CFBundleName': 'LocalMind',
         'CFBundleDisplayName': 'LocalMind',
-        'CFBundleVersion': '1.1.0',
-        'CFBundleShortVersionString': '1.1.0',
+        'CFBundleVersion': '1.2.0',
+        'CFBundleShortVersionString': '1.2.0',
         'CFBundleExecutable': 'LocalMind',
         'CFBundleIdentifier': 'ai.localmind.desktop',
 
