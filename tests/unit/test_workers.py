@@ -225,16 +225,18 @@ class TestDefaultParameters:
 
     def test_default_parameters_structure(self):
         """Test default parameters have required fields."""
-        total_points = 0
+        total_weighted_max = 0
         for param in DEFAULT_PARAMETERS:
             assert "name" in param
-            assert "points" in param
+            assert "max_score" in param
+            assert "weight" in param
             assert "description" in param
-            assert param["points"] > 0
-            total_points += param["points"]
+            assert param["max_score"] > 0
+            assert param["weight"] > 0
+            total_weighted_max += param["max_score"] * param["weight"]
 
-        # Verify total points sum to 100
-        assert total_points == 100, f"Total points should be 100, got {total_points}"
+        # Verify total weighted max score is 100 (max_score * weight for all params)
+        assert total_weighted_max == 100, f"Total weighted max should be 100, got {total_weighted_max}"
 
 
 class TestModelInfo:

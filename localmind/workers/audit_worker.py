@@ -208,28 +208,31 @@ class AuditResult:
         return "\n".join(lines)
 
 
-# Default scoring parameters - Total points = 100
-# Each parameter has points allocated based on importance
+# Default scoring parameters with weights
+# Each parameter scored 0-10, weighted by importance
+# Total weighted max = 100 (when all weights sum to 10.0)
 DEFAULT_PARAMETERS = [
-    {"name": "greeting", "points": 7, "description": "Proper greeting and introduction"},
-    {"name": "active_listening", "points": 11, "description": "Demonstrates active listening skills"},
-    {"name": "problem_identification", "points": 11, "description": "Correctly identifies customer issue"},
-    {"name": "solution_provided", "points": 15, "description": "Provides appropriate solution"},
-    {"name": "product_knowledge", "points": 11, "description": "Demonstrates product knowledge"},
-    {"name": "communication_clarity", "points": 8, "description": "Clear and professional communication"},
-    {"name": "empathy", "points": 8, "description": "Shows empathy and understanding"},
-    {"name": "call_control", "points": 7, "description": "Maintains control of conversation"},
-    {"name": "closing", "points": 7, "description": "Proper call closing and next steps"},
-    {"name": "compliance", "points": 15, "description": "Follows required compliance scripts"},
+    {"name": "greeting", "max_score": 10, "weight": 0.7, "description": "Proper greeting and introduction"},
+    {"name": "active_listening", "max_score": 10, "weight": 1.1, "description": "Demonstrates active listening skills"},
+    {"name": "problem_identification", "max_score": 10, "weight": 1.1, "description": "Correctly identifies customer issue"},
+    {"name": "solution_provided", "max_score": 10, "weight": 1.5, "description": "Provides appropriate solution"},
+    {"name": "product_knowledge", "max_score": 10, "weight": 1.1, "description": "Demonstrates product knowledge"},
+    {"name": "communication_clarity", "max_score": 10, "weight": 0.8, "description": "Clear and professional communication"},
+    {"name": "empathy", "max_score": 10, "weight": 0.8, "description": "Shows empathy and understanding"},
+    {"name": "call_control", "max_score": 10, "weight": 0.7, "description": "Maintains control of conversation"},
+    {"name": "closing", "max_score": 10, "weight": 0.7, "description": "Proper call closing and next steps"},
+    {"name": "compliance", "max_score": 10, "weight": 1.5, "description": "Follows required compliance scripts"},
 ]
-# Total: 7+11+11+15+11+8+8+7+7+15 = 100 points
+# Total weights: 0.7+1.1+1.1+1.5+1.1+0.8+0.8+0.7+0.7+1.5 = 10.0
+# Total weighted max score: 10 * 10.0 = 100
 
 
 def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Create JSON schema for audit results based on parameters.
 
     This schema is used for constrained generation to guarantee valid JSON output.
-    Scores are out of the points allocated to each parameter (total = 100).
+    Each parameter is scored from 0 to max_score (typically 0-10).
+    Weights are applied after scoring to calculate weighted total out of 100.
     """
     # Build parameter_scores schema with all parameter names
     parameter_properties = {}
@@ -237,7 +240,7 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
 
     for param in parameters:
         param_name = param["name"]
-        max_points = param.get("points", param.get("max_score", 10))  # Support both formats
+        max_score = param.get("max_score", 10)
 
         parameter_properties[param_name] = {
             "type": "object",
@@ -245,8 +248,8 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
                 "score": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": max_points,
-                    "description": f"Score from 0 to {max_points} points",
+                    "maximum": max_score,
+                    "description": f"Score from 0 to {max_score}",
                 },
                 "feedback": {
                     "type": "string",
@@ -294,123 +297,161 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
 
 
 def create_audit_prompt(parameters: List[Dict[str, Any]], model_name: str = "phi-3.5-mini") -> str:
-    """Create optimized audit prompt based on parameters and model.
+    """Create universal audit prompt that works with all local LLMs.
 
     Args:
-        parameters: List of scoring parameters with points allocated
-        model_name: Name of the LLM model for optimization
+        parameters: List of scoring parameters with max_score and weight
+        model_name: Name of the LLM model (informational only)
 
     Returns:
-        Optimized prompt string for the specific model
+        Universal prompt string optimized for local LLMs
     """
-    # Calculate total points
-    total_points = sum(p.get("points", p.get("max_score", 10)) for p in parameters)
-
-    # Build parameter list with points
+    # Build parameter list with max scores and weights
     param_list = "\n".join(
-        f"- **{p['name']}**: {p['description']} "
-        f"(Max: {p.get('points', p.get('max_score', 10))} points)"
+        f"- **{p['name']}** (0-{p.get('max_score', 10)} scale, weight: {p.get('weight', 1.0)}): {p['description']}"
         for p in parameters
     )
 
-    # Create realistic example scores for a good call (70-85% range)
+    # Create realistic example scores for a GOOD professional call
+    # Most parameters should score 7-9 out of 10 for good service
     example_scores = {}
     for p in parameters:
-        max_pts = p.get("points", p.get("max_score", 10))
-        # Good performance = 75-85% of max points
-        example_score = int(max_pts * 0.8)  # 80% as baseline
-        example_scores[p['name']] = f'{{"score": {example_score}, "feedback": "Good performance with room for improvement"}}'
+        max_score = p.get("max_score", 10)
+        # Good professional service = 70-85% of max (7-8.5 out of 10)
+        example_score = round(max_score * 0.8, 1)  # 8 out of 10 as baseline
+        example_scores[p['name']] = {
+            "score": example_score,
+            "feedback": f"Professional performance with minor areas for improvement"
+        }
 
-    example_scores_str = ",\n    ".join(f'"{name}": {score}' for name, score in example_scores.items())
+    # Format example scores as JSON string
+    example_scores_json = []
+    for name, data in example_scores.items():
+        example_scores_json.append(f'    "{name}": {{"score": {data["score"]}, "feedback": "{data["feedback"]}"}}')
+    example_scores_str = ",\n".join(example_scores_json)
 
-    # Model-specific optimizations and chat format
-    if "qwen" in model_name.lower():
-        chat_start = "<|system|>"
-        chat_end = "<|end|>"
-        format_note = "Note: Qwen models excel at JSON output - use your strength!"
-    elif "mistral" in model_name.lower():
-        chat_start = "[INST]"
-        chat_end = "[/INST]"
-        format_note = "CRITICAL: Mistral, score realistically! A good professional call scores 70-85%, NOT 10%!"
-    else:  # phi-3.5-mini and others
-        chat_start = "<|system|>"
-        chat_end = "<|end|>"
-        format_note = "Note: Return ONLY the JSON object, no code blocks or explanations"
+    return f"""You are an expert call quality auditor. Score this customer service conversation accurately.
 
-    return f"""{chat_start}
-You are a professional call quality auditor. Your task is to score a customer service call.
+## CRITICAL SCORING INSTRUCTIONS
 
-## SCORING SYSTEM
+**UNDERSTAND THE SCALE:**
+- Each parameter is scored from 0 to max_score (typically 0-10)
+- Scores are weighted by importance, then normalized to 100 total points
+- Your job: Score each parameter honestly from 0 to its maximum
 
-**Total Points Available: {total_points}**
+**WHAT EACH SCORE MEANS (for 0-10 scale):**
 
-Each parameter below has a maximum point allocation. Score honestly based on actual performance.
+**9-10 / 10 = EXCELLENT** (90-100%)
+- Exceptional, flawless execution
+- Exceeds all expectations
+- Minimal to no room for improvement
 
-### Parameters:
+**7-8 / 10 = GOOD** (70-80%)  ← **MOST PROFESSIONAL CALLS FALL HERE**
+- Professional, competent service
+- Meets expectations with minor flaws
+- Effective but has room to improve
+
+**5-6 / 10 = ACCEPTABLE** (50-60%)
+- Adequate but needs work
+- Noticeable gaps or issues
+- Barely meets minimum standards
+
+**3-4 / 10 = BELOW AVERAGE** (30-40%)
+- Significant problems present
+- Falls short of expectations
+- Needs serious improvement
+
+**0-2 / 10 = POOR** (0-20%)
+- Unacceptable performance
+- Major failures or omissions
+- Completely missed the mark
+
+## PARAMETERS TO SCORE
+
 {param_list}
 
-## SCORING GUIDELINES
+## SCORING EXAMPLES
 
-**Overall Target Ranges:**
-- 85-100: Excellent (exceptional service, minimal issues)
-- 70-84: Good (professional, effective service)
-- 55-69: Acceptable (adequate but needs improvement)
-- 40-54: Below Average (significant issues present)
-- 0-39: Poor (unacceptable performance)
+### Example 1: GOOD Professional Call (Target: 70-85%)
 
-**How to Score Each Parameter:**
-1. Award **full points** if performance is excellent
-2. Award **75-85%** of points for good professional performance
-3. Award **50-70%** for acceptable but flawed performance
-4. Award **25-50%** for below average performance
-5. Award **0-25%** for poor/unacceptable performance
-
-## REALISTIC EXAMPLE
-
-A professional sales call with good rapport and service should score **70-85%** overall:
+A sales agent handles a customer inquiry professionally with good product knowledge and communication.
 
 ```json
 {{
   "parameter_scores": {{
-    {example_scores_str}
+{example_scores_str}
   }},
-  "strengths": ["Clear product explanation", "Addressed customer concerns", "Professional tone throughout"],
-  "improvements": ["Could ask more qualifying questions", "Closing could be stronger"],
-  "summary": "Professional call with good product knowledge and customer engagement"
+  "strengths": ["Clear communication", "Good product knowledge", "Professional demeanor"],
+  "improvements": ["Could probe deeper on needs", "Close could be stronger"],
+  "summary": "Professional call with effective service delivery and good customer engagement"
 }}
 ```
 
-## COMMON MISTAKE TO AVOID
+**This scores around 80/100 = GOOD professional service.**
 
-**WRONG (10% = terrible service):**
+### Example 2: POOR Call (10-20%)
+
+An agent who is rude, doesn't listen, provides wrong information, and hangs up abruptly.
+
 ```json
 {{
   "parameter_scores": {{
-    "greeting": {{"score": 1, "feedback": "..."}},
-    "active_listening": {{"score": 1, "feedback": "..."}},
-    "problem_identification": {{"score": 1, "feedback": "..."}},
-    ...
-  }}
+    "greeting": {{"score": 1, "feedback": "No proper greeting, abrupt start"}},
+    "active_listening": {{"score": 2, "feedback": "Interrupted customer constantly"}},
+    "problem_identification": {{"score": 1, "feedback": "Failed to understand issue"}},
+    "solution_provided": {{"score": 0, "feedback": "Gave incorrect information"}},
+    "product_knowledge": {{"score": 2, "feedback": "Major knowledge gaps"}},
+    "communication_clarity": {{"score": 3, "feedback": "Confusing explanations"}},
+    "empathy": {{"score": 1, "feedback": "Showed no understanding"}},
+    "call_control": {{"score": 2, "feedback": "Lost control early"}},
+    "closing": {{"score": 0, "feedback": "Hung up without proper closing"}},
+    "compliance": {{"score": 1, "feedback": "Violated multiple policies"}}
+  }},
+  "strengths": [],
+  "improvements": ["Everything needs major improvement"],
+  "summary": "Unacceptable service with multiple policy violations and poor customer treatment"
 }}
 ```
-This is 10/100 = 10% = UNACCEPTABLE SERVICE. Only use this for truly terrible calls.
 
-**CORRECT (80% = good professional service):**
+**This scores around 13/100 = POOR unacceptable service.**
+
+### Example 3: EXCELLENT Call (85-95%)
+
+An expert agent who anticipates needs, provides perfect solution, builds rapport, and creates a wow experience.
+
 ```json
 {{
   "parameter_scores": {{
-    "greeting": {{"score": 6, "feedback": "Professional greeting"}},
-    "active_listening": {{"score": 9, "feedback": "Good listening"}},
-    "problem_identification": {{"score": 9, "feedback": "Identified issue"}},
-    ...
-  }}
+    "greeting": {{"score": 10, "feedback": "Warm, personalized greeting"}},
+    "active_listening": {{"score": 9, "feedback": "Excellent listening with acknowledgments"}},
+    "problem_identification": {{"score": 10, "feedback": "Identified root cause immediately"}},
+    "solution_provided": {{"score": 9, "feedback": "Perfect solution with clear steps"}},
+    "product_knowledge": {{"score": 10, "feedback": "Expert level knowledge"}},
+    "communication_clarity": {{"score": 9, "feedback": "Crystal clear explanations"}},
+    "empathy": {{"score": 10, "feedback": "Exceptional empathy and rapport"}},
+    "call_control": {{"score": 9, "feedback": "Perfect control throughout"}},
+    "closing": {{"score": 9, "feedback": "Comprehensive closing with follow-up"}},
+    "compliance": {{"score": 10, "feedback": "Perfect compliance adherence"}}
+  }},
+  "strengths": ["Exceptional service", "Perfect problem resolution", "Outstanding customer rapport"],
+  "improvements": ["Minor: could have offered additional products"],
+  "summary": "Outstanding call demonstrating expert-level service and creating exceptional customer experience"
 }}
 ```
-This is 80/100 = 80% = GOOD SERVICE. Use this range for professional calls.
 
-## OUTPUT REQUIREMENTS
+**This scores around 95/100 = EXCELLENT exceptional service.**
 
-{format_note}
+## KEY REMINDERS
+
+1. **Most professional calls score 70-85%** (7-8.5 out of 10 on average)
+2. **Scores of 1-2 out of 10 mean TERRIBLE service** - only use for truly bad calls
+3. **Score each parameter independently** based on what you heard
+4. **Be realistic** - perfection (10/10) is rare, good service is 7-8/10
+5. **Consider the context** - a good agent may have 1-2 minor flaws and still score 75-80%
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON matching the schema. No markdown code blocks, no explanations, just the JSON object.
 
 Return ONLY this JSON structure:
 
@@ -523,15 +564,17 @@ class AuditWorker(BaseWorker):
             messages = [
                 provider.create_system_message(system_prompt),
                 provider.create_user_message(
-                    f"<|user|>\nPlease audit this call transcript:\n\n{transcript}\n<|end|>"
+                    f"Please audit this call transcript:\n\n{transcript}"
                 ),
             ]
 
             # Create JSON schema for constrained generation
             json_schema = create_audit_json_schema(self._parameters)
 
+            # Use moderate temperature for all LLMs
+            # 0.5 balances consistency with flexibility across different models
             config = LLMConfig(
-                temperature=0.3,
+                temperature=0.5,
                 json_mode=True,
                 json_schema=json_schema,  # Use schema-based constrained generation
             )
@@ -549,19 +592,21 @@ class AuditWorker(BaseWorker):
             for param in self._parameters:
                 name = param["name"]
                 score_data = param_data.get(name, {})
-                max_points = param.get("points", param.get("max_score", 10))
+                max_score = param.get("max_score", 10)
+                weight = param.get("weight", 1.0)
 
                 parameter_scores.append(ParameterScore(
                     name=name,
                     score=float(score_data.get("score", 0)),
-                    max_score=float(max_points),
-                    weight=1.0,  # No weighting needed since points already allocated
+                    max_score=float(max_score),
+                    weight=float(weight),
                     feedback=score_data.get("feedback", ""),
                 ))
 
-            # Calculate overall scores (simple sum since points are out of 100)
-            total_score = sum(p.score for p in parameter_scores)
-            total_max = sum(p.max_score for p in parameter_scores)
+            # Calculate overall scores using weighted system
+            # Each score is multiplied by its weight, then summed
+            total_score = sum(p.score * p.weight for p in parameter_scores)
+            total_max = sum(p.max_score * p.weight for p in parameter_scores)
 
             # Calculate compliance and quality subscores
             compliance_params = ["greeting", "closing", "compliance"]

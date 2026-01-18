@@ -261,24 +261,14 @@ class MainWindow(QMainWindow):
         profile = profile_manager.get_current_profile()
         enabled_params = profile.get_enabled_parameters()
 
-        # Convert weighted parameters to point allocation out of 100
-        # Calculate total weighted score
-        total_weighted = sum(p.max_score * p.weight for p in enabled_params)
-
-        # Convert each parameter to points out of 100
+        # Pass parameters with max_score and weight directly
+        # The audit worker will apply weights during calculation
         scoring_parameters = []
         for p in enabled_params:
-            # Calculate points: (max_score * weight / total_weighted) * 100
-            if total_weighted > 0:
-                points = (p.max_score * p.weight / total_weighted) * 100
-            else:
-                points = 0
-
             scoring_parameters.append({
                 "name": p.name,
-                "points": points,  # Use new points format
-                "max_score": p.max_score,  # Keep for backward compatibility
-                "weight": p.weight,  # Keep for backward compatibility
+                "max_score": p.max_score,
+                "weight": p.weight,
                 "description": p.description,
             })
 
