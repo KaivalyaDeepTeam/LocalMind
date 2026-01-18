@@ -116,7 +116,6 @@ def main():
         print("\n✅ All models downloaded and verified successfully!")
         print("\nModels are cached at: ~/.cache/huggingface/hub/")
         print("\nYou can now run the application:")
-        print("  cd /Users/prepladder/localmind/localmind")
         print("  python -m localmind")
         return 0
     else:
