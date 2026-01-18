@@ -531,11 +531,16 @@ class AuditWorker(BaseWorker):
         provider_name = provider.provider_name.lower()
         use_cot = provider_name == "local"
 
+        # Debug logging
+        print(f"[DEBUG] Provider: {provider_name}, Using CoT: {use_cot}")
+
         if use_cot:
             # Local models benefit from Chain-of-Thought reasoning
+            print("[DEBUG] Routing to CoT method")
             return await self._llm_audit_with_cot(provider)
         else:
             # API models (GPT-4, Claude, Groq) are powerful enough for single-shot
+            print("[DEBUG] Routing to single-shot method")
             return await self._llm_audit_single_shot(provider)
 
     async def _llm_audit_with_cot(self, provider) -> AuditResult:
@@ -586,6 +591,10 @@ class AuditWorker(BaseWorker):
 
             analysis_response = await provider.generate(cot_messages, cot_config)
             analysis = analysis_response.content if analysis_response else "No analysis generated"
+
+            # Debug: Show analysis length
+            print(f"[DEBUG CoT] Analysis generated: {len(analysis)} characters")
+            print(f"[DEBUG CoT] Analysis preview: {analysis[:200]}...")
 
             self.report_progress(55, "Analysis complete. Now scoring...")
 
