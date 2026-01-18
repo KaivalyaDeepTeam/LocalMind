@@ -585,7 +585,7 @@ class AuditWorker(BaseWorker):
             )
 
             analysis_response = await provider.generate(cot_messages, cot_config)
-            analysis = analysis_response.get("content", "No analysis generated")
+            analysis = analysis_response.content if analysis_response else "No analysis generated"
 
             self.report_progress(55, "Analysis complete. Now scoring...")
 
