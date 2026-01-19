@@ -35,6 +35,10 @@ jobs:
 
       - name: Create DMG
         run: |
+          # Wait for file system to settle and release locks
+          sync
+          sleep 5
+          # Create DMG
           hdiutil create -volname "LocalMind" -srcfolder dist/LocalMind.app -ov -format UDZO LocalMind-macOS.dmg
 
       - name: Upload artifact
@@ -154,8 +158,8 @@ jobs:
             convert -size 256x256 xc:#6366F1 -fill white -gravity center -pointsize 72 -annotate 0 "LM" LocalMind.AppDir/localmind.png || true
           fi
 
-          # Build AppImage
-          ARCH=x86_64 ./appimagetool-x86_64.AppImage LocalMind.AppDir LocalMind-Linux.AppImage || \
+          # Build AppImage (use --appimage-extract-and-run since FUSE may not be available)
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run LocalMind.AppDir LocalMind-Linux.AppImage || \
             tar -czvf LocalMind-Linux.tar.gz -C dist LocalMind
 
       - name: Upload artifact
