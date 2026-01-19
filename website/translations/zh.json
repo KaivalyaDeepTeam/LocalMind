@@ -76,7 +76,7 @@
     "label": "开始使用",
     "title": "下载<br><span class='gradient-text'>LocalMind</span>",
     "subtitle": "现已支持macOS。Windows和Linux即将推出。",
-    "macos": "macOS v1.2.0",
+    "macos": "macOS v1.2.1",
     "windows": "Windows",
     "linux": "Linux",
     "coming_soon": "即将推出"

@@ -76,7 +76,7 @@
     "label": "始める",
     "title": "ダウンロード<br><span class='gradient-text'>LocalMind</span>",
     "subtitle": "現在macOSで利用可能。WindowsとLinuxは近日公開。",
-    "macos": "macOS v1.2.0",
+    "macos": "macOS v1.2.1",
     "windows": "Windows",
     "linux": "Linux",
     "coming_soon": "近日公開"

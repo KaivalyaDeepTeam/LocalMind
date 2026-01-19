@@ -76,7 +76,7 @@
     "label": "Comenzar",
     "title": "Descargar<br><span class='gradient-text'>LocalMind</span>",
     "subtitle": "Disponible ahora para macOS. Windows y Linux próximamente.",
-    "macos": "macOS v1.2.0",
+    "macos": "macOS v1.2.1",
     "windows": "Windows",
     "linux": "Linux",
     "coming_soon": "Próximamente"
