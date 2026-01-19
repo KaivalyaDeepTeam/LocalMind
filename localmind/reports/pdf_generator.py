@@ -1,68 +1,94 @@
 """
 LocalMind PDF Report Generator
 
-Generates professional PDF audit reports using WeasyPrint and Jinja2.
+Generates professional PDF audit reports using ReportLab (pure Python).
+Features: Score gauges, bar charts, detailed tables, and clean layout.
 """
 
 import io
-import base64
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass
+import math
 
-# Template rendering
+# ReportLab imports
 try:
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
-    HAS_JINJA2 = True
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch, cm, mm
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+        PageBreak, Image, HRFlowable, KeepTogether, ListFlowable, ListItem
+    )
+    from reportlab.graphics.shapes import Drawing, Rect, String, Circle, Wedge, Line
+    from reportlab.graphics.charts.barcharts import HorizontalBarChart
+    from reportlab.graphics.charts.legends import Legend
+    from reportlab.graphics import renderPDF
+    HAS_REPORTLAB = True
 except ImportError:
-    HAS_JINJA2 = False
-
-# PDF generation
-try:
-    from weasyprint import HTML, CSS
-    HAS_WEASYPRINT = True
-except ImportError:
-    HAS_WEASYPRINT = False
-
-# Chart generation
-try:
-    import matplotlib
-    matplotlib.use('Agg')  # Non-interactive backend
-    import matplotlib.pyplot as plt
-    import numpy as np
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
+    HAS_REPORTLAB = False
+    colors = None
 
 
-def get_templates_dir() -> Path:
-    """Get the templates directory."""
-    return Path(__file__).parent / "templates"
+# Color palette - Modern, professional colors
+COLORS = {}
+if HAS_REPORTLAB:
+    COLORS = {
+        # Brand colors
+        'primary': colors.HexColor('#4F46E5'),       # Indigo
+        'primary_light': colors.HexColor('#818CF8'), # Light indigo
+        'primary_dark': colors.HexColor('#3730A3'),  # Dark indigo
+
+        # Score colors
+        'excellent': colors.HexColor('#10B981'),     # Emerald green
+        'good': colors.HexColor('#22C55E'),          # Green
+        'average': colors.HexColor('#F59E0B'),       # Amber
+        'below_avg': colors.HexColor('#F97316'),     # Orange
+        'poor': colors.HexColor('#EF4444'),          # Red
+
+        # Neutral colors
+        'text_dark': colors.HexColor('#111827'),     # Gray 900
+        'text': colors.HexColor('#374151'),          # Gray 700
+        'text_light': colors.HexColor('#6B7280'),    # Gray 500
+        'text_muted': colors.HexColor('#9CA3AF'),    # Gray 400
+        'border': colors.HexColor('#E5E7EB'),        # Gray 200
+        'background': colors.HexColor('#F9FAFB'),    # Gray 50
+        'background_alt': colors.HexColor('#F3F4F6'), # Gray 100
+        'white': colors.white,
+    }
 
 
-def get_score_class(percentage: float) -> str:
-    """Get CSS class based on score percentage."""
-    if percentage >= 80:
-        return "score-excellent"
-    elif percentage >= 60:
-        return "score-good"
+def get_score_color(percentage: float) -> 'colors.Color':
+    """Get color based on score percentage."""
+    if not HAS_REPORTLAB:
+        return None
+    if percentage >= 85:
+        return COLORS['excellent']
+    elif percentage >= 70:
+        return COLORS['good']
+    elif percentage >= 55:
+        return COLORS['average']
     elif percentage >= 40:
-        return "score-average"
+        return COLORS['below_avg']
     else:
-        return "score-poor"
+        return COLORS['poor']
 
 
-def get_bar_class(percentage: float) -> str:
-    """Get bar CSS class based on score percentage."""
-    if percentage >= 80:
-        return "bar-excellent"
-    elif percentage >= 60:
-        return "bar-good"
+def get_rating_text(percentage: float) -> str:
+    """Get rating text based on percentage."""
+    if percentage >= 85:
+        return "Excellent"
+    elif percentage >= 70:
+        return "Good"
+    elif percentage >= 55:
+        return "Average"
     elif percentage >= 40:
-        return "bar-average"
+        return "Below Average"
     else:
-        return "bar-poor"
+        return "Needs Improvement"
 
 
 @dataclass
@@ -70,321 +96,657 @@ class ReportOptions:
     """Options for PDF report generation."""
     include_transcript: bool = True
     include_chart: bool = True
-    include_scores: bool = True
+    include_details: bool = True
     company_name: Optional[str] = None
     logo_path: Optional[str] = None
+    page_size: str = "letter"  # "letter" or "a4"
 
 
 class ScoreChartGenerator:
-    """Generates score visualization charts."""
+    """Generates score visualization charts using ReportLab."""
 
     @staticmethod
-    def generate_radar_chart(
-        parameters: List[Dict[str, Any]],
-        width: int = 6,
-        height: int = 6,
-    ) -> Optional[str]:
-        """Generate a radar chart of scores.
-
-        Args:
-            parameters: List of parameter dicts with name, score, max.
-            width: Chart width in inches.
-            height: Chart height in inches.
-
-        Returns:
-            Base64-encoded PNG image data URI, or None if matplotlib unavailable.
-        """
-        if not HAS_MATPLOTLIB or not parameters:
+    def create_score_gauge(
+        score: float,
+        max_score: float = 100,
+        size: float = 120
+    ) -> Drawing:
+        """Create a circular score gauge."""
+        if not HAS_REPORTLAB:
             return None
 
-        # Prepare data
-        labels = [p.get("display_name", p["name"])[:15] for p in parameters]
-        scores = [p["score"] / p["max"] * 100 for p in parameters]
+        percentage = (score / max_score * 100) if max_score > 0 else 0
+        color = get_score_color(percentage)
 
-        # Number of variables
-        num_vars = len(labels)
-        if num_vars < 3:
-            return None  # Radar chart needs at least 3 points
+        drawing = Drawing(size, size + 20)
+        center_x = size / 2
+        center_y = size / 2 + 10
+        radius = size / 2 - 10
 
-        # Compute angle for each axis
-        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-        angles += angles[:1]  # Complete the loop
-        scores += scores[:1]
+        # Background circle (gray track)
+        drawing.add(Wedge(
+            center_x, center_y, radius,
+            0, 360,
+            fillColor=COLORS['background_alt'],
+            strokeColor=None,
+            strokeWidth=0
+        ))
 
-        # Create figure
-        fig, ax = plt.subplots(figsize=(width, height), subplot_kw=dict(polar=True))
+        # Score arc (colored portion)
+        if percentage > 0:
+            # Convert percentage to angle (starting from top, going clockwise)
+            angle = percentage * 3.6  # 360 degrees = 100%
+            start_angle = 90  # Start from top
+            end_angle = 90 - angle
 
-        # Draw the chart
-        ax.fill(angles, scores, color='#2196F3', alpha=0.25)
-        ax.plot(angles, scores, color='#1976D2', linewidth=2)
+            drawing.add(Wedge(
+                center_x, center_y, radius,
+                end_angle, start_angle,
+                fillColor=color,
+                strokeColor=None,
+                strokeWidth=0
+            ))
 
-        # Add labels
-        ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(labels, size=9)
+        # Inner white circle to create donut effect
+        inner_radius = radius * 0.65
+        drawing.add(Circle(
+            center_x, center_y, inner_radius,
+            fillColor=COLORS['white'],
+            strokeColor=None
+        ))
 
-        # Set y-axis
-        ax.set_ylim(0, 100)
-        ax.set_yticks([20, 40, 60, 80, 100])
-        ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], size=8, color='gray')
+        # Score text in center
+        drawing.add(String(
+            center_x, center_y + 5,
+            f"{percentage:.0f}%",
+            fontName='Helvetica-Bold',
+            fontSize=24,
+            fillColor=color,
+            textAnchor='middle'
+        ))
 
-        # Style
-        ax.spines['polar'].set_color('#ddd')
-        ax.grid(color='#eee', linewidth=0.5)
+        # "Score" label below
+        drawing.add(String(
+            center_x, center_y - 15,
+            "Overall",
+            fontName='Helvetica',
+            fontSize=10,
+            fillColor=COLORS['text_light'],
+            textAnchor='middle'
+        ))
 
-        plt.tight_layout()
-
-        # Save to bytes
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight',
-                   facecolor='white', edgecolor='none')
-        plt.close(fig)
-
-        # Convert to base64 data URI
-        buf.seek(0)
-        img_data = base64.b64encode(buf.read()).decode('utf-8')
-        return f"data:image/png;base64,{img_data}"
+        return drawing
 
     @staticmethod
-    def generate_bar_chart(
+    def create_horizontal_bar_chart(
         parameters: List[Dict[str, Any]],
-        width: int = 8,
-        height: int = 4,
-    ) -> Optional[str]:
-        """Generate a horizontal bar chart of scores.
-
-        Args:
-            parameters: List of parameter dicts with name, score, max.
-            width: Chart width in inches.
-            height: Chart height in inches.
-
-        Returns:
-            Base64-encoded PNG image data URI, or None if matplotlib unavailable.
-        """
-        if not HAS_MATPLOTLIB or not parameters:
+        width: float = 480,
+        bar_height: float = 22
+    ) -> Drawing:
+        """Create a horizontal bar chart with score labels."""
+        if not HAS_REPORTLAB or not parameters:
             return None
 
-        # Prepare data
-        labels = [p.get("display_name", p["name"]) for p in parameters]
-        percentages = [p["score"] / p["max"] * 100 for p in parameters]
+        num_params = len(parameters)
+        chart_height = num_params * (bar_height + 12) + 40
 
-        # Colors based on score
-        colors = []
-        for pct in percentages:
-            if pct >= 80:
-                colors.append('#4CAF50')
-            elif pct >= 60:
-                colors.append('#8BC34A')
-            elif pct >= 40:
-                colors.append('#FF9800')
-            else:
-                colors.append('#F44336')
+        drawing = Drawing(width, chart_height)
 
-        # Create figure
-        fig, ax = plt.subplots(figsize=(width, height))
+        # Chart dimensions
+        label_width = 150
+        bar_width = width - label_width - 60
+        start_x = label_width + 10
+        start_y = chart_height - 30
 
-        # Create bars
-        y_pos = np.arange(len(labels))
-        bars = ax.barh(y_pos, percentages, color=colors, height=0.6)
+        for i, param in enumerate(parameters):
+            name = param.get("parameter", param.get("name", f"Parameter {i+1}"))
+            # Truncate long names
+            if len(name) > 25:
+                name = name[:22] + "..."
 
-        # Customize
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(labels, size=10)
-        ax.set_xlim(0, 100)
-        ax.set_xlabel('Score (%)', size=10)
+            score = param.get("score", 0)
+            max_score = param.get("max_score", param.get("max", 10))
+            percentage = (score / max_score * 100) if max_score > 0 else 0
+            color = get_score_color(percentage)
 
-        # Add value labels
-        for bar, pct in zip(bars, percentages):
-            ax.text(bar.get_width() + 2, bar.get_y() + bar.get_height()/2,
-                   f'{pct:.0f}%', va='center', size=9, color='#666')
+            y_pos = start_y - (i * (bar_height + 12))
 
-        # Style
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_color('#ddd')
-        ax.spines['left'].set_color('#ddd')
-        ax.tick_params(colors='#666')
+            # Parameter label (left aligned)
+            drawing.add(String(
+                5, y_pos + bar_height/2 - 4,
+                name,
+                fontName='Helvetica',
+                fontSize=10,
+                fillColor=COLORS['text'],
+                textAnchor='start'
+            ))
 
-        # Add grid
-        ax.xaxis.grid(True, color='#eee', linewidth=0.5)
-        ax.set_axisbelow(True)
+            # Background bar (gray track)
+            drawing.add(Rect(
+                start_x, y_pos,
+                bar_width, bar_height,
+                fillColor=COLORS['background_alt'],
+                strokeColor=None,
+                rx=4, ry=4
+            ))
 
-        plt.tight_layout()
+            # Score bar (colored portion)
+            score_width = (percentage / 100) * bar_width
+            if score_width > 0:
+                drawing.add(Rect(
+                    start_x, y_pos,
+                    max(score_width, 8), bar_height,  # Minimum width for visibility
+                    fillColor=color,
+                    strokeColor=None,
+                    rx=4, ry=4
+                ))
 
-        # Save to bytes
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight',
-                   facecolor='white', edgecolor='none')
-        plt.close(fig)
+            # Score label (right of bar)
+            drawing.add(String(
+                start_x + bar_width + 8, y_pos + bar_height/2 - 4,
+                f"{score:.1f}/{max_score:.0f}",
+                fontName='Helvetica-Bold',
+                fontSize=9,
+                fillColor=COLORS['text'],
+                textAnchor='start'
+            ))
 
-        # Convert to base64 data URI
-        buf.seek(0)
-        img_data = base64.b64encode(buf.read()).decode('utf-8')
-        return f"data:image/png;base64,{img_data}"
+        return drawing
+
+    @staticmethod
+    def create_mini_bar(
+        percentage: float,
+        width: float = 60,
+        height: float = 8
+    ) -> Drawing:
+        """Create a mini progress bar for table cells."""
+        if not HAS_REPORTLAB:
+            return None
+
+        drawing = Drawing(width, height)
+        color = get_score_color(percentage)
+
+        # Background
+        drawing.add(Rect(0, 0, width, height,
+                        fillColor=COLORS['background_alt'],
+                        strokeColor=None, rx=2, ry=2))
+
+        # Fill
+        fill_width = (percentage / 100) * width
+        if fill_width > 0:
+            drawing.add(Rect(0, 0, max(fill_width, 4), height,
+                            fillColor=color,
+                            strokeColor=None, rx=2, ry=2))
+
+        return drawing
 
 
 class PDFReportGenerator:
-    """Generates PDF audit reports."""
+    """Generates professional PDF audit reports."""
 
     def __init__(self, options: Optional[ReportOptions] = None):
-        """Initialize PDF generator.
-
-        Args:
-            options: Report generation options.
-        """
+        """Initialize PDF generator."""
         self._options = options or ReportOptions()
-        self._templates_dir = get_templates_dir()
-        self._chart_generator = ScoreChartGenerator()
+        self._styles = self._create_styles() if HAS_REPORTLAB else {}
 
-        if HAS_JINJA2:
-            self._env = Environment(
-                loader=FileSystemLoader(str(self._templates_dir)),
-                autoescape=select_autoescape(['html', 'xml']),
-            )
-        else:
-            self._env = None
+    def _create_styles(self) -> Dict[str, ParagraphStyle]:
+        """Create custom paragraph styles."""
+        if not HAS_REPORTLAB:
+            return {}
 
-    def check_dependencies(self) -> Dict[str, bool]:
-        """Check if required dependencies are available.
+        styles = getSampleStyleSheet()
 
-        Returns:
-            Dict mapping dependency name to availability.
-        """
         return {
-            "jinja2": HAS_JINJA2,
-            "weasyprint": HAS_WEASYPRINT,
-            "matplotlib": HAS_MATPLOTLIB,
+            'Title': ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=28,
+                textColor=COLORS['primary'],
+                spaceAfter=6,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold',
+            ),
+            'Subtitle': ParagraphStyle(
+                'CustomSubtitle',
+                parent=styles['Normal'],
+                fontSize=11,
+                textColor=COLORS['text_light'],
+                spaceAfter=20,
+                alignment=TA_CENTER,
+            ),
+            'SectionHeading': ParagraphStyle(
+                'SectionHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=COLORS['primary_dark'],
+                spaceBefore=25,
+                spaceAfter=12,
+                fontName='Helvetica-Bold',
+                borderPadding=(0, 0, 5, 0),
+                borderWidth=0,
+                borderColor=COLORS['primary'],
+            ),
+            'SubHeading': ParagraphStyle(
+                'SubHeading',
+                parent=styles['Heading3'],
+                fontSize=12,
+                textColor=COLORS['text_dark'],
+                spaceBefore=15,
+                spaceAfter=8,
+                fontName='Helvetica-Bold',
+            ),
+            'Body': ParagraphStyle(
+                'CustomBody',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=COLORS['text'],
+                spaceAfter=8,
+                leading=14,
+                alignment=TA_JUSTIFY,
+            ),
+            'BodyCentered': ParagraphStyle(
+                'BodyCentered',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=COLORS['text'],
+                spaceAfter=8,
+                alignment=TA_CENTER,
+            ),
+            'Strength': ParagraphStyle(
+                'Strength',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=COLORS['excellent'],
+                leftIndent=15,
+                spaceAfter=6,
+                leading=14,
+            ),
+            'Improvement': ParagraphStyle(
+                'Improvement',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=COLORS['below_avg'],
+                leftIndent=15,
+                spaceAfter=6,
+                leading=14,
+            ),
+            'Transcript': ParagraphStyle(
+                'Transcript',
+                parent=styles['Normal'],
+                fontSize=9,
+                textColor=COLORS['text'],
+                spaceAfter=6,
+                leading=13,
+                leftIndent=10,
+            ),
+            'TranscriptSpeaker': ParagraphStyle(
+                'TranscriptSpeaker',
+                parent=styles['Normal'],
+                fontSize=9,
+                textColor=COLORS['primary'],
+                fontName='Helvetica-Bold',
+                spaceAfter=2,
+            ),
+            'Footer': ParagraphStyle(
+                'Footer',
+                fontSize=8,
+                textColor=COLORS['text_muted'],
+                alignment=TA_CENTER,
+            ),
         }
 
     def can_generate(self) -> bool:
         """Check if PDF generation is possible."""
-        return HAS_JINJA2 and HAS_WEASYPRINT
+        return HAS_REPORTLAB
 
-    def generate_html(
-        self,
-        audit_result: Dict[str, Any],
-        file_name: str = "audio_file",
-    ) -> str:
-        """Generate HTML report from audit results.
+    def _build_header(self, file_name: str) -> List:
+        """Build report header with title and metadata."""
+        elements = []
 
-        Args:
-            audit_result: Audit result dictionary.
-            file_name: Name of the audio file.
+        # Main title
+        elements.append(Paragraph(
+            "Audio Quality Audit Report",
+            self._styles['Title']
+        ))
 
-        Returns:
-            Rendered HTML string.
-        """
-        if not HAS_JINJA2:
-            raise ImportError("Jinja2 is required for report generation. Install with: pip install jinja2")
+        # Subtitle with file and date
+        date_str = datetime.now().strftime("%B %d, %Y at %H:%M")
+        elements.append(Paragraph(
+            f"<b>File:</b> {file_name} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Generated:</b> {date_str}",
+            self._styles['Subtitle']
+        ))
 
-        # Prepare template data
-        overall_score = audit_result.get("overall_score", 0)
-        max_score = audit_result.get("max_score", 100)
-        overall_pct = (overall_score / max_score * 100) if max_score > 0 else 0
+        # Divider line
+        elements.append(HRFlowable(
+            width="100%", thickness=2,
+            color=COLORS['primary'], spaceAfter=20
+        ))
 
-        compliance_score = audit_result.get("compliance_score", 0)
-        quality_score = audit_result.get("quality_score", 0)
+        return elements
 
-        # Process parameters
-        parameters = []
-        param_scores = audit_result.get("parameter_scores", {})
+    def _build_score_overview(self, audit_result: Dict[str, Any]) -> List:
+        """Build score overview section with gauge and summary."""
+        elements = []
 
-        if isinstance(param_scores, dict):
-            for name, data in param_scores.items():
-                if isinstance(data, dict):
-                    score = data.get("score", 0)
-                    max_s = data.get("max", 10)
-                    weight = data.get("weight", 1.0)
-                else:
-                    score = data
-                    max_s = 10
-                    weight = 1.0
+        # Get score data
+        score_summary = audit_result.get("score_summary", {})
+        total_score = score_summary.get("total_score", 0)
+        max_score = score_summary.get("max_possible_score", 100)
+        percentage = score_summary.get("percentage", 0)
 
-                pct = (score / max_s * 100) if max_s > 0 else 0
-                parameters.append({
-                    "name": name.replace("_", " ").title(),
-                    "score": f"{score:.1f}",
-                    "max": f"{max_s:.0f}",
-                    "weight": f"{weight:.1f}",
-                    "percentage": pct,
-                    "bar_class": get_bar_class(pct),
-                })
+        if max_score == 0 and total_score == 0:
+            # Try alternative keys
+            total_score = audit_result.get("overall_score", 0)
+            max_score = audit_result.get("max_score", 100)
+            percentage = (total_score / max_score * 100) if max_score > 0 else 0
 
-        # Generate chart
-        chart_image = None
-        if self._options.include_chart and HAS_MATPLOTLIB and parameters:
-            chart_params = [
-                {
-                    "name": p["name"],
-                    "display_name": p["name"],
-                    "score": float(p["score"]),
-                    "max": float(p["max"]),
-                }
-                for p in parameters
-            ]
-            chart_image = self._chart_generator.generate_bar_chart(chart_params)
+        rating = get_rating_text(percentage)
+        rating_color = get_score_color(percentage)
 
-        # Process transcript
-        transcript_lines = []
-        if self._options.include_transcript:
-            transcript = audit_result.get("transcript", "")
-            if transcript:
-                for line in transcript.split("\n"):
-                    line = line.strip()
-                    if not line:
-                        continue
+        # Create gauge
+        gauge = ScoreChartGenerator.create_score_gauge(percentage, 100, 130)
 
-                    speaker = "Unknown"
-                    text = line
+        # Build overview table with gauge on left, summary on right
+        summary_data = [
+            ["Total Score:", f"{total_score:.1f} / {max_score:.0f}"],
+            ["Percentage:", f"{percentage:.1f}%"],
+            ["Rating:", rating],
+        ]
 
-                    if line.startswith("[Agent]"):
-                        speaker = "Agent"
-                        text = line[7:].strip()
-                    elif line.startswith("[Customer]"):
-                        speaker = "Customer"
-                        text = line[10:].strip()
-                    elif "]" in line and line.startswith("["):
-                        bracket_end = line.index("]")
-                        speaker = line[1:bracket_end]
-                        text = line[bracket_end + 1:].strip()
+        summary_table = Table(summary_data, colWidths=[100, 120])
+        summary_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('TEXTCOLOR', (0, 0), (0, -1), COLORS['text_light']),
+            ('TEXTCOLOR', (1, 0), (1, 1), COLORS['text_dark']),
+            ('TEXTCOLOR', (1, 2), (1, 2), rating_color),
+            ('FONTNAME', (1, 2), (1, 2), 'Helvetica-Bold'),
+            ('FONTSIZE', (1, 2), (1, 2), 13),
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ]))
 
-                    transcript_lines.append({
-                        "speaker": speaker,
-                        "text": text,
-                    })
+        # Main overview table
+        overview_data = [[gauge, summary_table]]
+        overview_table = Table(overview_data, colWidths=[150, 300])
+        overview_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('ALIGN', (1, 0), (1, 0), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (1, 0), (1, 0), 30),
+        ]))
 
-        # Get feedback
-        feedback = audit_result.get("feedback", {})
-        if isinstance(feedback, dict):
-            summary = feedback.get("summary", audit_result.get("summary", ""))
-            strengths = feedback.get("strengths", audit_result.get("strengths", []))
-            improvements = feedback.get("improvements", audit_result.get("improvements", []))
-        else:
-            summary = str(feedback) if feedback else ""
-            strengths = audit_result.get("strengths", [])
-            improvements = audit_result.get("improvements", [])
+        # Wrap in a styled container
+        container_data = [[overview_table]]
+        container = Table(container_data, colWidths=[480])
+        container.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), COLORS['background']),
+            ('BOX', (0, 0), (-1, -1), 1, COLORS['border']),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ]))
 
-        # Render template
-        template = self._env.get_template("audit_report.html")
-        html = template.render(
-            file_name=file_name,
-            generated_date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            overall_score=f"{overall_score:.1f}",
-            max_score=f"{max_score:.1f}",
-            overall_score_class=get_score_class(overall_pct),
-            compliance_score=f"{compliance_score:.0f}",
-            compliance_score_class=get_score_class(compliance_score),
-            quality_score=f"{quality_score:.0f}",
-            quality_score_class=get_score_class(quality_score),
-            parameters=parameters,
-            chart_image=chart_image,
-            summary=summary,
-            strengths=strengths,
-            improvements=improvements,
-            include_transcript=self._options.include_transcript,
-            transcript_lines=transcript_lines,
-        )
+        elements.append(container)
+        elements.append(Spacer(1, 20))
 
-        return html
+        return elements
+
+    def _build_score_chart(self, audit_result: Dict[str, Any]) -> List:
+        """Build the score breakdown bar chart."""
+        elements = []
+
+        if not self._options.include_chart:
+            return elements
+
+        scoring_details = audit_result.get("scoring_details", [])
+        if not scoring_details:
+            return elements
+
+        elements.append(Paragraph("Score Breakdown", self._styles['SectionHeading']))
+
+        # Create bar chart
+        chart = ScoreChartGenerator.create_horizontal_bar_chart(scoring_details, width=490)
+        if chart:
+            elements.append(chart)
+
+        elements.append(Spacer(1, 15))
+
+        return elements
+
+    def _build_detailed_scores_table(self, audit_result: Dict[str, Any]) -> List:
+        """Build detailed scores table."""
+        elements = []
+
+        if not self._options.include_details:
+            return elements
+
+        scoring_details = audit_result.get("scoring_details", [])
+        if not scoring_details:
+            return elements
+
+        elements.append(Paragraph("Detailed Scores", self._styles['SectionHeading']))
+
+        # Table header
+        table_data = [['Parameter', 'Score', 'Max', 'Percentage', 'Rating']]
+
+        for param in scoring_details:
+            name = param.get("parameter", param.get("name", "Unknown"))
+            score = param.get("score", 0)
+            max_score = param.get("max_score", param.get("max", 10))
+            percentage = param.get("percentage", (score / max_score * 100) if max_score > 0 else 0)
+            rating = param.get("rating", get_rating_text(percentage))
+
+            # Truncate long names
+            if len(name) > 30:
+                name = name[:27] + "..."
+
+            table_data.append([
+                name,
+                f"{score:.1f}",
+                f"{max_score:.0f}",
+                f"{percentage:.0f}%",
+                rating
+            ])
+
+        # Create table
+        col_widths = [180, 60, 50, 80, 100]
+        table = Table(table_data, colWidths=col_widths)
+
+        # Style the table
+        style_commands = [
+            # Header row
+            ('BACKGROUND', (0, 0), (-1, 0), COLORS['primary']),
+            ('TEXTCOLOR', (0, 0), (-1, 0), COLORS['white']),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+
+            # Data rows
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 1), (3, -1), 'CENTER'),
+            ('ALIGN', (4, 1), (4, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+
+            # Alternating row colors
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [COLORS['white'], COLORS['background']]),
+
+            # Borders
+            ('BOX', (0, 0), (-1, -1), 1, COLORS['border']),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, COLORS['primary']),
+            ('LINEBELOW', (0, 1), (-1, -2), 0.5, COLORS['border']),
+
+            # Padding
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ]
+
+        # Color-code the rating column
+        for i, param in enumerate(scoring_details, start=1):
+            percentage = param.get("percentage", 0)
+            if percentage == 0:
+                score = param.get("score", 0)
+                max_score = param.get("max_score", 10)
+                percentage = (score / max_score * 100) if max_score > 0 else 0
+            rating_color = get_score_color(percentage)
+            style_commands.append(('TEXTCOLOR', (4, i), (4, i), rating_color))
+            style_commands.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))
+
+        table.setStyle(TableStyle(style_commands))
+        elements.append(table)
+        elements.append(Spacer(1, 20))
+
+        return elements
+
+    def _build_ai_feedback(self, audit_result: Dict[str, Any]) -> List:
+        """Build AI feedback section with strengths and improvements."""
+        elements = []
+
+        ai_feedback = audit_result.get("ai_feedback", {})
+        if not ai_feedback:
+            return elements
+
+        elements.append(Paragraph("AI Analysis & Feedback", self._styles['SectionHeading']))
+
+        # Summary
+        summary = ai_feedback.get("summary", "")
+        if summary:
+            # Create summary box
+            summary_data = [[Paragraph(f"<b>Summary:</b> {summary}", self._styles['Body'])]]
+            summary_table = Table(summary_data, colWidths=[470])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), COLORS['background']),
+                ('BOX', (0, 0), (-1, -1), 1, COLORS['border']),
+                ('TOPPADDING', (0, 0), (-1, -1), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ]))
+            elements.append(summary_table)
+            elements.append(Spacer(1, 15))
+
+        # Two-column layout for strengths and improvements
+        strengths = ai_feedback.get("strengths", [])
+        improvements = ai_feedback.get("improvements", [])
+
+        if strengths or improvements:
+            # Strengths column
+            strengths_content = []
+            if strengths:
+                strengths_content.append(Paragraph(
+                    "<font color='#10B981'><b>Strengths</b></font>",
+                    self._styles['SubHeading']
+                ))
+                for s in strengths[:5]:  # Limit to 5 items
+                    strengths_content.append(Paragraph(
+                        f"<font color='#10B981'>&#10003;</font> {s}",
+                        self._styles['Strength']
+                    ))
+
+            # Improvements column
+            improvements_content = []
+            if improvements:
+                improvements_content.append(Paragraph(
+                    "<font color='#F97316'><b>Areas for Improvement</b></font>",
+                    self._styles['SubHeading']
+                ))
+                for imp in improvements[:5]:  # Limit to 5 items
+                    improvements_content.append(Paragraph(
+                        f"<font color='#F97316'>&#10148;</font> {imp}",
+                        self._styles['Improvement']
+                    ))
+
+            # Create two-column table
+            if strengths_content and improvements_content:
+                col_data = [[strengths_content, improvements_content]]
+                col_table = Table(col_data, colWidths=[235, 235])
+                col_table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                ]))
+                elements.append(col_table)
+            elif strengths_content:
+                for item in strengths_content:
+                    elements.append(item)
+            elif improvements_content:
+                for item in improvements_content:
+                    elements.append(item)
+
+        elements.append(Spacer(1, 15))
+
+        return elements
+
+    def _build_transcript(self, audit_result: Dict[str, Any]) -> List:
+        """Build transcript section."""
+        elements = []
+
+        if not self._options.include_transcript:
+            return elements
+
+        transcript = audit_result.get("transcript", "")
+        if not transcript:
+            return elements
+
+        elements.append(PageBreak())
+        elements.append(Paragraph("Full Transcript", self._styles['SectionHeading']))
+
+        # Parse transcript into speaker turns
+        lines = transcript.split('\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Try to extract speaker
+            speaker = None
+            text = line
+
+            # Check for common speaker patterns
+            if ':' in line:
+                parts = line.split(':', 1)
+                potential_speaker = parts[0].strip()
+                # Check if it looks like a speaker label
+                if len(potential_speaker) < 30 and not potential_speaker[0].isdigit():
+                    speaker = potential_speaker
+                    text = parts[1].strip()
+
+            if speaker:
+                elements.append(Paragraph(
+                    f"<b>{speaker}:</b> {text}",
+                    self._styles['Transcript']
+                ))
+            else:
+                elements.append(Paragraph(text, self._styles['Transcript']))
+
+        return elements
+
+    def _build_footer(self) -> List:
+        """Build report footer."""
+        elements = []
+
+        elements.append(Spacer(1, 30))
+        elements.append(HRFlowable(
+            width="100%", thickness=1,
+            color=COLORS['border'], spaceBefore=10
+        ))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(
+            "Generated by <b>LocalMind</b> - Free, Private, Open Source AI Audio Analysis<br/>"
+            "<font color='#4F46E5'>https://localmind.ai</font>",
+            self._styles['Footer']
+        ))
+
+        return elements
 
     def generate_pdf(
         self,
@@ -392,73 +754,69 @@ class PDFReportGenerator:
         output_path: str,
         file_name: str = "audio_file",
     ) -> None:
-        """Generate PDF report and save to file.
-
-        Args:
-            audit_result: Audit result dictionary.
-            output_path: Path to save the PDF.
-            file_name: Name of the audio file.
-        """
+        """Generate PDF report and save to file."""
         if not self.can_generate():
-            missing = []
-            deps = self.check_dependencies()
-            if not deps["jinja2"]:
-                missing.append("jinja2")
-            if not deps["weasyprint"]:
-                missing.append("weasyprint")
             raise ImportError(
-                f"Missing required dependencies: {', '.join(missing)}. "
-                f"Install with: pip install {' '.join(missing)}"
+                "ReportLab is required for PDF generation. "
+                "Install with: pip install reportlab"
             )
 
-        # Generate HTML
-        html_content = self.generate_html(audit_result, file_name)
+        # Select page size
+        page_size = A4 if self._options.page_size == "a4" else letter
 
-        # Convert to PDF
-        html = HTML(string=html_content, base_url=str(self._templates_dir))
-        html.write_pdf(output_path)
+        # Create document
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=page_size,
+            rightMargin=55,
+            leftMargin=55,
+            topMargin=50,
+            bottomMargin=50,
+        )
+
+        # Build content
+        elements = []
+        elements.extend(self._build_header(file_name))
+        elements.extend(self._build_score_overview(audit_result))
+        elements.extend(self._build_score_chart(audit_result))
+        elements.extend(self._build_detailed_scores_table(audit_result))
+        elements.extend(self._build_ai_feedback(audit_result))
+        elements.extend(self._build_transcript(audit_result))
+        elements.extend(self._build_footer())
+
+        # Build PDF
+        doc.build(elements)
 
     def generate_pdf_bytes(
         self,
         audit_result: Dict[str, Any],
         file_name: str = "audio_file",
     ) -> bytes:
-        """Generate PDF report and return as bytes.
-
-        Args:
-            audit_result: Audit result dictionary.
-            file_name: Name of the audio file.
-
-        Returns:
-            PDF file as bytes.
-        """
+        """Generate PDF report and return as bytes."""
         if not self.can_generate():
-            raise ImportError("Missing required dependencies for PDF generation")
+            raise ImportError("ReportLab is required for PDF generation")
 
-        html_content = self.generate_html(audit_result, file_name)
-        html = HTML(string=html_content, base_url=str(self._templates_dir))
-        return html.write_pdf()
+        buffer = io.BytesIO()
+        page_size = A4 if self._options.page_size == "a4" else letter
 
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=page_size,
+            rightMargin=55,
+            leftMargin=55,
+            topMargin=50,
+            bottomMargin=50,
+        )
 
-def generate_report(
-    audit_result: Dict[str, Any],
-    output_path: str,
-    file_name: str = "audio_file",
-    include_transcript: bool = True,
-    include_chart: bool = True,
-) -> None:
-    """Convenience function to generate a PDF report.
+        elements = []
+        elements.extend(self._build_header(file_name))
+        elements.extend(self._build_score_overview(audit_result))
+        elements.extend(self._build_score_chart(audit_result))
+        elements.extend(self._build_detailed_scores_table(audit_result))
+        elements.extend(self._build_ai_feedback(audit_result))
+        elements.extend(self._build_transcript(audit_result))
+        elements.extend(self._build_footer())
 
-    Args:
-        audit_result: Audit result dictionary.
-        output_path: Path to save the PDF.
-        file_name: Name of the audio file.
-        include_transcript: Whether to include transcript.
-        include_chart: Whether to include score chart.
-    """
-    options = ReportOptions(
-        include_transcript=include_transcript,
-        include_chart=include_chart,
-    )
-    generator = PDFReportGenerator(options)
-    generator.generate_pdf(audit_result, output_path, file_name)
+        doc.build(elements)
+
+        return buffer.getvalue()

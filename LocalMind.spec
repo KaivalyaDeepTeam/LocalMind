@@ -63,6 +63,16 @@ hiddenimports = [
     'soundfile',
     'librosa',
     'scipy.signal',
+
+    # PDF generation
+    'reportlab',
+    'reportlab.lib.colors',
+    'reportlab.lib.styles',
+    'reportlab.lib.units',
+    'reportlab.lib.pagesizes',
+    'reportlab.platypus',
+    'reportlab.graphics.shapes',
+    'reportlab.graphics.charts.barcharts',
 ]
 
 # Exclude unnecessary modules to reduce size

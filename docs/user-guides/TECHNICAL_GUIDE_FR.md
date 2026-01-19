@@ -1,292 +1,293 @@
-# LocalMind
-## Guide Technique
+# Guide Technique LocalMind
+## Version 1.2.0
 
 ---
 
 **Transformez l'Audio en Intelligence**
 
-Transcription de qualité professionnelle avec analyse de qualité alimentée par l'IA.
-100% hors ligne. Coût zéro. Confidentialité complète.
+Transcription de qualité professionnelle avec analyse qualité alimentée par IA.
+100% hors ligne. Coût zéro. Confidentialité totale.
 
 ---
 
-## Contenu
+## Table des Matières
 
-- [Démarrage Rapide](#démarrage-rapide)
-- [Votre Première Transcription](#votre-première-transcription)
-- [Comprendre la Notation de Qualité](#comprendre-la-notation-de-qualité)
-- [Choisir le Bon Modèle](#choisir-le-bon-modèle)
-- [Paramètres](#paramètres)
-- [Exporter et Partager](#exporter-et-partager)
-- [Dépannage](#dépannage)
-
----
-
-## Démarrage Rapide
-
-### Ce Dont Vous Avez Besoin
-
-- **macOS** 10.15 ou ultérieur
-- **4GB RAM** minimum (8GB recommandé)
-- **Fichier audio** au format MP3, WAV, M4A, FLAC, OGG ou WEBM
-
-### Premier Lancement
-
-1. Téléchargez LocalMind
-2. Déplacez vers le dossier Applications
-3. Double-cliquez pour ouvrir
-4. Accordez les autorisations si demandé
-
-C'est tout. Pas de compte. Pas d'abonnement. Pas d'internet requis.
+1. [Introduction](#introduction)
+2. [Configuration Requise](#configuration-requise)
+3. [Installation et Premier Lancement](#installation-et-premier-lancement)
+4. [Section A: Transcription (Parole vers Texte)](#section-a-transcription-parole-vers-texte)
+5. [Section B: Analyse Qualité LLM](#section-b-analyse-qualité-llm)
+6. [Options d'Exportation](#options-dexportation)
+7. [Référence des Paramètres](#référence-des-paramètres)
+8. [Dépannage](#dépannage)
+9. [Confidentialité et Sécurité](#confidentialité-et-sécurité)
 
 ---
 
-## Votre Première Transcription
+## Introduction
 
-### Étape 1: Ajoutez Votre Audio
+LocalMind est une application de bureau qui effectue deux tâches IA distinctes:
 
-Glissez-déposez votre fichier audio dans la fenêtre.
+| Tâche | Technologie | Objectif |
+|-------|-------------|----------|
+| **Transcription** | OpenAI Whisper | Convertir la parole en texte |
+| **Analyse Qualité** | LLM Local/Cloud | Noter et analyser les conversations |
 
-**Formats supportés:**
-MP3 · WAV · M4A · FLAC · OGG · WEBM
-
-**Taille du fichier:**
-Jusqu'à 2GB par fichier
-
-### Étape 2: Configurez le Traitement
-
-Choisissez vos préférences:
-
-**Mode de Traitement:**
-- **Hors ligne** - Traite localement sur votre appareil
-- **En ligne** - Utilise l'IA cloud (nécessite des clés API)
-
-**Langue:**
-Détection automatique ou sélectionnez parmi plus de 50 langues
-
-**Modèle:**
-Large V3 (Meilleure Qualité) - Recommandé pour la première utilisation
-
-### Étape 3: Traiter
-
-Cliquez sur **Traiter** et observez le pipeline:
-
-1. **Transcription** - Conversion de la parole en texte
-2. **Fusion des Canaux** - Combinaison des flux audio
-3. **Audit de Qualité** - Analyse alimentée par l'IA
-4. **Génération de Rapport** - Création de la sortie complète
-
-**Temps de traitement:**
-Audio de 10 minutes ≈ 5-7 minutes sur un laptop moyen
+Ce sont des **systèmes séparés** qui fonctionnent ensemble mais peuvent être utilisés indépendamment.
 
 ---
 
-## Comprendre la Notation de Qualité
+## Configuration Requise
 
-LocalMind ne transcrit pas seulement—il évalue vos conversations en utilisant un raisonnement IA avancé.
+### Configuration Minimale
 
-### Paramètres Par Défaut
+| Composant | Requis |
+|-----------|--------|
+| Système d'exploitation | macOS 12 (Monterey) ou ultérieur |
+| RAM | 8 Go |
+| Stockage | 10 Go d'espace libre |
+| Processeur | Intel ou Apple Silicon |
 
-**Conformité** (poids 1.0x)
-- Salutation et Introduction
-- Écoute Active
-- Identification du Problème
-- Solution Fournie
-- Connaissance du Produit
-- Clarté de Communication
-- Empathie et Rapport
-- Contrôle d'Appel
-- Clôture d'Appel
-- Conformité au Script
+### Configuration Recommandée
 
-### Personnaliser les Scores
+| Composant | Requis |
+|-----------|--------|
+| Système d'exploitation | macOS 14 (Sonoma) ou ultérieur |
+| RAM | 16 Go ou plus |
+| Stockage | 20 Go d'espace libre |
+| Processeur | Puce Apple M1/M2/M3 |
 
-Ajustez les poids des paramètres de 0.1x à 3.0x:
+### Téléchargements au Premier Lancement
 
-- **Poids plus élevé** = Plus important pour le score global
-- **Poids plus faible** = Moins d'impact sur la note finale
+| Type de Modèle | Taille | Moment du Téléchargement |
+|----------------|--------|--------------------------|
+| Whisper (transcription) | ~1.5 Go | Première transcription |
+| LLM Local (analyse) | ~4 Go | Première analyse qualité |
 
-### Comment Fonctionne la Notation
-
-LocalMind utilise le **raisonnement Chain-of-Thought (CoT)**:
-
-1. Analyse le contexte complet de la transcription
-2. Identifie les moments et motifs clés
-3. Évalue contre chaque paramètre
-4. Fournit des explications détaillées
-5. Calcule le score final pondéré
+**Internet requis uniquement pour les téléchargements initiaux des modèles.**
 
 ---
 
-## Choisir le Bon Modèle
+## Installation et Premier Lancement
 
-### Modèles de Transcription
+### Étape 1: Télécharger
 
-#### Qwen 2.5 (7B) - Meilleur pour l'audit (Recommandé)
+Téléchargez `LocalMind-1.2.0-macOS.dmg` depuis:
+[github.com/KaivalyaDeepTeam/LocalMind/releases](https://github.com/KaivalyaDeepTeam/LocalMind/releases)
 
-- **Taille:** 4GB
-- **Vitesse:** Rapide
-- **Qualité:** Excellente sortie JSON
-- **Idéal pour:** Analyse de qualité, usage professionnel
+### Étape 2: Installer
 
-#### Whisper Large V3
-- Précision maximale (97-99%)
-- Idéal pour les transcriptions critiques
+1. Ouvrez le fichier DMG téléchargé
+2. Glissez LocalMind dans votre dossier Applications
+3. Éjectez le DMG
 
----
+### Étape 3: Premier Lancement
 
-## Paramètres
+**Important:** macOS peut bloquer l'application car elle ne provient pas de l'App Store.
 
-Accédez aux paramètres via le menu **Paramètres** ou `⌘,` (Command-Virgule)
+**Pour ouvrir LocalMind:**
 
-### Fournisseur LLM
-
-Choisissez votre fournisseur d'IA:
-
-**LLM Local (Gratuit, Hors ligne)**
-- Pas d'internet requis
-- Confidentialité complète
-- Pas de coûts API
-- Recommandé pour la plupart des utilisateurs
-
-**OpenAI API / Anthropic API**
-- Nécessite une clé API
-- Traitement cloud
-
-### Paramètres de Transcription
-
-**Modèle:** Large V3 (Meilleure Qualité)
-**Langue:** Détection automatique
-**Accélération GPU:** Activer pour un traitement 3-5x plus rapide
-
-### Paramètres de Sortie
-
-**Répertoire de Sortie:** Choisissez où enregistrer les résultats
-
-**Auto-export après traitement:**
-- ✓ Auto-export JSON
-- ✓ Auto-export PDF
-
-### Apparence
-
-**Langue de l'IU:**
-English · Español · 日本語 · العربية · हिन्दी · Русский · Français · 中文
-
-**Thème:** Sombre · Clair · Système
+1. Faites un clic droit sur LocalMind.app
+2. Sélectionnez "Ouvrir" dans le menu
+3. Cliquez sur "Ouvrir" dans la boîte de dialogue de sécurité
 
 ---
 
-## Exporter et Partager
+# Section A: Transcription (Parole vers Texte)
 
-### Formats Disponibles
-
-**JSON** - Données lisibles par machine
-**PDF** - Rapport professionnel avec mise en forme
-**TXT** - Transcription en texte brut uniquement
-
-### Exportation
-
-1. Terminez le traitement
-2. Cliquez sur le bouton **Exporter**
-3. Choisissez le(s) format(s)
-4. Sélectionnez la destination
-5. Cliquez sur **Enregistrer**
+Cette section couvre **la conversion audio en texte** utilisant la technologie Whisper d'OpenAI.
 
 ---
 
-## Support Multilingue
+## Qu'est-ce que la Transcription?
 
-LocalMind parle votre langue.
+La transcription convertit les mots parlés dans les fichiers audio en texte écrit. LocalMind utilise **OpenAI Whisper**, l'un des systèmes de reconnaissance vocale les plus précis disponibles.
 
-### Langues d'IU Supportées
+### Comment Ça Fonctionne
 
-- 🇬🇧 **English** (Anglais)
-- 🇪🇸 **Español** (Espagnol)
-- 🇯🇵 **日本語** (Japonais)
-- 🇦🇪 **العربية** (Arabe) - avec disposition RTL
-- 🇮🇳 **हिन्दी** (Hindi)
-- 🇷🇺 **Русский** (Russe)
-- 🇫🇷 **Français**
-- 🇨🇳 **中文** (Chinois Simplifié)
+```
+Fichier Audio → Whisper AI → Transcription Écrite
+    (MP3)         (Local)         (Texte)
+```
 
-### Changer de Langue
+### Caractéristiques Principales
 
-**Paramètres → Apparence → Langue de l'IU**
+- **Plus de 50 langues** supportées
+- **Détection automatique de la langue**
+- **Identification des locuteurs** (diarisation)
+- **Horodatages** pour chaque segment
+- **Fonctionne complètement hors ligne** après téléchargement du modèle
 
-Les changements s'appliquent immédiatement. Aucun redémarrage requis.
+### Formats Audio Supportés
 
-### Langues de Transcription
+| Format | Extension | Description |
+|--------|-----------|-------------|
+| MP3 | .mp3 | Format le plus courant |
+| WAV | .wav | Non compressé, haute qualité |
+| M4A | .m4a | Format Apple/iTunes |
+| FLAC | .flac | Compression sans perte |
+| OGG | .ogg | Format open source |
+| WebM | .webm | Format audio web |
 
-LocalMind transcrit **plus de 50 langues** incluant:
-
-Anglais · Espagnol · Français · Allemand · Italien · Portugais · Néerlandais · Russe · Arabe · Hindi · Japonais · Coréen · Chinois · et bien d'autres
+**Taille maximale de fichier:** 2 Go par fichier
 
 ---
 
-## Dépannage
+## Modèles Whisper Expliqués
 
-### Le Traitement Prend Trop de Temps
+| Modèle | Taille | Précision | Vitesse | Idéal Pour |
+|--------|--------|-----------|---------|------------|
+| **Large V3** | 1.5 Go | 97-99% | Lent | Usage professionnel |
+| **Medium** | 750 Mo | 95-97% | Moyen | Usage quotidien |
+| **Small** | 250 Mo | 92-95% | Rapide | Transcriptions rapides |
+| **Base** | 150 Mo | 88-92% | Très Rapide | Tests |
+| **Tiny** | 75 Mo | 80-88% | Le Plus Rapide | Temps réel |
 
-**Essayez ceci:**
-- Utilisez un modèle Whisper plus petit (Medium au lieu de Large)
-- Activez l'accélération GPU dans les Paramètres
-- Fermez d'autres applications pour libérer la RAM
+---
 
-### Scores de Qualité Faibles
+# Section B: Analyse Qualité LLM
 
-**Rappelez-vous:**
-- La notation de qualité nécessite le téléchargement de LLM
-- La première exécution télécharge les modèles (peut prendre du temps)
-- Assurez-vous que "Activer la Notation de Qualité" est coché
+Cette section couvre **l'analyse de conversations alimentée par IA** utilisant les Grands Modèles de Langage.
+
+---
+
+## Qu'est-ce que l'Analyse LLM?
+
+L'analyse LLM lit votre transcription et évalue la qualité de la conversation. Elle fournit:
+
+- **Score global** (0-100%)
+- **Scores par paramètre** (critères personnalisables)
+- **Points forts** identifiés dans la conversation
+- **Axes d'amélioration**
+- **Retour détaillé** pour chaque paramètre
+
+### Différence Clé avec la Transcription
+
+| Aspect | Transcription | Analyse LLM |
+|--------|---------------|-------------|
+| **Entrée** | Fichier audio | Transcription texte |
+| **Sortie** | Texte écrit | Scores et retours |
+| **Technologie** | Whisper | LLM (Phi/Qwen/GPT) |
+| **Objectif** | Convertir la parole | Évaluer la qualité |
+| **Requis?** | Oui | Optionnel |
+
+---
+
+## Options de Fournisseurs LLM
+
+### 1. LLM Local (Recommandé)
+
+| Avantages | Inconvénients |
+|-----------|---------------|
+| 100% gratuit | Plus lent que le cloud |
+| Confidentialité totale | Nécessite 8Go+ de RAM |
+| Pas besoin d'internet | Téléchargement de modèle volumineux |
+
+### 2. API OpenAI
+
+| Avantages | Inconvénients |
+|-----------|---------------|
+| Très rapide | Coûte de l'argent |
+| Haute qualité | Nécessite internet |
+
+### 3. API Anthropic
+
+| Avantages | Inconvénients |
+|-----------|---------------|
+| Excellent raisonnement | Coûte de l'argent |
+| Idéal pour l'analyse | Nécessite internet |
+
+---
+
+## Modèles LLM Locaux
+
+| Modèle | Taille | Vitesse | Qualité | Idéal Pour |
+|--------|--------|---------|---------|------------|
+| **Phi-3.5 Mini** | 2.4 Go | Rapide | Bonne | Par défaut |
+| **Qwen 2.5 3B** | 2.0 Go | Très Rapide | Bonne | Analyse rapide |
+| **Qwen 2.5 7B** | 4.4 Go | Moyen | Excellente | Usage professionnel |
+| **Mistral 7B** | 4.1 Go | Moyen | Excellente | Retour détaillé |
+| **Gemma 2 2B** | 1.6 Go | Le Plus Rapide | Modérée | Priorité vitesse |
+
+---
+
+## Paramètres de Notation Qualité
+
+| Paramètre | Poids | Ce Qu'il Mesure |
+|-----------|-------|-----------------|
+| Greeting & Introduction | 1.0x | Ouverture professionnelle |
+| Active Listening | 1.0x | Attention et engagement |
+| Problem Identification | 1.0x | Compréhension du problème |
+| Solution Provided | 1.0x | Résolution utile |
+| Product Knowledge | 1.0x | Précision des informations |
+| Communication Clarity | 1.0x | Explications claires |
+| Empathy & Rapport | 1.0x | Connexion émotionnelle |
+| Call Control | 1.0x | Gestion du flux |
+| Call Closing | 1.0x | Conclusion professionnelle |
+| Script Compliance | 1.0x | Respect des directives |
+
+---
+
+## Options d'Exportation
+
+| Format | Raccourci | Idéal Pour |
+|--------|-----------|------------|
+| **PDF** | Cmd + Shift + P | Direction, clients |
+| **Markdown** | Cmd + Shift + M | Partage rapide |
+| **JSON** | Cmd + Shift + J | Intégration système |
+| **Texte** | Cmd + Shift + T | Archivage simple |
 
 ---
 
 ## Confidentialité et Sécurité
 
-### Ce Que LocalMind Collecte
+### Gestion des Données
+
+| Mode | Données Audio | Transcription |
+|------|---------------|---------------|
+| **Local LLM** | Reste sur l'appareil | Reste sur l'appareil |
+| **OpenAI API** | Reste sur l'appareil | Envoyée à OpenAI |
+| **Anthropic API** | Reste sur l'appareil | Envoyée à Anthropic |
+
+**Vos fichiers audio ne sont JAMAIS téléchargés vers le cloud.**
+
+### Ce que LocalMind Collecte
 
 **Rien.**
 
 - Pas de télémétrie
-- Pas d'analytique
+- Pas d'analytiques
 - Pas de rapports de crash
-- Pas de statistiques d'utilisation
-
-Votre audio ne quitte jamais votre appareil en mode hors ligne.
-
-### Stockage des Données
-
-Toutes les données stockées localement:
-- **Transcriptions:** Votre répertoire de sortie choisi
-- **Modèles:** `~/.cache/localmind/`
-- **Paramètres:** `~/Library/Application Support/localmind/`
-
-### Open Source
-
-LocalMind est open source (Licence MIT).
-
-Auditez le code vous-même: [github.com/prepladder/localmind](https://github.com/prepladder/localmind)
+- Pas de compte requis
 
 ---
 
-## À Propos de LocalMind
+## Raccourcis Clavier
 
-LocalMind a été construit pour donner à tous l'accès à la transcription et à l'analyse de qualité professionnelle sans sacrifier la confidentialité ni payer d'abonnements mensuels.
+| Action | Raccourci |
+|--------|-----------|
+| Ouvrir Fichier | Cmd + O |
+| Démarrer Traitement | Cmd + Return |
+| Arrêter | Escape |
+| Exporter PDF | Cmd + Shift + P |
+| Exporter Markdown | Cmd + Shift + M |
+| Exporter JSON | Cmd + Shift + J |
+| Exporter Transcription | Cmd + Shift + T |
+| Paramètres de Notation | Cmd + Shift + S |
+| Paramètres | Cmd + , |
+| Quitter | Cmd + Q |
 
-**Notre Promesse:**
+---
 
-- ✓ Toujours gratuit
-- ✓ Toujours capable de fonctionner hors ligne
-- ✓ Toujours open source
-- ✓ Toujours axé sur la confidentialité
+## Obtenir de l'Aide
 
-**Version:** 1.0.0
+- **Documentation:** [github.com/KaivalyaDeepTeam/LocalMind](https://github.com/KaivalyaDeepTeam/LocalMind)
+- **Problèmes:** [github.com/KaivalyaDeepTeam/LocalMind/issues](https://github.com/KaivalyaDeepTeam/LocalMind/issues)
+
+---
+
+**Version:** 1.2.0
 **Dernière Mise à Jour:** Janvier 2026
+**Licence:** MIT
 
----
-
-**Fabriqué avec soin pour les chercheurs, podcasteurs, journalistes, centres d'appels, professionnels du droit et tous ceux qui valorisent leur confidentialité.**
-
----
-
-© 2026 LocalMind. Publié sous Licence MIT.
+© 2026 Équipe LocalMind. Fait avec soin pour tous ceux qui valorisent leur vie privée.

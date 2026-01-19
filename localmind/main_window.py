@@ -143,6 +143,11 @@ class MainWindow(QMainWindow):
         export_markdown.triggered.connect(self._on_export_markdown_report)
         file_menu.addAction(export_markdown)
 
+        export_pdf = QAction(self.tr("Export &PDF Report..."), self)
+        export_pdf.setShortcut("Ctrl+Shift+P")
+        export_pdf.triggered.connect(self._on_export_pdf)
+        file_menu.addAction(export_pdf)
+
         file_menu.addSeparator()
 
         quit_action = QAction(self.tr("&Quit"), self)
@@ -591,6 +596,19 @@ class MainWindow(QMainWindow):
             self._results_viewer.export_markdown_report(filepath)
 
     @Slot()
+    def _on_export_pdf(self) -> None:
+        """Export audit report as PDF file."""
+        default_name = "audit_report.pdf"
+        if self._current_file:
+            default_name = f"{self._current_file.stem}_audit_report.pdf"
+
+        filepath, _ = QFileDialog.getSaveFileName(
+            self, "Export PDF Report", str(Path.home() / default_name), "PDF Files (*.pdf)"
+        )
+        if filepath:
+            self._results_viewer.export_pdf(filepath)
+
+    @Slot()
     def _on_edit_scoring(self) -> None:
         """Open the scoring parameters editor."""
         dialog = ScoringEditorDialog(self)
@@ -648,6 +666,7 @@ class MainWindow(QMainWindow):
             <tr><td><b>Escape</b></td><td>Stop processing</td></tr>
             <tr><td><b>Ctrl+Shift+T</b></td><td>Export transcript</td></tr>
             <tr><td><b>Ctrl+Shift+J</b></td><td>Export as JSON</td></tr>
+            <tr><td><b>Ctrl+Shift+P</b></td><td>Export PDF report</td></tr>
             <tr><td><b>Ctrl+Shift+S</b></td><td>Edit scoring parameters</td></tr>
             <tr><td><b>Ctrl+,</b></td><td>Open settings</td></tr>
             <tr><td><b>Ctrl+/</b></td><td>Show shortcuts</td></tr>

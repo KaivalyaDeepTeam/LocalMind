@@ -65,7 +65,7 @@ The security warning is only because we don't have an Apple Developer certificat
 1. Open audio file (drag & drop or File menu)
 2. Select transcription or scoring mode
 3. Click Process
-4. View results and export (JSON/Text/Markdown)
+4. View results and export (PDF/Markdown/JSON/Text)
 
 ## 🗑️ Uninstall
 

@@ -336,4 +336,4 @@ LocalMind is open source. Developers and translators can contribute at:
 ---
 
 *Last updated: January 2026*
-*LocalMind Version: 1.0*
+*LocalMind Version: 1.2.0*

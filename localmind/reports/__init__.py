@@ -1,6 +1,8 @@
 """LocalMind report generation.
 
-PDF generation has been removed. Reports are exported as JSON and TXT.
+Supports PDF, JSON, and TXT export formats.
 """
 
-__all__ = []
+from .pdf_generator import PDFReportGenerator, ReportOptions, ScoreChartGenerator
+
+__all__ = ["PDFReportGenerator", "ReportOptions", "ScoreChartGenerator"]

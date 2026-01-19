@@ -927,6 +927,113 @@ class ResultsViewer(QWidget):
                 "Please try again or choose a different location."
             )
 
+    def export_pdf(self, filepath: str) -> None:
+        """Export audit report as professional PDF file.
+
+        Creates a beautifully formatted PDF report with score summary,
+        bar chart visualization, detailed scores, AI feedback, and transcript.
+        """
+        if not self._results:
+            QMessageBox.warning(self, "No Results", "No audit report to export.")
+            return
+
+        # Check if we have scoring results
+        scoring_result = self._results.get("scoring_result", {})
+        if not scoring_result:
+            QMessageBox.warning(
+                self, "No Scoring Data",
+                "No scoring data available to export.\n\n"
+                "Please process an audio file with scoring enabled first."
+            )
+            return
+
+        try:
+            # Import PDF generator
+            try:
+                from localmind.reports import PDFReportGenerator
+            except ImportError:
+                QMessageBox.critical(
+                    self, "PDF Export Unavailable",
+                    "PDF export is not available.\n\n"
+                    "Please ensure reportlab is installed:\n"
+                    "pip install reportlab"
+                )
+                return
+
+            # Validate filepath
+            if not filepath:
+                QMessageBox.warning(self, "Invalid Path", "Please provide a valid file path.")
+                return
+
+            # Ensure .pdf extension
+            if not filepath.lower().endswith('.pdf'):
+                filepath += '.pdf'
+
+            # Create parent directory if it doesn't exist
+            from pathlib import Path
+            parent_dir = Path(filepath).parent
+            parent_dir.mkdir(parents=True, exist_ok=True)
+
+            # Prepare audit result for PDF generator
+            audit_result = {
+                "score_summary": scoring_result.get("summary", {}),
+                "scoring_details": scoring_result.get("parameters", []),
+                "ai_feedback": scoring_result.get("ai_feedback", {}),
+                "transcript": self._results.get("transcript", "")
+            }
+
+            # Get original filename if available
+            file_name = "audio_file"
+            if hasattr(self, '_audio_file') and self._audio_file:
+                file_name = Path(self._audio_file).stem
+
+            # Generate PDF
+            generator = PDFReportGenerator()
+            generator.generate_pdf(
+                audit_result=audit_result,
+                output_path=filepath,
+                file_name=file_name
+            )
+
+            QMessageBox.information(
+                self, "Export Complete",
+                f"PDF report exported to:\n{filepath}\n\n"
+                "The report includes score summary, visualization chart, "
+                "detailed scores, AI feedback, and transcript."
+            )
+
+        except PermissionError:
+            QMessageBox.critical(
+                self, "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\n"
+                "Please check file permissions or choose a different location."
+            )
+        except OSError as e:
+            if "No space left on device" in str(e):
+                QMessageBox.critical(
+                    self, "Disk Full",
+                    "Not enough disk space to save the PDF.\n\n"
+                    "Please free up some space and try again."
+                )
+            else:
+                QMessageBox.critical(
+                    self, "File System Error",
+                    f"Cannot save PDF:\n{e}\n\n"
+                    "Please check the file path and try again."
+                )
+        except MemoryError:
+            QMessageBox.critical(
+                self, "Memory Error",
+                "Not enough memory to generate PDF.\n\n"
+                "Try closing other applications and try again."
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Export Error",
+                f"Failed to export PDF:\n{str(e)}\n\n"
+                "Please try again or choose a different location."
+            )
+
     def get_results(self) -> Optional[Dict[str, Any]]:
         """Get the current results."""
         return self._results

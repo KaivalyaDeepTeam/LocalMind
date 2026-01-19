@@ -36,6 +36,8 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 - **Anthropic API** - Use your own API key
 
 ### Export Options
+- **PDF reports** with charts and visualizations
+- **Markdown reports** for easy sharing
 - JSON export for integration
 - TXT transcript export
 - Copy to clipboard
@@ -46,9 +48,11 @@ LocalMind is a revolutionary desktop application that brings enterprise-grade AI
 
 | Platform | Download | Size |
 |----------|----------|------|
-| macOS | [LocalMind-macOS.dmg](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
-| Windows | [LocalMind-Windows.zip](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
-| Linux | [LocalMind-Linux.tar.gz](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~800 MB |
+| macOS | [LocalMind-macOS.dmg](https://github.com/KaivalyaDeepTeam/LocalMind/releases/latest) | ~300 MB |
+| Windows | Coming Soon | ~300 MB |
+| Linux | Coming Soon | ~300 MB |
+
+> **Note:** AI models (~1.5 GB) download automatically on first run.
 
 ### First Run
 

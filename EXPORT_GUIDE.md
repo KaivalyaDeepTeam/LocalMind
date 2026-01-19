@@ -1,10 +1,52 @@
-# Export Guide - JSON and TXT Formats
+# Export Guide - PDF, Markdown, JSON and TXT Formats
 
 ## Overview
 
-LocalMind exports call quality audits in two formats:
-1. **JSON** - Complete data for integration and processing
-2. **TXT** - Human-readable transcripts for review
+LocalMind exports call quality audits in multiple formats:
+1. **PDF** - Professional reports with charts and visualizations
+2. **Markdown** - Human-readable reports for sharing
+3. **JSON** - Complete data for integration and processing
+4. **TXT** - Simple transcripts for review
+
+---
+
+## PDF Export
+
+### How to Export
+- **Menu**: File → Export PDF Report...
+- **Keyboard**: `Ctrl+Shift+P`
+
+### What's Included
+- **Score Overview**: Circular gauge showing overall percentage
+- **Bar Chart**: Visual breakdown of all scoring parameters
+- **Detailed Table**: All parameters with scores, percentages, and ratings
+- **AI Feedback**: Summary, strengths, and areas for improvement
+- **Full Transcript**: Complete conversation on separate page
+
+### Use Cases
+- **Management Reports**: Share professional audit results
+- **Training Materials**: Use for agent coaching sessions
+- **Compliance Records**: Archive audit evidence
+- **Client Deliverables**: Provide polished reports to stakeholders
+
+---
+
+## Markdown Export
+
+### How to Export
+- **Menu**: File → Export Markdown Report...
+- **Keyboard**: `Ctrl+Shift+M`
+
+### What's Included
+- Formatted audit report with scores
+- Strengths and improvement areas
+- Can be viewed in any markdown viewer
+- Easy to share via email or messaging
+
+### Use Cases
+- **Quick Sharing**: Send via Slack, Teams, or email
+- **Documentation**: Add to wikis or knowledge bases
+- **Version Control**: Track changes in Git
 
 ---
 
@@ -309,6 +351,16 @@ response = requests.post(
 
 ## Summary
 
+**PDF Export**:
+- Professional reports with charts
+- Score gauges and bar charts
+- Best for management and stakeholders
+
+**Markdown Export**:
+- Formatted text reports
+- Easy to share and view
+- Best for quick sharing and documentation
+
 **JSON Export**:
 - Complete audit data
 - Machine-readable
@@ -319,7 +371,7 @@ response = requests.post(
 - Simple text format
 - Best for review and coaching
 
-**Both formats**:
+**All formats**:
 - UTF-8 encoding (all languages supported)
 - Automatic error handling
 - Auto-create directories
@@ -329,4 +381,4 @@ response = requests.post(
 
 For more information, see:
 - [Scoring Parameters Guide](SCORING_GUIDE.md)
-- [Changes - PDF Removal](CHANGES_PDF_REMOVAL.md)
+- [User Guide](docs/USER_GUIDE.md)

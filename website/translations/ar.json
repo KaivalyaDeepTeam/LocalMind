@@ -299,7 +299,7 @@
   },
   "download_details": {
     "macos_desc": "macOS 12 فما فوق (Intel و Apple Silicon)",
-    "macos_size": "حوالي 800 ميجابايت",
+    "macos_size": "حوالي 300 ميجابايت (+ 1.5 جيجابايت للنموذج عند التشغيل الأول)",
     "windows_desc": "Windows 10 فما فوق (64 بت)",
     "linux_desc": "Ubuntu 22.04 فما فوق / AppImage",
     "system_req_heading": "متطلبات النظام",
