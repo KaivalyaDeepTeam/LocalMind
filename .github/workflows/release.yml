@@ -213,7 +213,7 @@ jobs:
           files: |
             artifacts/LocalMind-macOS/LocalMind-macOS.dmg
             artifacts/LocalMind-Windows/LocalMind-Windows.zip
-            artifacts/LocalMind-Linux/LocalMind-Linux.AppImage
-            artifacts/LocalMind-Linux/LocalMind-Linux.tar.gz
+            # Linux artifacts excluded due to GitHub 2GB limit
+            # Linux builds available as workflow artifacts for manual distribution
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
