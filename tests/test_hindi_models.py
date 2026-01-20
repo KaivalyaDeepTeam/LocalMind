@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 
-def test_model_download(model_id: str, variant_name: str):
+def _download_and_verify_model(model_id: str, variant_name: str):
     """Test downloading and loading a model."""
     print(f"\n{'='*70}")
     print(f"Testing {variant_name} Model: {model_id}")
@@ -100,7 +100,7 @@ def main():
     results = []
 
     for model_id, variant_name in models_to_test:
-        success = test_model_download(model_id, variant_name)
+        success = _download_and_verify_model(model_id, variant_name)
         results.append((variant_name, success))
 
     # Summary
