@@ -113,7 +113,7 @@ class ScoreChartGenerator:
     """Generates score visualization charts using ReportLab."""
 
     @staticmethod
-    def create_score_gauge(score: float, max_score: float = 100, size: float = 120) -> Drawing:
+    def create_score_gauge(score: float, max_score: float = 100, size: float = 120) -> Any:
         """Create a circular score gauge."""
         if not HAS_REPORTLAB:
             return None
@@ -197,7 +197,7 @@ class ScoreChartGenerator:
     @staticmethod
     def create_horizontal_bar_chart(
         parameters: list[dict[str, Any]], width: float = 480, bar_height: float = 22
-    ) -> Drawing:
+    ) -> Any:
         """Create a horizontal bar chart with score labels."""
         if not HAS_REPORTLAB or not parameters:
             return None
@@ -285,7 +285,7 @@ class ScoreChartGenerator:
         return drawing
 
     @staticmethod
-    def create_mini_bar(percentage: float, width: float = 60, height: float = 8) -> Drawing:
+    def create_mini_bar(percentage: float, width: float = 60, height: float = 8) -> Any:
         """Create a mini progress bar for table cells."""
         if not HAS_REPORTLAB:
             return None

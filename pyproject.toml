@@ -140,8 +140,10 @@ ignore = [
     "B904",  # raise from within except (too strict for our use case)
     "C901",  # too complex
     "F401",  # unused imports (many are intentional for try/except availability checks)
-    "UP035", # deprecated typing imports (Dict, List, etc.) - gradual migration
     "UP006", # use builtin types instead of typing module - gradual migration
+    "UP007", # use X | Y instead of Union - keeping Optional for clarity
+    "UP035", # deprecated typing imports (Dict, List, etc.) - gradual migration
+    "UP045", # use X | None instead of Optional - keeping Optional for Python 3.10 compat
 ]
 
 [tool.pytest.ini_options]

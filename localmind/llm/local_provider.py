@@ -8,7 +8,7 @@ import asyncio
 import os
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
 
 from localmind.llm.base import (
     BaseLLMProvider,
@@ -150,7 +150,7 @@ class LocalProvider(BaseLLMProvider):
 
     async def download_model(
         self,
-        progress_callback: callable | None = None,
+        progress_callback: Optional[Callable] = None,
     ) -> Path:
         """Download the model from Hugging Face.
 
