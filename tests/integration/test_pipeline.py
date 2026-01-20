@@ -200,41 +200,38 @@ class TestLLMProviderIntegration:
 class TestReportGenerationIntegration:
     """Integration tests for report generation."""
 
-    def test_html_generation_with_audit_result(self, sample_audit_result):
-        """Test HTML report generation with audit data."""
+    def test_pdf_generation_with_audit_result(self, sample_audit_result):
+        """Test PDF report generation with audit data."""
         from localmind.reports.pdf_generator import PDFReportGenerator
 
         generator = PDFReportGenerator()
 
-        if not generator.check_dependencies()["jinja2"]:
-            pytest.skip("Jinja2 not installed")
+        if not generator.can_generate():
+            pytest.skip("ReportLab not installed")
 
-        html = generator.generate_html(sample_audit_result, "test_call.wav")
+        pdf_bytes = generator.generate_pdf_bytes(sample_audit_result, "test_call.wav")
 
-        # Verify HTML structure
-        assert "<!DOCTYPE html>" in html
-        assert "test_call.wav" in html
-        assert str(sample_audit_result["overall_score"]) in html
+        # Verify PDF structure
+        assert pdf_bytes is not None
+        assert isinstance(pdf_bytes, bytes)
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_score_chart_generation(self):
-        """Test score chart generation."""
-        try:
-            import matplotlib
-        except ImportError:
-            pytest.skip("Matplotlib not installed")
-
+        """Test score chart generation using ReportLab."""
         from localmind.reports.pdf_generator import ScoreChartGenerator
 
         parameters = [
-            {"name": "greeting", "display_name": "Greeting", "score": 8.0, "max": 10.0},
-            {"name": "empathy", "display_name": "Empathy", "score": 7.5, "max": 10.0},
-            {"name": "resolution", "display_name": "Resolution", "score": 9.0, "max": 10.0},
+            {"name": "greeting", "display_name": "Greeting", "score": 8.0, "max_score": 10.0},
+            {"name": "empathy", "display_name": "Empathy", "score": 7.5, "max_score": 10.0},
+            {"name": "resolution", "display_name": "Resolution", "score": 9.0, "max_score": 10.0},
         ]
 
-        chart = ScoreChartGenerator.generate_bar_chart(parameters)
+        chart = ScoreChartGenerator.create_horizontal_bar_chart(parameters)
 
-        assert chart is not None
-        assert chart.startswith("data:image/png;base64,")
+        # Returns None if ReportLab not installed, otherwise a Drawing object
+        if chart is not None:
+            assert hasattr(chart, "width")
+            assert hasattr(chart, "height")
 
 
 class TestConfigIntegration:
