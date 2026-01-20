@@ -171,7 +171,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        run: python packaging/scripts/build.py --skip-installer
+        run: python packaging/scripts/build.py --no-installer --no-dmg --no-appimage --no-deb
 
       - name: Upload desktop build
         uses: actions/upload-artifact@v4
