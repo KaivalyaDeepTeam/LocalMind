@@ -5,29 +5,34 @@ The main application window with menu bar, file browser, and results panels.
 """
 
 from pathlib import Path
-from typing import Optional, List
 
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QStatusBar, QToolBar, QFileDialog, QMessageBox, QLabel,
-)
-from PySide6.QtCore import Qt, Signal, Slot, QSize
+from PySide6.QtCore import QSize, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QSplitter,
+    QStatusBar,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from localmind import __app_name__, __version__
-from localmind.config import get_settings_manager, get_settings, save_settings
+from localmind.config import get_profile_manager, get_settings, get_settings_manager, save_settings
 from localmind.ui.file_browser import FileBrowserPanel
-from localmind.ui.progress_panel import ProgressPanel, ProcessingStage
-from localmind.ui.results_viewer import ResultsViewer, CircularScoreGauge
-from localmind.ui.settings_dialog import SettingsDialog
-from localmind.ui.scoring_editor import ScoringEditorDialog
-from localmind.ui.setup_wizard import SetupWizard
-from localmind.ui.toast import ToastManager, ToastType, init_toast_manager
+from localmind.ui.loading_indicator import SpinnerWidget
 from localmind.ui.mode_selector import ModeSelector, ProcessingMode
-from localmind.ui.loading_indicator import SpinnerWidget, InlineLoadingIndicator
+from localmind.ui.progress_panel import ProcessingStage, ProgressPanel
+from localmind.ui.results_viewer import CircularScoreGauge, ResultsViewer
+from localmind.ui.scoring_editor import ScoringEditorDialog
+from localmind.ui.settings_dialog import SettingsDialog
+from localmind.ui.setup_wizard import SetupWizard
+from localmind.ui.toast import init_toast_manager
+from localmind.utils import get_error_handler
 from localmind.workers import ProcessingOrchestrator, ProcessingResult
-from localmind.config import get_profile_manager
-from localmind.utils import get_error_handler, ErrorContext, ErrorMessages
 
 
 class MainWindow(QMainWindow):
@@ -37,11 +42,11 @@ class MainWindow(QMainWindow):
     processing_started = Signal()
     processing_finished = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings_manager = get_settings_manager()
-        self._current_file: Optional[Path] = None
-        self._recent_files: List[str] = []
+        self._current_file: Path | None = None
+        self._recent_files: list[str] = []
 
         # Processing orchestrator
         self._orchestrator = ProcessingOrchestrator(self)
@@ -270,12 +275,14 @@ class MainWindow(QMainWindow):
         # The audit worker will apply weights during calculation
         scoring_parameters = []
         for p in enabled_params:
-            scoring_parameters.append({
-                "name": p.name,
-                "max_score": p.max_score,
-                "weight": p.weight,
-                "description": p.description,
-            })
+            scoring_parameters.append(
+                {
+                    "name": p.name,
+                    "max_score": p.max_score,
+                    "weight": p.weight,
+                    "description": p.description,
+                }
+            )
 
         # Language mode mapping
         LANGUAGE_CODE_MAP = {
@@ -304,7 +311,7 @@ class MainWindow(QMainWindow):
 
         if self._mode_selector.get_mode() == ProcessingMode.OFFLINE:
             language_mode = self._mode_selector.get_language_mode()
-            use_hindi_stt = (language_mode == "hindi-english")
+            use_hindi_stt = language_mode == "hindi-english"
 
             if use_hindi_stt:
                 hindi_model_variant = self._mode_selector.get_hindi_model_variant()
@@ -333,8 +340,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def _on_open_file(self) -> None:
         filepath, _ = QFileDialog.getOpenFileName(
-            self, "Open Audio File", str(Path.home()),
-            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm);;All Files (*.*)"
+            self,
+            "Open Audio File",
+            str(Path.home()),
+            "Audio Files (*.wav *.mp3 *.m4a *.ogg *.flac *.webm);;All Files (*.*)",
         )
         if filepath:
             self._current_file = Path(filepath)
@@ -396,7 +405,9 @@ class MainWindow(QMainWindow):
         if mode == ProcessingMode.OFFLINE and self._mode_selector.is_hindi_mode():
             variant = self._mode_selector.get_hindi_model_variant()
             variant_name = "Apex" if variant == "apex" else "Prime"
-            self._status_label.setText(f"Processing (Hindi {variant_name}): {self._current_file.name}")
+            self._status_label.setText(
+                f"Processing (Hindi {variant_name}): {self._current_file.name}"
+            )
         else:
             self._status_label.setText(f"Processing: {self._current_file.name}")
 
@@ -474,10 +485,19 @@ class MainWindow(QMainWindow):
         # For transcription-only mode, format the data for the viewer
         if result.transcription and not result.audit:
             display_data["transcript"] = result.transcription.text
-            display_data["segments"] = [
-                {"speaker": s.speaker or "Speaker", "text": s.text, "start": s.start, "end": s.end}
-                for s in result.transcription.segments
-            ] if result.transcription.segments else []
+            display_data["segments"] = (
+                [
+                    {
+                        "speaker": s.speaker or "Speaker",
+                        "text": s.text,
+                        "start": s.start,
+                        "end": s.end,
+                    }
+                    for s in result.transcription.segments
+                ]
+                if result.transcription.segments
+                else []
+            )
             display_data["language"] = result.transcription.language
             display_data["file_name"] = self._current_file.name if self._current_file else "audio"
             # Add placeholder scores for transcription-only
@@ -485,7 +505,9 @@ class MainWindow(QMainWindow):
             display_data["max_score"] = 100
 
         # Load results into viewer
-        has_transcript = display_data.get("transcript") and len(display_data.get("transcript", "").strip()) > 0
+        has_transcript = (
+            display_data.get("transcript") and len(display_data.get("transcript", "").strip()) > 0
+        )
 
         if has_transcript or result.audit:
             self._results_viewer.load_results(display_data)
@@ -519,7 +541,9 @@ class MainWindow(QMainWindow):
 
         # Auto-save transcript for transcription-only mode
         if result.transcription and not result.audit and self._current_file:
-            transcript_path = self._current_file.parent / f"{self._current_file.stem}_transcript.txt"
+            transcript_path = (
+                self._current_file.parent / f"{self._current_file.stem}_transcript.txt"
+            )
             try:
                 with open(transcript_path, "w", encoding="utf-8") as f:
                     f.write(f"Transcript: {self._current_file.name}\n")
@@ -528,7 +552,9 @@ class MainWindow(QMainWindow):
                     if result.transcription.segments:
                         for seg in result.transcription.segments:
                             speaker_label = f"[{seg.speaker}] " if seg.speaker else ""
-                            f.write(f"[{seg.start:.1f}s - {seg.end:.1f}s] {speaker_label}{seg.text}\n\n")
+                            f.write(
+                                f"[{seg.start:.1f}s - {seg.end:.1f}s] {speaker_label}{seg.text}\n\n"
+                            )
                     else:
                         f.write(result.transcription.text)
                 self._toast_manager.show_info(f"Transcript saved: {transcript_path.name}")
@@ -538,7 +564,9 @@ class MainWindow(QMainWindow):
         # Auto-export if configured
         settings = get_settings()
         if settings.output.auto_export_json and settings.output.output_directory:
-            output_path = Path(settings.output.output_directory) / f"{self._current_file.stem}_result.json"
+            output_path = (
+                Path(settings.output.output_directory) / f"{self._current_file.stem}_result.json"
+            )
             self._results_viewer.export_json(str(output_path))
             self._toast_manager.show_info(f"Results exported to {output_path.name}")
 
@@ -634,13 +662,15 @@ class MainWindow(QMainWindow):
             else:
                 points = 0
 
-            parameters.append({
-                "name": p.name,
-                "points": points,  # Use new points format
-                "max_score": p.max_score,  # Keep for backward compatibility
-                "weight": p.weight,  # Keep for backward compatibility
-                "description": p.description,
-            })
+            parameters.append(
+                {
+                    "name": p.name,
+                    "points": points,  # Use new points format
+                    "max_score": p.max_score,  # Keep for backward compatibility
+                    "weight": p.weight,  # Keep for backward compatibility
+                    "description": p.description,
+                }
+            )
 
         self._orchestrator.configure(scoring_parameters=parameters)
         self._status_label.setText(f"Scoring profile '{profile_name}' loaded")
@@ -651,7 +681,7 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             settings = get_settings()
             provider = settings.llm.provider
-            provider_name = provider.value if hasattr(provider, 'value') else str(provider)
+            provider_name = provider.value if hasattr(provider, "value") else str(provider)
             self._provider_label.setText(f"LLM: {provider_name.title()}")
             self._configure_orchestrator()
 
@@ -678,12 +708,13 @@ class MainWindow(QMainWindow):
     @Slot()
     def _on_about(self) -> None:
         QMessageBox.about(
-            self, f"About {__app_name__}",
+            self,
+            f"About {__app_name__}",
             f"<h3>{__app_name__}</h3>"
             f"<p>Version {__version__}</p>"
             "<p>Free, open-source AI for audio transcription and quality auditing.</p>"
             "<p>Works 100% offline with local models.</p>"
-            "<p>MIT License</p>"
+            "<p>MIT License</p>",
         )
 
     def show_first_run_wizard(self) -> None:

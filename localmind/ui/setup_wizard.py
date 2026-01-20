@@ -4,24 +4,34 @@ LocalMind Setup Wizard
 First-run setup wizard for downloading models and configuring the app.
 """
 
-from typing import Optional, List, Tuple
-
-from PySide6.QtWidgets import (
-    QWizard, QWizardPage, QVBoxLayout, QHBoxLayout, QWidget,
-    QLabel, QCheckBox, QRadioButton, QButtonGroup, QProgressBar,
-    QGroupBox, QTextEdit, QPushButton, QFrame, QMessageBox,
-)
-from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QFont
-
 import shutil
 
-from localmind.workers.model_download_worker import (
-    ModelDownloadWorker, ModelInfo, SetupWizardData,
-    AVAILABLE_MODELS, ModelType, is_model_downloaded,
-    get_required_download_size, get_optional_download_size,
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QGroupBox,
+    QLabel,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWizard,
+    QWizardPage,
 )
+
 from localmind.config import SettingsManager
+from localmind.workers.model_download_worker import (
+    AVAILABLE_MODELS,
+    ModelDownloadWorker,
+    ModelType,
+    SetupWizardData,
+    get_required_download_size,
+    is_model_downloaded,
+)
 
 
 class WelcomePage(QWizardPage):
@@ -214,7 +224,7 @@ class DownloadPage(QWizardPage):
     def __init__(self, wizard_data: SetupWizardData, parent=None):
         super().__init__(parent)
         self._wizard_data = wizard_data
-        self._worker: Optional[ModelDownloadWorker] = None
+        self._worker: ModelDownloadWorker | None = None
         self._download_complete = False
 
         self.setTitle("Downloading Models")
@@ -252,7 +262,7 @@ class DownloadPage(QWizardPage):
         self._skip_button.clicked.connect(self._on_skip)
         layout.addWidget(self._skip_button, alignment=Qt.AlignmentFlag.AlignRight)
 
-    def _check_disk_space(self, required_gb: float) -> Tuple[bool, float]:
+    def _check_disk_space(self, required_gb: float) -> tuple[bool, float]:
         """Check if there's enough disk space for downloads.
 
         Args:
@@ -266,7 +276,7 @@ class DownloadPage(QWizardPage):
             # Get disk usage for the models directory (or its parent if it doesn't exist)
             check_path = models_dir if models_dir.exists() else models_dir.parent
             usage = shutil.disk_usage(check_path)
-            available_gb = usage.free / (1024 ** 3)  # Convert to GB
+            available_gb = usage.free / (1024**3)  # Convert to GB
             # Add 10% buffer for safety
             return available_gb >= (required_gb * 1.1), available_gb
         except Exception:
@@ -308,10 +318,12 @@ class DownloadPage(QWizardPage):
                 f"Free up some disk space or choose smaller models.\n\n"
                 f"Continue anyway?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.No,
             )
             if result != QMessageBox.StandardButton.Yes:
-                self._log.append(f"Insufficient disk space. Need {total_required_gb:.1f} GB, have {available_gb:.1f} GB")
+                self._log.append(
+                    f"Insufficient disk space. Need {total_required_gb:.1f} GB, have {available_gb:.1f} GB"
+                )
                 self._current_label.setText("Waiting for disk space...")
                 return
             self._log.append(f"Warning: Low disk space ({available_gb:.1f} GB available)")
@@ -385,7 +397,7 @@ class DownloadPage(QWizardPage):
             "You can download models later from Settings.\n\n"
             "Are you sure you want to skip?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if result != QMessageBox.StandardButton.Yes:
@@ -483,6 +495,7 @@ class SetupWizard(QWizard):
         if result == QWizard.DialogCode.Accepted:
             # Save settings
             from localmind.config import get_settings, save_settings
+
             settings = get_settings()
             settings.app.whisper_models_downloaded = True
             settings.app.first_run_complete = True

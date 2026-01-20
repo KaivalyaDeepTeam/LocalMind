@@ -4,9 +4,9 @@ LocalMind Transcription Worker
 Background worker for audio transcription using Whisper.
 """
 
-from pathlib import Path
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from localmind.workers.base import BaseWorker
 
@@ -14,13 +14,14 @@ from localmind.workers.base import BaseWorker
 @dataclass
 class TranscriptionSegment:
     """A segment of transcribed audio."""
+
     start: float
     end: float
     text: str
-    speaker: Optional[str] = None  # Populated from channel info for dual-channel audio
+    speaker: str | None = None  # Populated from channel info for dual-channel audio
     confidence: float = 1.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "start": self.start,
@@ -34,13 +35,14 @@ class TranscriptionSegment:
 @dataclass
 class TranscriptionResult:
     """Result of transcription."""
+
     text: str
-    segments: List[TranscriptionSegment] = field(default_factory=list)
-    language: Optional[str] = None
+    segments: list[TranscriptionSegment] = field(default_factory=list)
+    language: str | None = None
     duration: float = 0.0
     channels: int = 1
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "text": self.text,
@@ -58,7 +60,7 @@ class TranscriptionWorker(BaseWorker):
         self,
         audio_path: str,
         model_name: str = "large-v3",
-        language: Optional[str] = None,
+        language: str | None = None,
         use_gpu: bool = True,
         use_preprocessing: bool = True,
         parent=None,
@@ -116,11 +118,13 @@ class TranscriptionWorker(BaseWorker):
         segments = []
 
         if full_text:
-            segments.append(TranscriptionSegment(
-                start=0.0,
-                end=len(audio) / sr,
-                text=full_text,
-            ))
+            segments.append(
+                TranscriptionSegment(
+                    start=0.0,
+                    end=len(audio) / sr,
+                    text=full_text,
+                )
+            )
 
         transcription = TranscriptionResult(
             text=full_text,
@@ -134,7 +138,6 @@ class TranscriptionWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the Whisper model."""
-        import os
 
         try:
             import torch
@@ -157,10 +160,12 @@ class TranscriptionWorker(BaseWorker):
 
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
+
         def patched_load(*args, **kwargs):
-            if 'map_location' not in kwargs:
-                kwargs['map_location'] = torch.device(self._device)
+            if "map_location" not in kwargs:
+                kwargs["map_location"] = torch.device(self._device)
             return original_load(*args, **kwargs)
+
         torch.load = patched_load
 
         try:
@@ -190,14 +195,14 @@ class TranscriptionWorker(BaseWorker):
 
         # No preprocessing or preprocessing failed - use original audio
         import librosa
+
         audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=True)
         return audio, sr
 
-    def _transcribe(self, audio, sr) -> Dict[str, Any]:
+    def _transcribe(self, audio, sr) -> dict[str, Any]:
         """Transcribe audio with chunking and optimized parameters."""
         import numpy as np
         import torch
-        import whisper
 
         # Chunk audio with 5-second overlap for better boundary handling
         chunk_duration = 25  # seconds (< 30s limit)
@@ -232,7 +237,7 @@ class TranscriptionWorker(BaseWorker):
             target_length = 30 * sr
             if len(chunk) < target_length:
                 padding = target_length - len(chunk)
-                chunk = np.pad(chunk, (0, padding), mode='constant', constant_values=0)
+                chunk = np.pad(chunk, (0, padding), mode="constant", constant_values=0)
 
             # Transcribe chunk with optimized parameters
             progress = 20 + int((i / num_chunks) * 70)
@@ -242,7 +247,8 @@ class TranscriptionWorker(BaseWorker):
                 # Transcribe options with optimized parameters
                 transcribe_options = {
                     "verbose": False,
-                    "fp16": self._device == "cuda",  # Only use fp16 on CUDA, not MPS (causes NaN errors)
+                    "fp16": self._device
+                    == "cuda",  # Only use fp16 on CUDA, not MPS (causes NaN errors)
                     # CRITICAL parameters for maximum word capture
                     "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
                     "no_speech_threshold": 0.3,  # CRITICAL for quiet speakers
@@ -285,7 +291,11 @@ class TranscriptionWorker(BaseWorker):
                                 if remaining_text:
                                     all_text.append(remaining_text)
                                     remaining_words = remaining_text.split()
-                                    previous_text_end = " ".join(remaining_words[-10:]) if len(remaining_words) > 10 else remaining_text
+                                    previous_text_end = (
+                                        " ".join(remaining_words[-10:])
+                                        if len(remaining_words) > 10
+                                        else remaining_text
+                                    )
                                 deduplicated = True
                                 break
 
@@ -316,7 +326,7 @@ class DualChannelTranscriptionWorker(BaseWorker):
         self,
         audio_path: str,
         model_name: str = "large-v3",
-        language: Optional[str] = None,
+        language: str | None = None,
         use_gpu: bool = True,
         agent_channel: int = 0,
         customer_channel: int = 1,
@@ -387,28 +397,30 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
         all_segments = []
         for seg in agent_result.get("segments", []):
-            all_segments.append(TranscriptionSegment(
-                start=seg["start"],
-                end=seg["end"],
-                text=seg["text"].strip(),
-                speaker="Agent",  # Assigned from channel 0
-            ))
+            all_segments.append(
+                TranscriptionSegment(
+                    start=seg["start"],
+                    end=seg["end"],
+                    text=seg["text"].strip(),
+                    speaker="Agent",  # Assigned from channel 0
+                )
+            )
 
         for seg in customer_result.get("segments", []):
-            all_segments.append(TranscriptionSegment(
-                start=seg["start"],
-                end=seg["end"],
-                text=seg["text"].strip(),
-                speaker="Customer",  # Assigned from channel 1
-            ))
+            all_segments.append(
+                TranscriptionSegment(
+                    start=seg["start"],
+                    end=seg["end"],
+                    text=seg["text"].strip(),
+                    speaker="Customer",  # Assigned from channel 1
+                )
+            )
 
         # Sort by start time
         all_segments.sort(key=lambda s: s.start)
 
         # Build full text - chronological with speaker labels
-        full_text = "\n".join(
-            f"[{s.speaker}] {s.text}" for s in all_segments
-        )
+        full_text = "\n".join(f"[{s.speaker}] {s.text}" for s in all_segments)
 
         transcription = TranscriptionResult(
             text=full_text,
@@ -422,7 +434,6 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the Whisper model."""
-        import os
 
         try:
             import torch
@@ -445,10 +456,12 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
+
         def patched_load(*args, **kwargs):
-            if 'map_location' not in kwargs:
-                kwargs['map_location'] = torch.device(device)
+            if "map_location" not in kwargs:
+                kwargs["map_location"] = torch.device(device)
             return original_load(*args, **kwargs)
+
         torch.load = patched_load
 
         try:
@@ -459,7 +472,6 @@ class DualChannelTranscriptionWorker(BaseWorker):
     def _load_channels(self):
         """Load and optionally preprocess separate audio channels with independent normalization."""
         import librosa
-        import numpy as np
 
         try:
             # Check if audio is stereo
@@ -470,13 +482,13 @@ class DualChannelTranscriptionWorker(BaseWorker):
 
         # Apply preprocessing if enabled
         if self._use_preprocessing:
-            from localmind.audio.preprocessing import (
-                preprocess_dual_channel_audio,
-                preprocess_audio_for_transcription,
-            )
+
             import soundfile as sf
-            import tempfile
-            from pathlib import Path
+
+            from localmind.audio.preprocessing import (
+                preprocess_audio_for_transcription,
+                preprocess_dual_channel_audio,
+            )
 
             if not is_stereo:
                 # Mono audio - preprocess once and return for both channels
@@ -508,7 +520,9 @@ class DualChannelTranscriptionWorker(BaseWorker):
                     return agent_audio, customer_audio
 
                 except Exception as e:
-                    print(f"Warning: Dual-channel preprocessing failed ({e}), using basic channel split")
+                    print(
+                        f"Warning: Dual-channel preprocessing failed ({e}), using basic channel split"
+                    )
 
         # No preprocessing or preprocessing failed - basic channel extraction
         if not is_stereo:
@@ -520,7 +534,7 @@ class DualChannelTranscriptionWorker(BaseWorker):
         customer_audio = audio[self._customer_channel]
         return agent_audio, customer_audio
 
-    def _transcribe_channel(self, audio, speaker: str) -> Dict[str, Any]:
+    def _transcribe_channel(self, audio, speaker: str) -> dict[str, Any]:
         """Transcribe a single channel."""
         import torch
         import whisper

@@ -5,23 +5,30 @@ Google-style toast notifications with animations, auto-dismiss,
 and action button support.
 """
 
-from typing import Optional, Callable
+from collections.abc import Callable
 from enum import Enum
 
-from PySide6.QtWidgets import (
-    QWidget, QFrame, QLabel, QPushButton,
-    QHBoxLayout, QVBoxLayout, QGraphicsOpacityEffect,
-    QApplication
-)
 from PySide6.QtCore import (
-    Qt, QTimer, QPropertyAnimation, QEasingCurve,
-    Property, Signal, QPoint, QSize
+    QEasingCurve,
+    QPropertyAnimation,
+    Qt,
+    QTimer,
+    Signal,
 )
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QFrame,
+    QGraphicsOpacityEffect,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QWidget,
+)
 
 
 class ToastType(Enum):
     """Toast notification types."""
+
     SUCCESS = "success"
     ERROR = "error"
     WARNING = "warning"
@@ -91,9 +98,9 @@ class ToastNotification(QFrame):
         message: str,
         toast_type: ToastType = ToastType.INFO,
         duration: int = 4000,
-        action_text: Optional[str] = None,
-        action_callback: Optional[Callable] = None,
-        parent: Optional[QWidget] = None,
+        action_text: str | None = None,
+        action_callback: Callable | None = None,
+        parent: QWidget | None = None,
         dark_mode: bool = False,
     ):
         super().__init__(parent)
@@ -244,7 +251,7 @@ class ToastManager(QWidget):
         manager.show_toast("File saved successfully!", ToastType.SUCCESS)
     """
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
         self._toasts: list[ToastNotification] = []
@@ -270,9 +277,9 @@ class ToastManager(QWidget):
         self,
         message: str,
         toast_type: ToastType = ToastType.INFO,
-        duration: Optional[int] = None,
-        action_text: Optional[str] = None,
-        action_callback: Optional[Callable] = None,
+        duration: int | None = None,
+        action_text: str | None = None,
+        action_callback: Callable | None = None,
     ) -> ToastNotification:
         """
         Show a new toast notification.
@@ -366,10 +373,10 @@ class ToastManager(QWidget):
 
 
 # Global toast manager instance
-_toast_manager: Optional[ToastManager] = None
+_toast_manager: ToastManager | None = None
 
 
-def get_toast_manager() -> Optional[ToastManager]:
+def get_toast_manager() -> ToastManager | None:
     """Get the global toast manager."""
     return _toast_manager
 
@@ -382,10 +389,8 @@ def init_toast_manager(parent: QWidget) -> ToastManager:
 
 
 def show_toast(
-    message: str,
-    toast_type: ToastType = ToastType.INFO,
-    **kwargs
-) -> Optional[ToastNotification]:
+    message: str, toast_type: ToastType = ToastType.INFO, **kwargs
+) -> ToastNotification | None:
     """
     Show a toast notification using the global manager.
 

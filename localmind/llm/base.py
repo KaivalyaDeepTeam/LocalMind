@@ -5,13 +5,15 @@ Abstract base class for LLM providers with unified interface.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict, Any, AsyncGenerator
+from typing import Any
 
 
 class LLMRole(Enum):
     """Message roles for chat completion."""
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -20,10 +22,11 @@ class LLMRole(Enum):
 @dataclass
 class LLMMessage:
     """A message in a conversation."""
+
     role: LLMRole
     content: str
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Convert to dictionary format."""
         return {"role": self.role.value, "content": self.content}
 
@@ -31,12 +34,13 @@ class LLMMessage:
 @dataclass
 class LLMResponse:
     """Response from an LLM provider."""
+
     content: str
     model: str
     provider: str
-    usage: Dict[str, int] = field(default_factory=dict)
-    finish_reason: Optional[str] = None
-    raw_response: Optional[Any] = None
+    usage: dict[str, int] = field(default_factory=dict)
+    finish_reason: str | None = None
+    raw_response: Any | None = None
 
     @property
     def input_tokens(self) -> int:
@@ -57,12 +61,13 @@ class LLMResponse:
 @dataclass
 class LLMConfig:
     """Configuration for LLM generation."""
+
     temperature: float = 0.7
     max_tokens: int = 4096
     top_p: float = 1.0
-    stop_sequences: Optional[List[str]] = None
+    stop_sequences: list[str] | None = None
     json_mode: bool = False
-    json_schema: Optional[Dict[str, Any]] = None  # JSON schema for constrained generation
+    json_schema: dict[str, Any] | None = None  # JSON schema for constrained generation
 
 
 class BaseLLMProvider(ABC):
@@ -97,8 +102,8 @@ class BaseLLMProvider(ABC):
     @abstractmethod
     async def generate(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> LLMResponse:
         """Generate a response from the LLM.
 
@@ -114,8 +119,8 @@ class BaseLLMProvider(ABC):
     @abstractmethod
     async def generate_stream(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response from the LLM.
 
@@ -130,9 +135,9 @@ class BaseLLMProvider(ABC):
 
     async def generate_json(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
-    ) -> Dict[str, Any]:
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
+    ) -> dict[str, Any]:
         """Generate a JSON response from the LLM.
 
         Args:

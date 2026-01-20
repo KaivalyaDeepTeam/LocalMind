@@ -4,10 +4,14 @@ LocalMind OpenAI Provider
 OpenAI API implementation of the LLM provider.
 """
 
-from typing import Optional, List, Dict, Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from localmind.llm.base import (
-    BaseLLMProvider, LLMMessage, LLMResponse, LLMConfig,
+    BaseLLMProvider,
+    LLMConfig,
+    LLMMessage,
+    LLMResponse,
 )
 
 
@@ -17,8 +21,8 @@ class OpenAIProvider(BaseLLMProvider):
     def __init__(
         self,
         model: str = "gpt-4o",
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ):
         """Initialize OpenAI provider.
 
@@ -45,9 +49,7 @@ class OpenAIProvider(BaseLLMProvider):
         try:
             from openai import AsyncOpenAI
         except ImportError:
-            raise ImportError(
-                "OpenAI package not installed. Install with: pip install openai"
-            )
+            raise ImportError("OpenAI package not installed. Install with: pip install openai")
 
         self._client = AsyncOpenAI(
             api_key=self._api_key,
@@ -57,8 +59,8 @@ class OpenAIProvider(BaseLLMProvider):
 
     async def generate(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> LLMResponse:
         """Generate a response using OpenAI API."""
         if not self._is_initialized:
@@ -68,7 +70,7 @@ class OpenAIProvider(BaseLLMProvider):
             config = LLMConfig()
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self._model,
             "messages": [msg.to_dict() for msg in messages],
             "temperature": config.temperature,
@@ -103,8 +105,8 @@ class OpenAIProvider(BaseLLMProvider):
 
     async def generate_stream(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response using OpenAI API."""
         if not self._is_initialized:
@@ -114,7 +116,7 @@ class OpenAIProvider(BaseLLMProvider):
             config = LLMConfig()
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self._model,
             "messages": [msg.to_dict() for msg in messages],
             "temperature": config.temperature,

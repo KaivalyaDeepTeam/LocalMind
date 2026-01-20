@@ -4,16 +4,16 @@ LocalMind Model Download Worker
 Background worker for downloading AI models on first run.
 """
 
-from pathlib import Path
-from typing import Optional, Dict, List, Callable
 from dataclasses import dataclass
 from enum import Enum, auto
+from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
 
 class ModelType(Enum):
     """Types of downloadable models."""
+
     WHISPER = auto()
     LOCAL_LLM = auto()
 
@@ -21,6 +21,7 @@ class ModelType(Enum):
 @dataclass
 class ModelInfo:
     """Information about a downloadable model."""
+
     name: str
     display_name: str
     model_type: ModelType
@@ -78,8 +79,8 @@ AVAILABLE_MODELS = [
 
 def get_models_directory() -> Path:
     """Get the directory for storing models."""
-    import platform
     import os
+    import platform
 
     system = platform.system()
     if system == "Darwin":
@@ -124,7 +125,7 @@ class ModelDownloadWorker(QThread):
 
     def __init__(
         self,
-        models: Optional[List[ModelInfo]] = None,
+        models: list[ModelInfo] | None = None,
         parent=None,
     ):
         """Initialize download worker.
@@ -136,7 +137,7 @@ class ModelDownloadWorker(QThread):
         super().__init__(parent)
         self._models = models or [m for m in AVAILABLE_MODELS if m.required]
         self._should_stop = False
-        self._current_model: Optional[str] = None
+        self._current_model: str | None = None
 
     def stop(self) -> None:
         """Stop downloading."""
@@ -145,7 +146,7 @@ class ModelDownloadWorker(QThread):
     def run(self) -> None:
         """Download all specified models."""
         try:
-            from huggingface_hub import hf_hub_download, HfApi
+            from huggingface_hub import HfApi, hf_hub_download
             from huggingface_hub.utils import RepositoryNotFoundError
         except ImportError:
             self.error.emit(
@@ -154,9 +155,9 @@ class ModelDownloadWorker(QThread):
             return
 
         models_dir = get_models_directory()
-        total_models = len(self._models)
+        len(self._models)
 
-        for i, model in enumerate(self._models):
+        for _i, model in enumerate(self._models):
             if self._should_stop:
                 break
 
@@ -201,7 +202,7 @@ class SetupWizardData:
         self.local_llm_model: str = "phi-3.5-mini"
         self.use_gpu: bool = True
 
-    def get_models_to_download(self) -> List[ModelInfo]:
+    def get_models_to_download(self) -> list[ModelInfo]:
         """Get list of models to download based on selections."""
         models = []
 

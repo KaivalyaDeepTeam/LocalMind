@@ -4,32 +4,35 @@ LocalMind Processing Orchestrator
 Coordinates the full processing pipeline: transcription -> merge -> audit.
 """
 
-from pathlib import Path
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from localmind.workers.base import WorkerState
-from localmind.workers.transcription_worker import (
-    TranscriptionWorker, DualChannelTranscriptionWorker, TranscriptionResult,
-)
+from localmind.workers.audit_worker import AuditResult, AuditWorker
 from localmind.workers.hindi_transcription_worker import (
-    HindiSTTWorker, DualChannelHindiSTTWorker,
+    DualChannelHindiSTTWorker,
+    HindiSTTWorker,
 )
-from localmind.workers.merge_worker import MergeWorker, MergeResult
-from localmind.workers.audit_worker import AuditWorker, AuditResult
+from localmind.workers.merge_worker import MergeResult, MergeWorker
+from localmind.workers.transcription_worker import (
+    DualChannelTranscriptionWorker,
+    TranscriptionResult,
+    TranscriptionWorker,
+)
 
 
 @dataclass
 class ProcessingResult:
     """Complete processing result."""
-    transcription: Optional[TranscriptionResult] = None
-    merge: Optional[MergeResult] = None
-    audit: Optional[AuditResult] = None
-    error: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    transcription: TranscriptionResult | None = None
+    merge: MergeResult | None = None
+    audit: AuditResult | None = None
+    error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         result = {}
         if self.transcription:
@@ -64,27 +67,27 @@ class ProcessingOrchestrator(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._audio_path: Optional[Path] = None
+        self._audio_path: Path | None = None
         self._is_processing = False
         self._should_stop = False
 
         # Workers
-        self._transcription_worker: Optional[TranscriptionWorker] = None
-        self._merge_worker: Optional[MergeWorker] = None
-        self._audit_worker: Optional[AuditWorker] = None
+        self._transcription_worker: TranscriptionWorker | None = None
+        self._merge_worker: MergeWorker | None = None
+        self._audit_worker: AuditWorker | None = None
 
         # Results
         self._result = ProcessingResult()
 
         # Settings
         self._whisper_model = "large-v3"
-        self._language: Optional[str] = None
+        self._language: str | None = None
         self._use_gpu = True
         self._dual_channel = True
         self._use_hindi_stt = False  # Use HindiSTT for Hindi-English
         self._hindi_model_variant = "apex"  # "apex" (fast) or "prime" (accurate)
         self._use_preprocessing = True  # Apply audio preprocessing (default ON)
-        self._parameters: Optional[List[Dict[str, Any]]] = None
+        self._parameters: list[dict[str, Any]] | None = None
         self._transcription_only = False  # Skip scoring, only transcribe
 
     @property
@@ -95,13 +98,13 @@ class ProcessingOrchestrator(QObject):
     def configure(
         self,
         whisper_model: str = "large-v3",
-        language: Optional[str] = None,
+        language: str | None = None,
         use_gpu: bool = True,
         dual_channel: bool = True,
         use_hindi_stt: bool = False,
         hindi_model_variant: str = "apex",
         use_preprocessing: bool = True,
-        scoring_parameters: Optional[List[Dict[str, Any]]] = None,
+        scoring_parameters: list[dict[str, Any]] | None = None,
         transcription_only: bool = False,
     ) -> None:
         """Configure processing settings.
@@ -170,6 +173,7 @@ class ProcessingOrchestrator(QObject):
         """Check if audio file is stereo (2 channels) or mono (1 channel)."""
         try:
             import librosa
+
             audio, sr = librosa.load(str(audio_path), sr=None, mono=False)
             return audio.ndim == 2  # True if stereo, False if mono
         except Exception:
@@ -229,9 +233,7 @@ class ProcessingOrchestrator(QObject):
             lambda p, m: self.stage_progress.emit("transcription", p, m)
         )
         self._transcription_worker.finished_work.connect(self._on_transcription_complete)
-        self._transcription_worker.error.connect(
-            lambda e: self._on_stage_error("transcription", e)
-        )
+        self._transcription_worker.error.connect(lambda e: self._on_stage_error("transcription", e))
 
         self._transcription_worker.start()
 
@@ -262,13 +264,9 @@ class ProcessingOrchestrator(QObject):
             transcription=self._result.transcription,
         )
 
-        self._merge_worker.progress.connect(
-            lambda p, m: self.stage_progress.emit("merge", p, m)
-        )
+        self._merge_worker.progress.connect(lambda p, m: self.stage_progress.emit("merge", p, m))
         self._merge_worker.finished_work.connect(self._on_merge_complete)
-        self._merge_worker.error.connect(
-            lambda e: self._on_stage_error("merge", e)
-        )
+        self._merge_worker.error.connect(lambda e: self._on_stage_error("merge", e))
 
         self._merge_worker.start()
 
@@ -294,13 +292,9 @@ class ProcessingOrchestrator(QObject):
             parameters=self._parameters,
         )
 
-        self._audit_worker.progress.connect(
-            lambda p, m: self.stage_progress.emit("audit", p, m)
-        )
+        self._audit_worker.progress.connect(lambda p, m: self.stage_progress.emit("audit", p, m))
         self._audit_worker.finished_work.connect(self._on_audit_complete)
-        self._audit_worker.error.connect(
-            lambda e: self._on_stage_error("audit", e)
-        )
+        self._audit_worker.error.connect(lambda e: self._on_stage_error("audit", e))
 
         self._audit_worker.start()
 

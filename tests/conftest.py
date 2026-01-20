@@ -4,11 +4,10 @@ LocalMind Test Configuration
 Pytest fixtures and configuration for testing.
 """
 
-import os
 import sys
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,7 +27,7 @@ def temp_dir() -> Generator[Path, None, None]:
 @pytest.fixture
 def mock_settings(temp_dir: Path, monkeypatch):
     """Create mock settings with temporary directory."""
-    from localmind.config.settings import SettingsManager, UserSettings
+    from localmind.config.settings import SettingsManager
 
     # Create a settings manager and override its paths
     manager = SettingsManager()
@@ -51,10 +50,30 @@ def sample_audit_result() -> dict:
         "quality_score": 72.0,
         "parameter_scores": {
             "greeting": {"score": 8.0, "max": 10, "weight": 1.0, "feedback": "Good greeting"},
-            "active_listening": {"score": 7.5, "max": 10, "weight": 1.5, "feedback": "Shows engagement"},
-            "problem_identification": {"score": 8.0, "max": 10, "weight": 1.5, "feedback": "Correctly identified issue"},
-            "solution_provided": {"score": 7.0, "max": 10, "weight": 2.0, "feedback": "Adequate solution"},
-            "communication_clarity": {"score": 8.5, "max": 10, "weight": 1.0, "feedback": "Clear communication"},
+            "active_listening": {
+                "score": 7.5,
+                "max": 10,
+                "weight": 1.5,
+                "feedback": "Shows engagement",
+            },
+            "problem_identification": {
+                "score": 8.0,
+                "max": 10,
+                "weight": 1.5,
+                "feedback": "Correctly identified issue",
+            },
+            "solution_provided": {
+                "score": 7.0,
+                "max": 10,
+                "weight": 2.0,
+                "feedback": "Adequate solution",
+            },
+            "communication_clarity": {
+                "score": 8.5,
+                "max": 10,
+                "weight": 1.0,
+                "feedback": "Clear communication",
+            },
         },
         "strengths": [
             "Good rapport building",
@@ -76,7 +95,12 @@ def sample_transcription_segments() -> list:
     return [
         {"start": 0.0, "end": 2.5, "text": "Hello, thank you for calling.", "speaker": "Agent"},
         {"start": 2.5, "end": 5.0, "text": "Hi, I need help with my order.", "speaker": "Customer"},
-        {"start": 5.0, "end": 8.0, "text": "I'd be happy to help you with that.", "speaker": "Agent"},
+        {
+            "start": 5.0,
+            "end": 8.0,
+            "text": "I'd be happy to help you with that.",
+            "speaker": "Agent",
+        },
     ]
 
 
@@ -111,8 +135,18 @@ def sample_transcription_result() -> dict:
         "text": "Hello, thank you for calling. Hi, I need help with my order. I'd be happy to help you with that.",
         "segments": [
             {"start": 0.0, "end": 2.5, "text": "Hello, thank you for calling.", "speaker": "Agent"},
-            {"start": 2.5, "end": 5.0, "text": "Hi, I need help with my order.", "speaker": "Customer"},
-            {"start": 5.0, "end": 8.0, "text": "I'd be happy to help you with that.", "speaker": "Agent"},
+            {
+                "start": 2.5,
+                "end": 5.0,
+                "text": "Hi, I need help with my order.",
+                "speaker": "Customer",
+            },
+            {
+                "start": 5.0,
+                "end": 8.0,
+                "text": "I'd be happy to help you with that.",
+                "speaker": "Agent",
+            },
         ],
         "language": "en",
         "duration": 8.0,
@@ -126,8 +160,18 @@ def sample_merge_result() -> dict:
         "merged_text": "[Agent] Hello, thank you for calling.\n[Customer] Hi, I need help with my order.\n[Agent] I'd be happy to help you with that.",
         "segments": [
             {"start": 0.0, "end": 2.5, "text": "Hello, thank you for calling.", "speaker": "Agent"},
-            {"start": 2.5, "end": 5.0, "text": "Hi, I need help with my order.", "speaker": "Customer"},
-            {"start": 5.0, "end": 8.0, "text": "I'd be happy to help you with that.", "speaker": "Agent"},
+            {
+                "start": 2.5,
+                "end": 5.0,
+                "text": "Hi, I need help with my order.",
+                "speaker": "Customer",
+            },
+            {
+                "start": 5.0,
+                "end": 8.0,
+                "text": "I'd be happy to help you with that.",
+                "speaker": "Agent",
+            },
         ],
         "summary": "Customer called about order issue. Agent provided assistance.",
     }

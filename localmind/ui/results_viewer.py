@@ -6,24 +6,40 @@ Features animated circular score gauges and modern UI.
 """
 
 import json
-import math
-from pathlib import Path
-from typing import Optional, Dict, Any
+import re
+from typing import Any
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QTextEdit,
-    QTableWidget, QTableWidgetItem, QLabel, QHeaderView, QFrame,
-    QScrollArea, QSplitter, QMessageBox, QPushButton, QSizePolicy,
-)
 from PySide6.QtCore import (
-    Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve, Property,
-    QRectF, QPointF,
+    Property,
+    QEasingCurve,
+    QPropertyAnimation,
+    QRectF,
+    Qt,
+    QTimer,
+    Signal,
 )
 from PySide6.QtGui import (
-    QColor, QPainter, QPen, QFont, QBrush, QPainterPath,
-    QLinearGradient, QConicalGradient, QSyntaxHighlighter, QTextCharFormat,
+    QColor,
+    QFont,
+    QPainter,
+    QPen,
+    QSyntaxHighlighter,
+    QTextCharFormat,
 )
-import re
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMessageBox,
+    QSizePolicy,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class JsonSyntaxHighlighter(QSyntaxHighlighter):
@@ -56,11 +72,11 @@ class JsonSyntaxHighlighter(QSyntaxHighlighter):
             # String values
             (r':\s*"([^"\\]|\\.)*"', self._string_format),
             # Numbers
-            (r'\b-?\d+\.?\d*([eE][+-]?\d+)?\b', self._number_format),
+            (r"\b-?\d+\.?\d*([eE][+-]?\d+)?\b", self._number_format),
             # Keywords (true, false, null)
-            (r'\b(true|false|null)\b', self._keyword_format),
+            (r"\b(true|false|null)\b", self._keyword_format),
             # Brackets and braces
-            (r'[\[\]{}]', self._bracket_format),
+            (r"[\[\]{}]", self._bracket_format),
         ]
 
     def highlightBlock(self, text: str) -> None:
@@ -86,16 +102,16 @@ class CircularScoreGauge(QWidget):
 
     # Standard colors (red-orange-green)
     COLORS_STANDARD = {
-        "high": "#059669",    # Green - Emerald-600
+        "high": "#059669",  # Green - Emerald-600
         "medium": "#D97706",  # Orange - Amber-600
-        "low": "#DC2626",     # Red
+        "low": "#DC2626",  # Red
     }
 
     # Colorblind-friendly colors (blue-purple-orange)
     COLORS_COLORBLIND = {
-        "high": "#2563EB",    # Blue
+        "high": "#2563EB",  # Blue
         "medium": "#7C3AED",  # Purple
-        "low": "#EA580C",     # Orange (instead of red)
+        "low": "#EA580C",  # Orange (instead of red)
     }
 
     # Class-level colorblind mode setting
@@ -115,7 +131,7 @@ class CircularScoreGauge(QWidget):
         self,
         label: str = "",
         size: int = 120,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ):
         super().__init__(parent)
         self._label = label
@@ -265,7 +281,7 @@ class CircularScoreGauge(QWidget):
 class ScoreGaugeWidget(QFrame):
     """Widget showing a score with visual gauge (legacy compatibility)."""
 
-    def __init__(self, label: str, parent: Optional[QWidget] = None):
+    def __init__(self, label: str, parent: QWidget | None = None):
         super().__init__(parent)
         self._label = label
         self._score: float = 0.0
@@ -303,7 +319,7 @@ class ScoreGaugeWidget(QFrame):
 class TranscriptViewer(QWidget):
     """Widget for viewing transcript with speaker labels."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -336,15 +352,14 @@ class TranscriptViewer(QWidget):
             html.append(
                 f'<p style="margin: 8px 0;">'
                 f'<span class="{speaker_class}" style="font-weight: 600;">'
-                f'[{start:.1f}s - {end:.1f}s] {speaker}:</span> {text}</p>'
+                f"[{start:.1f}s - {end:.1f}s] {speaker}:</span> {text}</p>"
             )
 
         self._text_edit.setHtml(
-            '<style>'
-            '.agent { color: #4F46E5; }'
-            '.customer { color: #7C3AED; }'
-            '</style>'
-            + "".join(html)
+            "<style>"
+            ".agent { color: #4F46E5; }"
+            ".customer { color: #7C3AED; }"
+            "</style>" + "".join(html)
         )
 
     def clear(self) -> None:
@@ -355,7 +370,7 @@ class TranscriptViewer(QWidget):
 class ScoreDetailsTable(QWidget):
     """Widget showing detailed scoring breakdown."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -369,15 +384,21 @@ class ScoreDetailsTable(QWidget):
         self._table.setColumnCount(4)
         self._table.setHorizontalHeaderLabels(["Parameter", "Score", "Max", "Weight"])
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self._table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self._table.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self._table.horizontalHeader().setSectionResizeMode(
+            3, QHeaderView.ResizeMode.ResizeToContents
+        )
         self._table.setAlternatingRowColors(True)
         self._table.setShowGrid(False)
         self._table.verticalHeader().setVisible(False)
         layout.addWidget(self._table)
 
-    def set_scores(self, scores: Dict[str, Any]) -> None:
+    def set_scores(self, scores: dict[str, Any]) -> None:
         """Set the scoring data."""
         self._table.setRowCount(0)
 
@@ -415,7 +436,7 @@ class ScoreDetailsTable(QWidget):
 class FeedbackViewer(QWidget):
     """Widget for viewing AI feedback."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -433,9 +454,9 @@ class FeedbackViewer(QWidget):
         """Set the feedback text."""
         self._text_edit.setPlainText(feedback)
 
-    def set_structured_feedback(self, feedback: Dict[str, Any]) -> None:
+    def set_structured_feedback(self, feedback: dict[str, Any]) -> None:
         """Set structured feedback with sections."""
-        html = ['<style>h3 { color: #4F46E5; margin-top: 16px; } li { margin: 4px 0; }</style>']
+        html = ["<style>h3 { color: #4F46E5; margin-top: 16px; } li { margin: 4px 0; }</style>"]
 
         if "summary" in feedback:
             html.append(f"<h3>Summary</h3><p>{feedback['summary']}</p>")
@@ -468,7 +489,7 @@ class FeedbackViewer(QWidget):
 class EmptyStateWidget(QWidget):
     """Widget shown when no results are loaded."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -503,10 +524,10 @@ class ResultsViewer(QWidget):
 
     results_loaded = Signal(dict)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self._results: Optional[Dict[str, Any]] = None
-        self._scroll_positions: Dict[int, int] = {}  # Track scroll position per tab
+        self._results: dict[str, Any] | None = None
+        self._scroll_positions: dict[int, int] = {}  # Track scroll position per tab
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -585,22 +606,25 @@ class ResultsViewer(QWidget):
         prev_widget = self._tabs.widget(self._previous_tab)
         if prev_widget:
             scrollable = self._get_scrollable_widget(prev_widget)
-            if scrollable and hasattr(scrollable, 'verticalScrollBar'):
+            if scrollable and hasattr(scrollable, "verticalScrollBar"):
                 self._scroll_positions[self._previous_tab] = scrollable.verticalScrollBar().value()
 
         # Restore scroll position of new tab
         new_widget = self._tabs.widget(new_index)
         if new_widget and new_index in self._scroll_positions:
             scrollable = self._get_scrollable_widget(new_widget)
-            if scrollable and hasattr(scrollable, 'verticalScrollBar'):
+            if scrollable and hasattr(scrollable, "verticalScrollBar"):
                 # Use timer to ensure widget is ready
-                QTimer.singleShot(0, lambda: scrollable.verticalScrollBar().setValue(
-                    self._scroll_positions.get(new_index, 0)
-                ))
+                QTimer.singleShot(
+                    0,
+                    lambda: scrollable.verticalScrollBar().setValue(
+                        self._scroll_positions.get(new_index, 0)
+                    ),
+                )
 
         self._previous_tab = new_index
 
-    def _get_scrollable_widget(self, widget: QWidget) -> Optional[QWidget]:
+    def _get_scrollable_widget(self, widget: QWidget) -> QWidget | None:
         """Get the scrollable widget from a tab widget."""
         # Direct QTextEdit widgets
         if isinstance(widget, QTextEdit):
@@ -615,16 +639,16 @@ class ResultsViewer(QWidget):
             return table
         return widget
 
-    def load_results(self, results: Dict[str, Any]) -> None:
+    def load_results(self, results: dict[str, Any]) -> None:
         """Load audit results."""
         self._results = results
 
         # Detect transcription-only mode (has transcript but no meaningful scores)
         is_transcription_only = (
-            results.get("overall_score", 0) == 0 and
-            "transcript" in results and
-            not results.get("scores") and
-            not results.get("parameter_scores")
+            results.get("overall_score", 0) == 0
+            and "transcript" in results
+            and not results.get("scores")
+            and not results.get("parameter_scores")
         )
 
         self._update_visibility(has_results=True, transcription_only=is_transcription_only)
@@ -695,11 +719,12 @@ class ResultsViewer(QWidget):
                 return
 
             # Ensure .json extension
-            if not filepath.endswith('.json'):
-                filepath += '.json'
+            if not filepath.endswith(".json"):
+                filepath += ".json"
 
             # Create parent directory if it doesn't exist
             from pathlib import Path
+
             parent_dir = Path(filepath).parent
             parent_dir.mkdir(parents=True, exist_ok=True)
 
@@ -707,36 +732,38 @@ class ResultsViewer(QWidget):
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(self._results, f, indent=2, ensure_ascii=False)
 
-            QMessageBox.information(
-                self, "Export Complete",
-                f"Results exported to:\n{filepath}"
-            )
+            QMessageBox.information(self, "Export Complete", f"Results exported to:\n{filepath}")
 
         except PermissionError:
             QMessageBox.critical(
-                self, "Permission Denied",
-                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location."
+                self,
+                "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location.",
             )
         except OSError as e:
             if "No space left on device" in str(e):
                 QMessageBox.critical(
-                    self, "Disk Full",
-                    "Not enough disk space to save the file.\n\nPlease free up some space and try again."
+                    self,
+                    "Disk Full",
+                    "Not enough disk space to save the file.\n\nPlease free up some space and try again.",
                 )
             else:
                 QMessageBox.critical(
-                    self, "File System Error",
-                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again."
+                    self,
+                    "File System Error",
+                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again.",
                 )
         except MemoryError:
             QMessageBox.critical(
-                self, "Memory Error",
-                "Not enough memory to export results.\n\nTry closing other applications and try again."
+                self,
+                "Memory Error",
+                "Not enough memory to export results.\n\nTry closing other applications and try again.",
             )
         except Exception as e:
             QMessageBox.critical(
-                self, "Export Error",
-                f"Failed to export JSON:\n{str(e)}\n\nPlease try again or choose a different location."
+                self,
+                "Export Error",
+                f"Failed to export JSON:\n{str(e)}\n\nPlease try again or choose a different location.",
             )
 
     def export_transcript(self, filepath: str) -> None:
@@ -751,8 +778,9 @@ class ResultsViewer(QWidget):
 
         if not has_segments and not has_transcript:
             QMessageBox.warning(
-                self, "No Transcript",
-                "No transcript data available to export.\n\nPlease process an audio file first."
+                self,
+                "No Transcript",
+                "No transcript data available to export.\n\nPlease process an audio file first.",
             )
             return
 
@@ -763,11 +791,12 @@ class ResultsViewer(QWidget):
                 return
 
             # Ensure .txt extension
-            if not filepath.endswith('.txt'):
-                filepath += '.txt'
+            if not filepath.endswith(".txt"):
+                filepath += ".txt"
 
             # Create parent directory if it doesn't exist
             from pathlib import Path
+
             parent_dir = Path(filepath).parent
             parent_dir.mkdir(parents=True, exist_ok=True)
 
@@ -804,41 +833,44 @@ class ResultsViewer(QWidget):
                         f.write(transcript_text)
                         f.write("\n")
 
-            QMessageBox.information(
-                self, "Export Complete",
-                f"Transcript exported to:\n{filepath}"
-            )
+            QMessageBox.information(self, "Export Complete", f"Transcript exported to:\n{filepath}")
 
         except PermissionError:
             QMessageBox.critical(
-                self, "Permission Denied",
-                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location."
+                self,
+                "Permission Denied",
+                f"Cannot write to:\n{filepath}\n\nPlease check file permissions or choose a different location.",
             )
         except OSError as e:
             if "No space left on device" in str(e):
                 QMessageBox.critical(
-                    self, "Disk Full",
-                    "Not enough disk space to save the file.\n\nPlease free up some space and try again."
+                    self,
+                    "Disk Full",
+                    "Not enough disk space to save the file.\n\nPlease free up some space and try again.",
                 )
             else:
                 QMessageBox.critical(
-                    self, "File System Error",
-                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again."
+                    self,
+                    "File System Error",
+                    f"Cannot save file:\n{e}\n\nPlease check the file path and try again.",
                 )
         except UnicodeEncodeError as e:
             QMessageBox.critical(
-                self, "Encoding Error",
-                f"Failed to encode transcript text:\n{e}\n\nSome characters may not be supported."
+                self,
+                "Encoding Error",
+                f"Failed to encode transcript text:\n{e}\n\nSome characters may not be supported.",
             )
         except MemoryError:
             QMessageBox.critical(
-                self, "Memory Error",
-                "Not enough memory to export transcript.\n\nTry closing other applications and try again."
+                self,
+                "Memory Error",
+                "Not enough memory to export transcript.\n\nTry closing other applications and try again.",
             )
         except Exception as e:
             QMessageBox.critical(
-                self, "Export Error",
-                f"Failed to export transcript:\n{str(e)}\n\nPlease try again or choose a different location."
+                self,
+                "Export Error",
+                f"Failed to export transcript:\n{str(e)}\n\nPlease try again or choose a different location.",
             )
 
     def export_markdown_report(self, filepath: str) -> None:
@@ -857,9 +889,10 @@ class ResultsViewer(QWidget):
 
         if not markdown_report:
             QMessageBox.warning(
-                self, "No Report Available",
+                self,
+                "No Report Available",
                 "No markdown report available to export.\n\n"
-                "Please process an audio file with scoring enabled first."
+                "Please process an audio file with scoring enabled first.",
             )
             return
 
@@ -870,11 +903,12 @@ class ResultsViewer(QWidget):
                 return
 
             # Ensure .md extension
-            if not filepath.endswith('.md'):
-                filepath += '.md'
+            if not filepath.endswith(".md"):
+                filepath += ".md"
 
             # Create parent directory if it doesn't exist
             from pathlib import Path
+
             parent_dir = Path(filepath).parent
             parent_dir.mkdir(parents=True, exist_ok=True)
 
@@ -883,48 +917,53 @@ class ResultsViewer(QWidget):
                 f.write(markdown_report)
 
             QMessageBox.information(
-                self, "Export Complete",
+                self,
+                "Export Complete",
                 f"Audit report exported to:\n{filepath}\n\n"
                 "Open this file in any markdown viewer to see beautifully "
-                "formatted feedback to help improve your skills."
+                "formatted feedback to help improve your skills.",
             )
 
         except PermissionError:
             QMessageBox.critical(
-                self, "Permission Denied",
+                self,
+                "Permission Denied",
                 f"Cannot write to:\n{filepath}\n\n"
-                "Please check file permissions or choose a different location."
+                "Please check file permissions or choose a different location.",
             )
         except OSError as e:
             if "No space left on device" in str(e):
                 QMessageBox.critical(
-                    self, "Disk Full",
+                    self,
+                    "Disk Full",
                     "Not enough disk space to save the file.\n\n"
-                    "Please free up some space and try again."
+                    "Please free up some space and try again.",
                 )
             else:
                 QMessageBox.critical(
-                    self, "File System Error",
-                    f"Cannot save file:\n{e}\n\n"
-                    "Please check the file path and try again."
+                    self,
+                    "File System Error",
+                    f"Cannot save file:\n{e}\n\n" "Please check the file path and try again.",
                 )
         except UnicodeEncodeError as e:
             QMessageBox.critical(
-                self, "Encoding Error",
-                f"Failed to encode report text:\n{e}\n\n"
-                "Some characters may not be supported."
+                self,
+                "Encoding Error",
+                f"Failed to encode report text:\n{e}\n\n" "Some characters may not be supported.",
             )
         except MemoryError:
             QMessageBox.critical(
-                self, "Memory Error",
+                self,
+                "Memory Error",
                 "Not enough memory to export report.\n\n"
-                "Try closing other applications and try again."
+                "Try closing other applications and try again.",
             )
         except Exception as e:
             QMessageBox.critical(
-                self, "Export Error",
+                self,
+                "Export Error",
                 f"Failed to export report:\n{str(e)}\n\n"
-                "Please try again or choose a different location."
+                "Please try again or choose a different location.",
             )
 
     def export_pdf(self, filepath: str) -> None:
@@ -941,9 +980,10 @@ class ResultsViewer(QWidget):
         scoring_result = self._results.get("scoring_result", {})
         if not scoring_result:
             QMessageBox.warning(
-                self, "No Scoring Data",
+                self,
+                "No Scoring Data",
                 "No scoring data available to export.\n\n"
-                "Please process an audio file with scoring enabled first."
+                "Please process an audio file with scoring enabled first.",
             )
             return
 
@@ -953,10 +993,11 @@ class ResultsViewer(QWidget):
                 from localmind.reports import PDFReportGenerator
             except ImportError:
                 QMessageBox.critical(
-                    self, "PDF Export Unavailable",
+                    self,
+                    "PDF Export Unavailable",
                     "PDF export is not available.\n\n"
                     "Please ensure reportlab is installed:\n"
-                    "pip install reportlab"
+                    "pip install reportlab",
                 )
                 return
 
@@ -966,11 +1007,12 @@ class ResultsViewer(QWidget):
                 return
 
             # Ensure .pdf extension
-            if not filepath.lower().endswith('.pdf'):
-                filepath += '.pdf'
+            if not filepath.lower().endswith(".pdf"):
+                filepath += ".pdf"
 
             # Create parent directory if it doesn't exist
             from pathlib import Path
+
             parent_dir = Path(filepath).parent
             parent_dir.mkdir(parents=True, exist_ok=True)
 
@@ -979,61 +1021,64 @@ class ResultsViewer(QWidget):
                 "score_summary": scoring_result.get("summary", {}),
                 "scoring_details": scoring_result.get("parameters", []),
                 "ai_feedback": scoring_result.get("ai_feedback", {}),
-                "transcript": self._results.get("transcript", "")
+                "transcript": self._results.get("transcript", ""),
             }
 
             # Get original filename if available
             file_name = "audio_file"
-            if hasattr(self, '_audio_file') and self._audio_file:
+            if hasattr(self, "_audio_file") and self._audio_file:
                 file_name = Path(self._audio_file).stem
 
             # Generate PDF
             generator = PDFReportGenerator()
             generator.generate_pdf(
-                audit_result=audit_result,
-                output_path=filepath,
-                file_name=file_name
+                audit_result=audit_result, output_path=filepath, file_name=file_name
             )
 
             QMessageBox.information(
-                self, "Export Complete",
+                self,
+                "Export Complete",
                 f"PDF report exported to:\n{filepath}\n\n"
                 "The report includes score summary, visualization chart, "
-                "detailed scores, AI feedback, and transcript."
+                "detailed scores, AI feedback, and transcript.",
             )
 
         except PermissionError:
             QMessageBox.critical(
-                self, "Permission Denied",
+                self,
+                "Permission Denied",
                 f"Cannot write to:\n{filepath}\n\n"
-                "Please check file permissions or choose a different location."
+                "Please check file permissions or choose a different location.",
             )
         except OSError as e:
             if "No space left on device" in str(e):
                 QMessageBox.critical(
-                    self, "Disk Full",
+                    self,
+                    "Disk Full",
                     "Not enough disk space to save the PDF.\n\n"
-                    "Please free up some space and try again."
+                    "Please free up some space and try again.",
                 )
             else:
                 QMessageBox.critical(
-                    self, "File System Error",
-                    f"Cannot save PDF:\n{e}\n\n"
-                    "Please check the file path and try again."
+                    self,
+                    "File System Error",
+                    f"Cannot save PDF:\n{e}\n\n" "Please check the file path and try again.",
                 )
         except MemoryError:
             QMessageBox.critical(
-                self, "Memory Error",
+                self,
+                "Memory Error",
                 "Not enough memory to generate PDF.\n\n"
-                "Try closing other applications and try again."
+                "Try closing other applications and try again.",
             )
         except Exception as e:
             QMessageBox.critical(
-                self, "Export Error",
+                self,
+                "Export Error",
                 f"Failed to export PDF:\n{str(e)}\n\n"
-                "Please try again or choose a different location."
+                "Please try again or choose a different location.",
             )
 
-    def get_results(self) -> Optional[Dict[str, Any]]:
+    def get_results(self) -> dict[str, Any] | None:
         """Get the current results."""
         return self._results

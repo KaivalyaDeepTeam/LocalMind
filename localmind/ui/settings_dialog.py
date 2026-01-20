@@ -4,27 +4,40 @@ LocalMind Settings Dialog
 Configuration dialog for LLM providers, API keys, and preferences.
 """
 
-from typing import Optional
-
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
-    QFormLayout, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QLabel, QPushButton, QGroupBox, QMessageBox,
-    QDialogButtonBox, QFileDialog,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal, Slot, QThread, QObject
 
 from localmind.config import (
-    get_settings, save_settings, UserSettings, LLMProviderType,
+    LLMProviderType,
+    UserSettings,
+    get_settings,
+    save_settings,
 )
-from localmind.ui.loading_indicator import LoadingButton, InlineLoadingIndicator
 from localmind.llm.local_provider import LOCAL_MODELS, LocalProvider
+from localmind.ui.loading_indicator import LoadingButton
 
 
 class LLMSettingsTab(QWidget):
     """Tab for LLM provider settings."""
 
-    def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
+    def __init__(self, settings: UserSettings, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings = settings
         self._setup_ui()
@@ -215,9 +228,11 @@ class LLMSettingsTab(QWidget):
         reply = QMessageBox.question(
             self,
             self.tr("Download Model"),
-            self.tr(f"Download {model_id}?\n\nSize: ~{size}GB\nThis will download from Hugging Face."),
+            self.tr(
+                f"Download {model_id}?\n\nSize: ~{size}GB\nThis will download from Hugging Face."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply != QMessageBox.StandardButton.Yes:
@@ -277,6 +292,7 @@ class LLMSettingsTab(QWidget):
 
         try:
             import openai
+
             client = openai.OpenAI(api_key=api_key)
             # Make a minimal API call to test the key
             client.models.list()
@@ -303,12 +319,13 @@ class LLMSettingsTab(QWidget):
 
         try:
             import anthropic
+
             client = anthropic.Anthropic(api_key=api_key)
             # Make a minimal API call to test the key
             client.messages.create(
                 model="claude-3-haiku-20240307",
                 max_tokens=1,
-                messages=[{"role": "user", "content": "Hi"}]
+                messages=[{"role": "user", "content": "Hi"}],
             )
             self._anthropic_status.setText("Connected")
             self._anthropic_status.setStyleSheet("color: #059669;")
@@ -323,7 +340,7 @@ class LLMSettingsTab(QWidget):
 class TranscriptionSettingsTab(QWidget):
     """Tab for transcription settings."""
 
-    def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
+    def __init__(self, settings: UserSettings, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings = settings
         self._setup_ui()
@@ -411,7 +428,7 @@ class TranscriptionSettingsTab(QWidget):
 class OutputSettingsTab(QWidget):
     """Tab for output settings."""
 
-    def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
+    def __init__(self, settings: UserSettings, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings = settings
         self._setup_ui()
@@ -480,9 +497,9 @@ class OutputSettingsTab(QWidget):
     def _on_browse(self) -> None:
         """Browse for output directory."""
         from pathlib import Path
+
         directory = QFileDialog.getExistingDirectory(
-            self, self.tr("Select Output Directory"),
-            self._output_dir.text() or str(Path.home())
+            self, self.tr("Select Output Directory"), self._output_dir.text() or str(Path.home())
         )
         if directory:
             self._output_dir.setText(directory)
@@ -491,7 +508,7 @@ class OutputSettingsTab(QWidget):
 class AppearanceSettingsTab(QWidget):
     """Tab for appearance settings."""
 
-    def __init__(self, settings: UserSettings, parent: Optional[QWidget] = None):
+    def __init__(self, settings: UserSettings, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings = settings
         self._initial_language = settings.app.language
@@ -508,6 +525,7 @@ class AppearanceSettingsTab(QWidget):
 
         self._language_combo = QComboBox()
         from localmind.i18n import TranslationManager
+
         for code, name in TranslationManager.LANGUAGES.items():
             self._language_combo.addItem(name, code)
         self._language_combo.currentIndexChanged.connect(self._on_language_changed)
@@ -542,8 +560,10 @@ class AppearanceSettingsTab(QWidget):
 
         self._colorblind_checkbox = QCheckBox(self.tr("Colorblind-friendly mode"))
         self._colorblind_checkbox.setToolTip(
-            self.tr("Use blue-purple-orange colors instead of green-yellow-red\n"
-            "for better visibility with red-green color blindness")
+            self.tr(
+                "Use blue-purple-orange colors instead of green-yellow-red\n"
+                "for better visibility with red-green color blindness"
+            )
         )
         self._colorblind_checkbox.stateChanged.connect(self._on_colorblind_changed)
         accessibility_layout.addRow("", self._colorblind_checkbox)
@@ -588,6 +608,7 @@ class AppearanceSettingsTab(QWidget):
     def _on_theme_changed(self) -> None:
         """Apply theme immediately when changed."""
         from localmind.ui.theme_manager import get_theme_manager
+
         theme = self._theme_combo.currentData()
         manager = get_theme_manager()
         if manager:
@@ -597,6 +618,7 @@ class AppearanceSettingsTab(QWidget):
     def _on_colorblind_changed(self) -> None:
         """Apply colorblind mode immediately when changed."""
         from localmind.ui.results_viewer import CircularScoreGauge
+
         enabled = self._colorblind_checkbox.isChecked()
         CircularScoreGauge.set_colorblind_mode(enabled)
 
@@ -606,7 +628,7 @@ class SettingsDialog(QDialog):
 
     settings_saved = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._settings = get_settings()
         self._setup_ui()
@@ -637,9 +659,9 @@ class SettingsDialog(QDialog):
 
         # Buttons
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok |
-            QDialogButtonBox.StandardButton.Cancel |
-            QDialogButtonBox.StandardButton.Apply
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
+            | QDialogButtonBox.StandardButton.Apply
         )
         button_box.accepted.connect(self._on_accept)
         button_box.rejected.connect(self.reject)
@@ -666,4 +688,6 @@ class SettingsDialog(QDialog):
     def _on_apply(self) -> None:
         """Handle Apply button."""
         self._save_all()
-        QMessageBox.information(self, self.tr("Settings Saved"), self.tr("Settings have been saved."))
+        QMessageBox.information(
+            self, self.tr("Settings Saved"), self.tr("Settings have been saved.")
+        )

@@ -4,23 +4,45 @@ LocalMind Scoring Editor
 Visual editor for configuring scoring parameters with drag-drop weight adjustment.
 """
 
-from typing import Optional, List
 from pathlib import Path
 
+from PySide6.QtCore import QModelIndex, Qt, Signal, Slot
+from PySide6.QtGui import QAction, QColor, QPainter
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget, QTableWidgetItem,
-    QHeaderView, QPushButton, QComboBox, QLabel, QGroupBox, QSlider,
-    QSpinBox, QDoubleSpinBox, QCheckBox, QLineEdit, QTextEdit,
-    QDialogButtonBox, QMessageBox, QFileDialog, QInputDialog,
-    QStyledItemDelegate, QStyleOptionViewItem, QAbstractItemView,
-    QSplitter, QFrame, QToolBar,
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleSpinBox,
+    QFileDialog,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QSlider,
+    QSplitter,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal, Slot, QModelIndex
-from PySide6.QtGui import QColor, QPainter, QBrush, QAction
 
 from localmind.config.scoring_parameters import (
-    ScoringParameter, ScoringProfile, ParameterCategory,
-    get_profile_manager, get_default_profile,
+    ParameterCategory,
+    ScoringParameter,
+    ScoringProfile,
+    get_default_profile,
+    get_profile_manager,
 )
 
 
@@ -68,9 +90,9 @@ class ParameterEditWidget(QWidget):
 
     parameter_changed = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self._parameter: Optional[ScoringParameter] = None
+        self._parameter: ScoringParameter | None = None
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -175,7 +197,7 @@ class ParameterEditWidget(QWidget):
 
         layout.addStretch()
 
-    def set_parameter(self, param: Optional[ScoringParameter]) -> None:
+    def set_parameter(self, param: ScoringParameter | None) -> None:
         """Set the parameter to edit."""
         self._parameter = param
 
@@ -232,10 +254,10 @@ class ScoringEditorDialog(QDialog):
 
     profile_saved = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._profile_manager = get_profile_manager()
-        self._current_profile: Optional[ScoringProfile] = None
+        self._current_profile: ScoringProfile | None = None
         self._modified = False
 
         self._setup_ui()
@@ -312,9 +334,9 @@ class ScoringEditorDialog(QDialog):
 
         self._param_table = QTableWidget()
         self._param_table.setColumnCount(5)
-        self._param_table.setHorizontalHeaderLabels([
-            "Enabled", "Name", "Category", "Weight", "Max"
-        ])
+        self._param_table.setHorizontalHeaderLabels(
+            ["Enabled", "Name", "Category", "Weight", "Max"]
+        )
         self._param_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self._param_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._param_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -383,8 +405,7 @@ class ScoringEditorDialog(QDialog):
 
         # Dialog buttons
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save |
-            QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self._on_save)
         button_box.rejected.connect(self._on_cancel)
@@ -471,9 +492,10 @@ class ScoringEditorDialog(QDialog):
         """Handle profile selection."""
         if self._modified:
             result = QMessageBox.question(
-                self, "Unsaved Changes",
+                self,
+                "Unsaved Changes",
                 "You have unsaved changes. Discard them?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if result == QMessageBox.StandardButton.No:
                 return
@@ -558,6 +580,7 @@ class ScoringEditorDialog(QDialog):
         name, ok = QInputDialog.getText(self, "New Profile", "Profile name:")
         if ok and name:
             from datetime import datetime
+
             now = datetime.now().isoformat()
 
             self._current_profile = ScoringProfile(
@@ -572,7 +595,9 @@ class ScoringEditorDialog(QDialog):
 
             # Select the new profile
             for i in range(self._profile_combo.count()):
-                if self._profile_combo.itemText(i).lower().replace(" ", "_") == name.lower().replace(" ", "_"):
+                if self._profile_combo.itemText(i).lower().replace(
+                    " ", "_"
+                ) == name.lower().replace(" ", "_"):
                     self._profile_combo.setCurrentIndex(i)
                     break
 
@@ -586,9 +611,10 @@ class ScoringEditorDialog(QDialog):
             return
 
         name, ok = QInputDialog.getText(
-            self, "Duplicate Profile",
+            self,
+            "Duplicate Profile",
             "New profile name:",
-            text=f"{self._current_profile.name} Copy"
+            text=f"{self._current_profile.name} Copy",
         )
         if ok and name:
             source_name = self._current_profile.name.lower().replace(" ", "_")
@@ -606,9 +632,10 @@ class ScoringEditorDialog(QDialog):
             return
 
         result = QMessageBox.question(
-            self, "Delete Profile",
+            self,
+            "Delete Profile",
             f"Delete profile '{self._current_profile.name}'?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if result == QMessageBox.StandardButton.Yes:
             name = self._current_profile.name.lower().replace(" ", "_")
@@ -620,8 +647,7 @@ class ScoringEditorDialog(QDialog):
     def _on_import_profile(self) -> None:
         """Import a profile from file."""
         filepath, _ = QFileDialog.getOpenFileName(
-            self, "Import Profile", str(Path.home()),
-            "JSON Files (*.json)"
+            self, "Import Profile", str(Path.home()), "JSON Files (*.json)"
         )
         if filepath:
             try:
@@ -638,9 +664,10 @@ class ScoringEditorDialog(QDialog):
             return
 
         filepath, _ = QFileDialog.getSaveFileName(
-            self, "Export Profile",
+            self,
+            "Export Profile",
             str(Path.home() / f"{self._current_profile.name}.json"),
-            "JSON Files (*.json)"
+            "JSON Files (*.json)",
         )
         if filepath:
             try:
@@ -700,9 +727,10 @@ class ScoringEditorDialog(QDialog):
     def _on_reset_profile(self) -> None:
         """Reset profile to default values."""
         result = QMessageBox.question(
-            self, "Reset Profile",
+            self,
+            "Reset Profile",
             "Reset all parameters to default values?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if result == QMessageBox.StandardButton.Yes:
             self._current_profile = self._profile_manager.reset_to_default()
@@ -724,16 +752,17 @@ class ScoringEditorDialog(QDialog):
         """Cancel and close."""
         if self._modified:
             result = QMessageBox.question(
-                self, "Unsaved Changes",
+                self,
+                "Unsaved Changes",
                 "You have unsaved changes. Discard them?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if result == QMessageBox.StandardButton.No:
                 return
 
         self.reject()
 
-    def get_current_parameters(self) -> List[dict]:
+    def get_current_parameters(self) -> list[dict]:
         """Get current parameters as list of dicts for audit worker."""
         if self._current_profile is None:
             return []

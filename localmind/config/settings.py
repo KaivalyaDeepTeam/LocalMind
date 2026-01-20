@@ -7,15 +7,15 @@ LLM provider selection, and application settings.
 
 import json
 import os
-from dataclasses import dataclass, field, asdict
+import platform
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
-import platform
 
 
 class LLMProviderType(str, Enum):
     """Available LLM providers."""
+
     LOCAL = "local"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -24,6 +24,7 @@ class LLMProviderType(str, Enum):
 @dataclass
 class LLMSettings:
     """LLM provider configuration."""
+
     provider: LLMProviderType = LLMProviderType.LOCAL
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
@@ -36,6 +37,7 @@ class LLMSettings:
 @dataclass
 class TranscriptionSettings:
     """Transcription configuration."""
+
     language: str = "auto"
     romanize: bool = False
     device: str = "auto"
@@ -48,6 +50,7 @@ class TranscriptionSettings:
 @dataclass
 class ScoringSettings:
     """Scoring configuration."""
+
     profile: str = "default"
     custom_parameters_path: str = ""
 
@@ -55,6 +58,7 @@ class ScoringSettings:
 @dataclass
 class OutputSettings:
     """Output configuration."""
+
     output_directory: str = ""
     auto_export_json: bool = True
     auto_export_pdf: bool = True
@@ -65,6 +69,7 @@ class OutputSettings:
 @dataclass
 class AppSettings:
     """Application settings."""
+
     theme: str = "system"
     language: str = "en"  # UI language (en, ru, es, hi, ar)
     colorblind_mode: bool = False  # Use colorblind-friendly colors
@@ -81,6 +86,7 @@ class AppSettings:
 @dataclass
 class UserSettings:
     """Complete user settings."""
+
     llm: LLMSettings = field(default_factory=LLMSettings)
     transcription: TranscriptionSettings = field(default_factory=TranscriptionSettings)
     scoring: ScoringSettings = field(default_factory=ScoringSettings)
@@ -145,7 +151,7 @@ class SettingsManager:
     """Manages loading and saving of user settings."""
 
     def __init__(self):
-        self._settings: Optional[UserSettings] = None
+        self._settings: UserSettings | None = None
         self._config_dir = self._get_config_dir()
         self._config_file = self._config_dir / "settings.json"
         self._ensure_dirs()
@@ -213,14 +219,14 @@ class SettingsManager:
 
         if self._config_file.exists():
             try:
-                with open(self._config_file, "r", encoding="utf-8") as f:
+                with open(self._config_file, encoding="utf-8") as f:
                     settings = UserSettings.from_dict(json.load(f))
             except Exception:
                 pass
 
         return settings
 
-    def save(self, settings: Optional[UserSettings] = None) -> None:
+    def save(self, settings: UserSettings | None = None) -> None:
         """Save settings to disk."""
         if settings is not None:
             self._settings = settings
@@ -238,7 +244,7 @@ class SettingsManager:
         return self._settings
 
 
-_settings_manager: Optional[SettingsManager] = None
+_settings_manager: SettingsManager | None = None
 
 
 def get_settings_manager() -> SettingsManager:
@@ -254,6 +260,6 @@ def get_settings() -> UserSettings:
     return get_settings_manager().settings
 
 
-def save_settings(settings: Optional[UserSettings] = None) -> None:
+def save_settings(settings: UserSettings | None = None) -> None:
     """Save settings."""
     get_settings_manager().save(settings)

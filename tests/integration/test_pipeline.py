@@ -2,17 +2,15 @@
 Integration tests for LocalMind processing pipeline.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
 
-from PySide6.QtCore import QCoreApplication
+import pytest
 
-from localmind.workers.transcription_worker import TranscriptionWorker, TranscriptionResult
-from localmind.workers.merge_worker import MergeWorker, MergeResult
-from localmind.workers.audit_worker import AuditWorker, AuditResult
-from localmind.llm.factory import create_provider
 from localmind.config import LLMProviderType
+from localmind.llm.factory import create_provider
+from localmind.workers.audit_worker import AuditWorker
+from localmind.workers.merge_worker import MergeWorker
+from localmind.workers.transcription_worker import TranscriptionResult, TranscriptionWorker
 
 
 class TestTranscriptionWorkerIntegration:
@@ -48,7 +46,6 @@ class TestMergeWorkerIntegration:
 
     def test_worker_creation(self, qapp, sample_transcription_result):
         """Test creating merge worker."""
-        from localmind.workers.transcription_worker import TranscriptionResult
 
         # Create a proper TranscriptionResult object
         result = TranscriptionResult(
@@ -65,7 +62,6 @@ class TestMergeWorkerIntegration:
 
     def test_worker_signals(self, qapp, sample_transcription_result):
         """Test merge worker signals are properly defined."""
-        from localmind.workers.transcription_worker import TranscriptionResult
 
         result = TranscriptionResult(
             text="Test transcript",
@@ -163,10 +159,10 @@ class TestLLMProviderIntegration:
     @pytest.mark.asyncio
     async def test_openai_provider_message_format(self):
         """Test OpenAI provider formats messages correctly."""
-        from localmind.llm.openai_provider import OpenAIProvider
         from localmind.llm.base import LLMMessage, LLMRole
+        from localmind.llm.openai_provider import OpenAIProvider
 
-        provider = OpenAIProvider(model="gpt-4o-mini", api_key="test-key")
+        OpenAIProvider(model="gpt-4o-mini", api_key="test-key")
 
         messages = [
             LLMMessage(role=LLMRole.SYSTEM, content="You are helpful."),
@@ -187,7 +183,7 @@ class TestLLMProviderIntegration:
         from localmind.llm.anthropic_provider import AnthropicProvider
         from localmind.llm.base import LLMMessage, LLMRole
 
-        provider = AnthropicProvider(model="claude-3-haiku-20240307", api_key="test-key")
+        AnthropicProvider(model="claude-3-haiku-20240307", api_key="test-key")
 
         messages = [
             LLMMessage(role=LLMRole.USER, content="Hello"),
@@ -254,7 +250,7 @@ class TestConfigIntegration:
 
         monkeypatch.setattr(
             "localmind.config.settings.SettingsManager._get_config_dir",
-            staticmethod(mock_get_config_dir)
+            staticmethod(mock_get_config_dir),
         )
 
         # Create and save settings
@@ -274,7 +270,7 @@ class TestConfigIntegration:
 
     def test_scoring_profile_persistence(self, temp_dir):
         """Test scoring profiles are persisted correctly."""
-        from localmind.config import ScoringProfileManager, ScoringProfile, ScoringParameter
+        from localmind.config import ScoringParameter, ScoringProfile, ScoringProfileManager
 
         profiles_dir = temp_dir / "profiles"
         profiles_dir.mkdir()

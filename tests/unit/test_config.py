@@ -2,25 +2,24 @@
 Unit tests for LocalMind configuration module.
 """
 
-import json
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from localmind.config.settings import (
-    UserSettings,
-    LLMSettings,
-    TranscriptionSettings,
-    LLMProviderType,
-    SettingsManager,
-)
 from localmind.config.scoring_parameters import (
+    ParameterCategory,
     ScoringParameter,
     ScoringProfile,
-    ParameterCategory,
     ScoringProfileManager,
     get_default_profile,
+)
+from localmind.config.settings import (
+    LLMProviderType,
+    LLMSettings,
+    SettingsManager,
+    TranscriptionSettings,
+    UserSettings,
 )
 
 
@@ -108,7 +107,7 @@ class TestSettingsManager:
 
     def test_load_default_settings(self):
         """Test loading returns default settings when no file exists."""
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             manager = SettingsManager()
             settings = manager.load()
 
@@ -215,7 +214,9 @@ class TestScoringProfile:
         params = [
             ScoringParameter(name="p1", display_name="P1", description="", weight=1.0),
             ScoringParameter(name="p2", display_name="P2", description="", weight=1.5),
-            ScoringParameter(name="p3", display_name="P3", description="", weight=2.0, enabled=False),
+            ScoringParameter(
+                name="p3", display_name="P3", description="", weight=2.0, enabled=False
+            ),
         ]
 
         profile = ScoringProfile(name="Test", parameters=params)

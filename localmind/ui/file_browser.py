@@ -4,16 +4,21 @@ LocalMind File Browser Panel
 Commercial-quality audio file selector with drag-and-drop support.
 """
 
-from pathlib import Path
-from typing import Optional, List
 import os
+from pathlib import Path
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QFileDialog, QSizePolicy, QStackedWidget,
-)
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from localmind.config import get_settings, save_settings
 
@@ -40,9 +45,9 @@ class DropZoneWidget(QFrame):
     file_dropped = Signal(str)
     browse_clicked = Signal()
 
-    AUDIO_EXTENSIONS = {'.wav', '.mp3', '.m4a', '.ogg', '.flac', '.webm', '.aac', '.wma', '.opus'}
+    AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".webm", ".aac", ".wma", ".opus"}
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self._setup_ui()
@@ -121,9 +126,9 @@ class FileCardWidget(QFrame):
     process_clicked = Signal()
     change_file_clicked = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self._filepath: Optional[str] = None
+        self._filepath: str | None = None
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -212,7 +217,7 @@ class FileCardWidget(QFrame):
 
         self._file_info_label.setText(" • ".join(info_parts))
 
-    def get_file(self) -> Optional[str]:
+    def get_file(self) -> str | None:
         return self._filepath
 
 
@@ -223,12 +228,12 @@ class FileBrowserPanel(QWidget):
     file_double_clicked = Signal(str)
     process_clicked = Signal()
 
-    AUDIO_EXTENSIONS = {'.wav', '.mp3', '.m4a', '.ogg', '.flac', '.webm', '.aac', '.wma', '.opus'}
+    AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".webm", ".aac", ".wma", ".opus"}
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self._current_file: Optional[str] = None
-        self._recent_files: List[str] = []
+        self._current_file: str | None = None
+        self._recent_files: list[str] = []
         self._setup_ui()
         self._load_recent_files()
 
@@ -280,9 +285,13 @@ class FileBrowserPanel(QWidget):
     def _open_file_dialog(self) -> None:
         """Open file selection dialog."""
         filepath, _ = QFileDialog.getOpenFileName(
-            self, self.tr("Select Audio File"),
+            self,
+            self.tr("Select Audio File"),
             str(Path.home()),
-            self.tr("Audio Files") + " (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;" + self.tr("All Files") + " (*.*)"
+            self.tr("Audio Files")
+            + " (*.wav *.mp3 *.m4a *.ogg *.flac *.webm *.aac);;"
+            + self.tr("All Files")
+            + " (*.*)",
         )
         if filepath:
             self._on_file_selected(filepath)
@@ -359,7 +368,7 @@ class FileBrowserPanel(QWidget):
         """Programmatically select a file."""
         self._on_file_selected(filepath)
 
-    def get_selected_file(self) -> Optional[str]:
+    def get_selected_file(self) -> str | None:
         """Get currently selected file."""
         return self._current_file
 

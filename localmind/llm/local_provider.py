@@ -4,15 +4,18 @@ LocalMind Local LLM Provider
 Local LLM implementation using llama-cpp-python for offline inference.
 """
 
-import os
-from pathlib import Path
-from typing import Optional, List, Dict, Any, AsyncGenerator
 import asyncio
+import os
+from collections.abc import AsyncGenerator
+from pathlib import Path
+from typing import Any
 
 from localmind.llm.base import (
-    BaseLLMProvider, LLMMessage, LLMResponse, LLMConfig, LLMRole,
+    BaseLLMProvider,
+    LLMConfig,
+    LLMMessage,
+    LLMResponse,
 )
-
 
 # Model configurations
 # Recommended models for call quality auditing (ordered by quality for JSON tasks)
@@ -83,7 +86,7 @@ class LocalProvider(BaseLLMProvider):
     def __init__(
         self,
         model: str = "phi-3.5-mini",
-        n_ctx: Optional[int] = None,
+        n_ctx: int | None = None,
         n_gpu_layers: int = -1,
         verbose: bool = False,
     ):
@@ -100,14 +103,14 @@ class LocalProvider(BaseLLMProvider):
         self._n_gpu_layers = n_gpu_layers
         self._verbose = verbose
         self._llm = None
-        self._model_path: Optional[Path] = None
+        self._model_path: Path | None = None
 
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
         return "local"
 
-    def _get_model_config(self) -> Dict[str, Any]:
+    def _get_model_config(self) -> dict[str, Any]:
         """Get configuration for the model."""
         if self._model in LOCAL_MODELS:
             return LOCAL_MODELS[self._model]
@@ -147,7 +150,7 @@ class LocalProvider(BaseLLMProvider):
 
     async def download_model(
         self,
-        progress_callback: Optional[callable] = None,
+        progress_callback: callable | None = None,
     ) -> Path:
         """Download the model from Hugging Face.
 
@@ -196,8 +199,7 @@ class LocalProvider(BaseLLMProvider):
             from llama_cpp import Llama
         except ImportError:
             raise ImportError(
-                "llama-cpp-python not installed. Install with: "
-                "pip install llama-cpp-python"
+                "llama-cpp-python not installed. Install with: " "pip install llama-cpp-python"
             )
 
         model_path = self._get_model_path()
@@ -237,8 +239,8 @@ class LocalProvider(BaseLLMProvider):
 
     async def generate(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> LLMResponse:
         """Generate a response using local LLM."""
         if not self._is_initialized:
@@ -296,8 +298,8 @@ class LocalProvider(BaseLLMProvider):
 
     async def generate_stream(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response using local LLM."""
         if not self._is_initialized:

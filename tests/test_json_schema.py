@@ -6,9 +6,10 @@ This shows how the schema guarantees valid JSON output from local LLMs.
 """
 
 import json
+
 from localmind.workers.audit_worker import (
-    create_audit_json_schema,
     DEFAULT_PARAMETERS,
+    create_audit_json_schema,
 )
 
 
@@ -49,9 +50,9 @@ def main():
     print("-" * 70)
     print(f"• Required parameters: {len(DEFAULT_PARAMETERS)}")
     print(f"• Parameter names: {', '.join(p['name'] for p in DEFAULT_PARAMETERS)}")
-    print(f"• Score validation: 0 to max_score for each parameter")
-    print(f"• Strengths/improvements: 2-4 items required")
-    print(f"• No extra fields allowed (strict validation)")
+    print("• Score validation: 0 to max_score for each parameter")
+    print("• Strengths/improvements: 2-4 items required")
+    print("• No extra fields allowed (strict validation)")
     print()
 
 

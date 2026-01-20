@@ -2,18 +2,18 @@
 Unit tests for LocalMind LLM module.
 """
 
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from localmind.config import LLMProviderType
 from localmind.llm.base import (
-    BaseLLMProvider,
+    LLMConfig,
     LLMMessage,
     LLMResponse,
-    LLMConfig,
     LLMRole,
 )
 from localmind.llm.factory import create_provider
-from localmind.config import LLMProviderType
 
 
 class TestLLMMessage:
@@ -215,7 +215,7 @@ class TestLocalProvider:
 
     def test_model_config(self):
         """Test getting model configuration."""
-        from localmind.llm.local_provider import LocalProvider, LOCAL_MODELS
+        from localmind.llm.local_provider import LOCAL_MODELS, LocalProvider
 
         provider = LocalProvider(model="phi-3.5-mini")
         config = provider._get_model_config()

@@ -5,14 +5,13 @@ Handles loading and switching between light/dark themes,
 including automatic system theme detection.
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import Optional, Callable, List
 
-from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QPalette, QColor
+from PySide6.QtGui import QColor, QPalette
+from PySide6.QtWidgets import QApplication
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +45,7 @@ class ThemeManager(QObject):
 
         # Try from package root
         import localmind
+
         pkg_dir = Path(localmind.__file__).parent / "resources" / "styles"
         if pkg_dir.exists():
             return pkg_dir
@@ -95,7 +95,7 @@ class ThemeManager(QObject):
             return
 
         try:
-            with open(stylesheet_path, "r", encoding="utf-8") as f:
+            with open(stylesheet_path, encoding="utf-8") as f:
                 stylesheet = f.read()
             self._app.setStyleSheet(stylesheet)
             logger.debug(f"Applied stylesheet: {stylesheet_path}")
@@ -136,10 +136,13 @@ class ThemeManager(QObject):
         # macOS
         if sys.platform == "darwin":
             try:
-                from subprocess import run, DEVNULL
+                from subprocess import DEVNULL, run
+
                 result = run(
                     ["defaults", "read", "-g", "AppleInterfaceStyle"],
-                    capture_output=True, text=True, stderr=DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    stderr=DEVNULL,
                 )
                 if "Dark" in result.stdout:
                     return "dark"
@@ -151,9 +154,10 @@ class ThemeManager(QObject):
         if sys.platform == "win32":
             try:
                 import winreg
+
                 key = winreg.OpenKey(
                     winreg.HKEY_CURRENT_USER,
-                    r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+                    r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
                 )
                 value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
                 winreg.CloseKey(key)
@@ -165,6 +169,7 @@ class ThemeManager(QObject):
         # Linux
         if sys.platform.startswith("linux"):
             import os
+
             gtk_theme = os.environ.get("GTK_THEME", "").lower()
             if "dark" in gtk_theme:
                 return "dark"
@@ -180,10 +185,10 @@ class ThemeManager(QObject):
 
 
 # Global instance
-_theme_manager: Optional[ThemeManager] = None
+_theme_manager: ThemeManager | None = None
 
 
-def get_theme_manager() -> Optional[ThemeManager]:
+def get_theme_manager() -> ThemeManager | None:
     """Get the global theme manager instance."""
     return _theme_manager
 

@@ -2,25 +2,22 @@
 Unit tests for LocalMind workers module.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-
-from localmind.workers.base import BaseWorker, WorkerState
+from localmind.workers.audit_worker import (
+    DEFAULT_PARAMETERS,
+    AuditResult,
+    ParameterScore,
+)
+from localmind.workers.base import WorkerState
+from localmind.workers.merge_worker import MergedSegment, MergeResult
+from localmind.workers.model_download_worker import (
+    AVAILABLE_MODELS,
+    ModelInfo,
+    ModelType,
+    SetupWizardData,
+)
 from localmind.workers.transcription_worker import (
     TranscriptionResult,
     TranscriptionSegment,
-)
-from localmind.workers.merge_worker import MergeResult, MergedSegment
-from localmind.workers.audit_worker import (
-    AuditResult,
-    ParameterScore,
-    DEFAULT_PARAMETERS,
-)
-from localmind.workers.model_download_worker import (
-    ModelInfo,
-    ModelType,
-    AVAILABLE_MODELS,
-    SetupWizardData,
 )
 
 
@@ -236,7 +233,9 @@ class TestDefaultParameters:
             total_weighted_max += param["max_score"] * param["weight"]
 
         # Verify total weighted max score is 100 (max_score * weight for all params)
-        assert total_weighted_max == 100, f"Total weighted max should be 100, got {total_weighted_max}"
+        assert (
+            total_weighted_max == 100
+        ), f"Total weighted max should be 100, got {total_weighted_max}"
 
 
 class TestModelInfo:

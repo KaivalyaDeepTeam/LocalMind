@@ -3,14 +3,13 @@ Unit tests for LocalMind reports module.
 """
 
 import pytest
-from pathlib import Path
 
 from localmind.reports.pdf_generator import (
     PDFReportGenerator,
     ReportOptions,
     ScoreChartGenerator,
-    get_score_class,
     get_bar_class,
+    get_score_class,
 )
 
 
@@ -106,7 +105,7 @@ class TestPDFReportGenerator:
         assert "matplotlib" in deps
 
         # All should be boolean
-        for key, value in deps.items():
+        for _key, value in deps.items():
             assert isinstance(value, bool)
 
     def test_can_generate(self):

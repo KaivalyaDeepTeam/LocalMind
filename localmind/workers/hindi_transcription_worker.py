@@ -17,15 +17,14 @@ Features:
 """
 
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Literal
-from dataclasses import dataclass, field
+from typing import Any, Literal
 
 from localmind.workers.base import BaseWorker
-from localmind.workers.transcription_worker import TranscriptionSegment, TranscriptionResult
+from localmind.workers.transcription_worker import TranscriptionResult, TranscriptionSegment
 
 # Available Hindi models
 HINDI_MODELS = {
-    "apex": "Oriserve/Whisper-Hindi2Hinglish-Apex",    # Default: 8x faster, better for noisy audio
+    "apex": "Oriserve/Whisper-Hindi2Hinglish-Apex",  # Default: 8x faster, better for noisy audio
     "prime": "Oriserve/Whisper-Hindi2Hinglish-Prime",  # Higher accuracy on clean audio
 }
 
@@ -39,7 +38,7 @@ class HindiSTTWorker(BaseWorker):
         use_gpu: bool = True,
         use_flash_attention: bool = False,
         model_variant: Literal["apex", "prime"] = "apex",
-        num_speakers: Optional[int] = 2,
+        num_speakers: int | None = 2,
         use_preprocessing: bool = True,
         parent=None,
     ):
@@ -91,11 +90,13 @@ class HindiSTTWorker(BaseWorker):
         segments = []
 
         if full_text:
-            segments.append(TranscriptionSegment(
-                start=0.0,
-                end=0.0,
-                text=full_text,
-            ))
+            segments.append(
+                TranscriptionSegment(
+                    start=0.0,
+                    end=0.0,
+                    text=full_text,
+                )
+            )
 
         transcription = TranscriptionResult(
             text=result["text"].strip(),
@@ -108,7 +109,6 @@ class HindiSTTWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the HindiSTT model with optimized parameters."""
-        import os
 
         try:
             import torch
@@ -138,10 +138,12 @@ class HindiSTTWorker(BaseWorker):
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
         target_device = "cpu" if self._device == "mps" else self._device
+
         def patched_load(*args, **kwargs):
-            if 'map_location' not in kwargs:
-                kwargs['map_location'] = torch.device(target_device)
+            if "map_location" not in kwargs:
+                kwargs["map_location"] = torch.device(target_device)
             return original_load(*args, **kwargs)
+
         torch.load = patched_load
 
         try:
@@ -160,10 +162,7 @@ class HindiSTTWorker(BaseWorker):
             # Download and load model
             self.report_progress(5, f"Downloading {self._model_id}...")
 
-            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                self._model_id,
-                **model_kwargs
-            )
+            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(self._model_id, **model_kwargs)
 
             self.report_progress(15, "Moving model to device...")
             self._model = self._model.to(self._device)
@@ -177,11 +176,11 @@ class HindiSTTWorker(BaseWorker):
 
         self.report_progress(25, "Model loaded successfully")
 
-    def _transcribe(self) -> Dict[str, Any]:
+    def _transcribe(self) -> dict[str, Any]:
         """Transcribe audio file with chunking to avoid timestamp issues."""
-        import tempfile
-        import soundfile as sf
+
         import numpy as np
+
         from localmind.audio.preprocessing import preprocess_audio_for_transcription
 
         # Load and preprocess audio
@@ -198,9 +197,11 @@ class HindiSTTWorker(BaseWorker):
             except Exception as e:
                 print(f"Warning: Audio preprocessing failed ({e}), using original audio")
                 import librosa
+
                 audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=True)
         else:
             import librosa
+
             audio, sr = librosa.load(str(self._audio_path), sr=16000, mono=True)
 
         # Chunk audio with 5-second overlap for better boundary handling
@@ -236,7 +237,7 @@ class HindiSTTWorker(BaseWorker):
             if len(chunk) < target_length:
                 # Pad with zeros to reach 30 seconds
                 padding = target_length - len(chunk)
-                chunk = np.pad(chunk, (0, padding), mode='constant', constant_values=0)
+                chunk = np.pad(chunk, (0, padding), mode="constant", constant_values=0)
 
             # Transcribe chunk with optimized parameters
             progress = 40 + int((i / num_chunks) * 50)
@@ -245,10 +246,7 @@ class HindiSTTWorker(BaseWorker):
             try:
                 # Process audio through processor
                 inputs = self._processor(
-                    chunk,
-                    sampling_rate=sr,
-                    return_tensors="pt",
-                    return_attention_mask=True
+                    chunk, sampling_rate=sr, return_tensors="pt", return_attention_mask=True
                 )
 
                 input_features = inputs.input_features.to(self._device, dtype=self._dtype)
@@ -258,20 +256,15 @@ class HindiSTTWorker(BaseWorker):
                     # Language and task (suppress warnings)
                     "language": "en",  # Hindi-English mixed
                     "task": "transcribe",
-
                     # Temperature fallback for difficult code-mixed speech
                     "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
-
                     # CRITICAL: Low threshold to capture quiet speakers
                     "no_speech_threshold": 0.3,  # Default 0.6 causes missing words!
-
                     # Relaxed hallucination detection for better recall
                     "compression_ratio_threshold": 2.4,  # Default 1.35 too aggressive
                     "logprob_threshold": -1.0,
-
                     # Don't condition on previous tokens for better independence
                     "condition_on_prev_tokens": False,
-
                     # Generation settings
                     "max_new_tokens": 444,  # Leave room for special tokens
                     "num_beams": 1,
@@ -280,26 +273,20 @@ class HindiSTTWorker(BaseWorker):
 
                 # Generate transcription
                 import torch
+
                 with torch.no_grad():
                     try:
-                        generated_ids = self._model.generate(
-                            input_features,
-                            **generate_kwargs
-                        )
+                        generated_ids = self._model.generate(input_features, **generate_kwargs)
                     except Exception:
                         # Fallback for older transformers
                         generated_ids = self._model.generate(
-                            input_features,
-                            max_new_tokens=444,
-                            num_beams=1,
-                            do_sample=False
+                            input_features, max_new_tokens=444, num_beams=1, do_sample=False
                         )
 
                 # Decode
-                text = self._processor.batch_decode(
-                    generated_ids,
-                    skip_special_tokens=True
-                )[0].strip()
+                text = self._processor.batch_decode(generated_ids, skip_special_tokens=True)[
+                    0
+                ].strip()
 
                 if text:
                     if i == 0:
@@ -324,7 +311,11 @@ class HindiSTTWorker(BaseWorker):
                                     all_text.append(remaining_text)
                                     # Update previous_text_end
                                     remaining_words = remaining_text.split()
-                                    previous_text_end = " ".join(remaining_words[-10:]) if len(remaining_words) > 10 else remaining_text
+                                    previous_text_end = (
+                                        " ".join(remaining_words[-10:])
+                                        if len(remaining_words) > 10
+                                        else remaining_text
+                                    )
                                 deduplicated = True
                                 break
 
@@ -428,27 +419,29 @@ class DualChannelHindiSTTWorker(BaseWorker):
         # Add agent transcription
         agent_text = agent_result.get("text", "").strip()
         if agent_text:
-            all_segments.append(TranscriptionSegment(
-                start=0.0,
-                end=0.0,
-                text=agent_text,
-                speaker="Agent",  # Assigned from channel 0
-            ))
+            all_segments.append(
+                TranscriptionSegment(
+                    start=0.0,
+                    end=0.0,
+                    text=agent_text,
+                    speaker="Agent",  # Assigned from channel 0
+                )
+            )
 
         # Add customer transcription
         customer_text = customer_result.get("text", "").strip()
         if customer_text:
-            all_segments.append(TranscriptionSegment(
-                start=0.0,
-                end=0.0,
-                text=customer_text,
-                speaker="Customer",  # Assigned from channel 1
-            ))
+            all_segments.append(
+                TranscriptionSegment(
+                    start=0.0,
+                    end=0.0,
+                    text=customer_text,
+                    speaker="Customer",  # Assigned from channel 1
+                )
+            )
 
         # Build full text - with speaker labels
-        full_text = "\n".join(
-            f"[{s.speaker}] {s.text}" for s in all_segments
-        )
+        full_text = "\n".join(f"[{s.speaker}] {s.text}" for s in all_segments)
 
         transcription = TranscriptionResult(
             text=full_text,
@@ -462,7 +455,6 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
     def _load_model(self) -> None:
         """Load the HindiSTT model with optimized parameters."""
-        import os
 
         try:
             import torch
@@ -492,10 +484,12 @@ class DualChannelHindiSTTWorker(BaseWorker):
         # Patch torch.load to handle CUDA-saved models on non-CUDA devices
         original_load = torch.load
         target_device = "cpu" if self._device == "mps" else self._device
+
         def patched_load(*args, **kwargs):
-            if 'map_location' not in kwargs:
-                kwargs['map_location'] = torch.device(target_device)
+            if "map_location" not in kwargs:
+                kwargs["map_location"] = torch.device(target_device)
             return original_load(*args, **kwargs)
+
         torch.load = patched_load
 
         try:
@@ -514,10 +508,7 @@ class DualChannelHindiSTTWorker(BaseWorker):
             # Download and load model
             self.report_progress(5, f"Downloading {self._model_id}...")
 
-            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                self._model_id,
-                **model_kwargs
-            )
+            self._model = AutoModelForSpeechSeq2Seq.from_pretrained(self._model_id, **model_kwargs)
 
             self.report_progress(10, "Moving model to device...")
             self._model = self._model.to(self._device)
@@ -533,8 +524,9 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
     def _load_channels(self):
         """Load and optionally preprocess separate audio channels with independent normalization."""
-        import librosa
         import tempfile
+
+        import librosa
         import soundfile as sf
 
         try:
@@ -546,7 +538,10 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
         # Apply preprocessing if enabled
         if self._use_preprocessing:
-            from localmind.audio.preprocessing import preprocess_dual_channel_audio, preprocess_audio_for_transcription
+            from localmind.audio.preprocessing import (
+                preprocess_audio_for_transcription,
+                preprocess_dual_channel_audio,
+            )
 
             if not is_stereo:
                 # Mono audio - use single preprocessing
@@ -561,10 +556,11 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
                     # Save to temp file
                     import numpy as np
+
                     temp_path = str(Path(tempfile.gettempdir()) / "preprocessed_mono.wav")
                     # Ensure audio is float32 and in valid range [-1, 1]
                     processed_audio = np.clip(processed_audio, -1.0, 1.0).astype(np.float32)
-                    sf.write(temp_path, processed_audio, sr, subtype='FLOAT')
+                    sf.write(temp_path, processed_audio, sr, subtype="FLOAT")
                     return temp_path, temp_path
                 except Exception as e:
                     print(f"Warning: Audio preprocessing failed ({e}), using original audio")
@@ -580,7 +576,9 @@ class DualChannelHindiSTTWorker(BaseWorker):
                     )
                     return agent_path, customer_path
                 except Exception as e:
-                    print(f"Warning: Dual-channel preprocessing failed ({e}), using basic channel split")
+                    print(
+                        f"Warning: Dual-channel preprocessing failed ({e}), using basic channel split"
+                    )
 
         # Fallback: No preprocessing or preprocessing failed
         if not is_stereo:
@@ -589,6 +587,7 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
         # Stereo - basic channel extraction without preprocessing
         import numpy as np
+
         agent_audio = audio[self._agent_channel]
         customer_audio = audio[self._customer_channel]
 
@@ -600,16 +599,16 @@ class DualChannelHindiSTTWorker(BaseWorker):
         agent_audio = np.clip(agent_audio, -1.0, 1.0).astype(np.float32)
         customer_audio = np.clip(customer_audio, -1.0, 1.0).astype(np.float32)
 
-        sf.write(agent_path, agent_audio, sr, subtype='FLOAT')
-        sf.write(customer_path, customer_audio, sr, subtype='FLOAT')
+        sf.write(agent_path, agent_audio, sr, subtype="FLOAT")
+        sf.write(customer_path, customer_audio, sr, subtype="FLOAT")
 
         return agent_path, customer_path
 
-    def _transcribe_audio(self, audio_path: str) -> Dict[str, Any]:
+    def _transcribe_audio(self, audio_path: str) -> dict[str, Any]:
         """Transcribe audio file with overlapping chunks."""
-        import soundfile as sf
+
         import numpy as np
-        import tempfile
+        import soundfile as sf
 
         # Load audio
         audio, sr = sf.read(audio_path)
@@ -641,16 +640,13 @@ class DualChannelHindiSTTWorker(BaseWorker):
             target_length = 30 * sr
             if len(chunk) < target_length:
                 padding = target_length - len(chunk)
-                chunk = np.pad(chunk, (0, padding), mode='constant', constant_values=0)
+                chunk = np.pad(chunk, (0, padding), mode="constant", constant_values=0)
 
             # Transcribe chunk with optimized parameters
             try:
                 # Process audio through processor
                 inputs = self._processor(
-                    chunk,
-                    sampling_rate=sr,
-                    return_tensors="pt",
-                    return_attention_mask=True
+                    chunk, sampling_rate=sr, return_tensors="pt", return_attention_mask=True
                 )
 
                 input_features = inputs.input_features.to(self._device, dtype=self._dtype)
@@ -671,25 +667,19 @@ class DualChannelHindiSTTWorker(BaseWorker):
 
                 # Generate transcription
                 import torch
+
                 with torch.no_grad():
                     try:
-                        generated_ids = self._model.generate(
-                            input_features,
-                            **generate_kwargs
-                        )
+                        generated_ids = self._model.generate(input_features, **generate_kwargs)
                     except Exception:
                         generated_ids = self._model.generate(
-                            input_features,
-                            max_new_tokens=444,
-                            num_beams=1,
-                            do_sample=False
+                            input_features, max_new_tokens=444, num_beams=1, do_sample=False
                         )
 
                 # Decode
-                text = self._processor.batch_decode(
-                    generated_ids,
-                    skip_special_tokens=True
-                )[0].strip()
+                text = self._processor.batch_decode(generated_ids, skip_special_tokens=True)[
+                    0
+                ].strip()
 
                 if text:
                     if i == 0:
@@ -708,7 +698,11 @@ class DualChannelHindiSTTWorker(BaseWorker):
                                 if remaining_text:
                                     all_text.append(remaining_text)
                                     remaining_words = remaining_text.split()
-                                    previous_text_end = " ".join(remaining_words[-10:]) if len(remaining_words) > 10 else remaining_text
+                                    previous_text_end = (
+                                        " ".join(remaining_words[-10:])
+                                        if len(remaining_words) > 10
+                                        else remaining_text
+                                    )
                                 deduplicated = True
                                 break
 

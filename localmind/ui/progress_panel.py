@@ -5,23 +5,35 @@ Displays processing progress for transcription, merge, and audit stages
 with smooth animations, ETA tracking, and expandable details.
 """
 
-from typing import Optional
-from enum import Enum, auto
 import time
+from enum import Enum, auto
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QProgressBar, QLabel, QFrame,
-    QTextEdit, QPushButton, QGraphicsOpacityEffect, QSizePolicy,
-)
 from PySide6.QtCore import (
-    Qt, Signal, Slot, QTimer, QPropertyAnimation, QEasingCurve,
-    Property, QSequentialAnimationGroup, QParallelAnimationGroup,
+    Property,
+    QEasingCurve,
+    QPropertyAnimation,
+    QSequentialAnimationGroup,
+    Qt,
+    QTimer,
+    Signal,
 )
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QFrame,
+    QGraphicsOpacityEffect,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class ProcessingStage(Enum):
     """Processing stages."""
+
     IDLE = auto()
     TRANSCRIBING = auto()
     MERGING = auto()
@@ -41,7 +53,7 @@ class AnimatedProgressBar(QProgressBar):
     - Status property for theming (success, error, active)
     """
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._animated_value = 0
         self._target_value = 0
@@ -99,11 +111,11 @@ class StageProgressWidget(QFrame):
 
     retry_requested = Signal()
 
-    def __init__(self, name: str, number: int, parent: Optional[QWidget] = None):
+    def __init__(self, name: str, number: int, parent: QWidget | None = None):
         super().__init__(parent)
         self._name = name
         self._number = number
-        self._start_time: Optional[float] = None
+        self._start_time: float | None = None
         self._current_progress: int = 0
         self._is_expanded = False
         self._logs: list[str] = []
@@ -408,10 +420,10 @@ class ProgressPanel(QWidget):
     processing_complete = Signal()
     processing_error = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._current_stage = ProcessingStage.IDLE
-        self._start_time: Optional[float] = None
+        self._start_time: float | None = None
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -495,7 +507,7 @@ class ProgressPanel(QWidget):
             stage_widget.set_active()
             self._set_stage(stage)
 
-    def _get_stage_widget(self, stage: ProcessingStage) -> Optional[StageProgressWidget]:
+    def _get_stage_widget(self, stage: ProcessingStage) -> StageProgressWidget | None:
         """Get the widget for a stage."""
         return {
             ProcessingStage.TRANSCRIBING: self._transcribe_stage,

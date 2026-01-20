@@ -5,23 +5,24 @@ Background worker for merging dual-channel transcripts using LLM.
 """
 
 import asyncio
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
+from typing import Any
 
 from localmind.workers.base import BaseWorker
-from localmind.workers.transcription_worker import TranscriptionResult, TranscriptionSegment
+from localmind.workers.transcription_worker import TranscriptionResult
 
 
 @dataclass
 class MergedSegment:
     """A segment in the merged transcript."""
+
     start: float
     end: float
     speaker: str
     text: str
-    original_segments: List[Dict[str, Any]] = field(default_factory=list)
+    original_segments: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "start": self.start,
@@ -34,12 +35,13 @@ class MergedSegment:
 @dataclass
 class MergeResult:
     """Result of transcript merging."""
-    merged_text: str
-    segments: List[MergedSegment] = field(default_factory=list)
-    summary: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    merged_text: str
+    segments: list[MergedSegment] = field(default_factory=list)
+    summary: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "merged_text": self.merged_text,
@@ -88,7 +90,7 @@ class MergeWorker(BaseWorker):
         """
         super().__init__(parent)
         self._transcription = transcription
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     def do_work(self) -> MergeResult:
         """Perform transcript merging."""
@@ -170,9 +172,7 @@ class MergeWorker(BaseWorker):
             for s in segments
         ]
 
-        merged_text = "\n".join(
-            f"[{s.speaker}] {s.text}" for s in merged_segments
-        )
+        merged_text = "\n".join(f"[{s.speaker}] {s.text}" for s in merged_segments)
 
         return MergeResult(
             merged_text=merged_text,
@@ -181,7 +181,7 @@ class MergeWorker(BaseWorker):
 
     async def _llm_merge(self) -> MergeResult:
         """Use LLM to merge overlapping segments."""
-        from localmind.llm import create_provider, LLMConfig
+        from localmind.llm import LLMConfig, create_provider
 
         self.report_progress(30, "Loading LLM provider...")
 

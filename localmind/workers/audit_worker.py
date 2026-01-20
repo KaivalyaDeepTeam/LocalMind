@@ -5,8 +5,8 @@ Background worker for quality auditing using LLM.
 """
 
 import asyncio
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
+from typing import Any
 
 from localmind.workers.base import BaseWorker
 from localmind.workers.merge_worker import MergeResult
@@ -15,13 +15,14 @@ from localmind.workers.merge_worker import MergeResult
 @dataclass
 class ParameterScore:
     """Score for a single parameter."""
+
     name: str
     score: float
     max_score: float
     weight: float = 1.0
     feedback: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -45,17 +46,18 @@ class ParameterScore:
 @dataclass
 class AuditResult:
     """Result of quality audit."""
+
     overall_score: float
     max_score: float
-    parameter_scores: List[ParameterScore] = field(default_factory=list)
-    strengths: List[str] = field(default_factory=list)
-    improvements: List[str] = field(default_factory=list)
+    parameter_scores: list[ParameterScore] = field(default_factory=list)
+    strengths: list[str] = field(default_factory=list)
+    improvements: list[str] = field(default_factory=list)
     summary: str = ""
     compliance_score: float = 0.0
     quality_score: float = 0.0
     transcript: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "overall_score": self.overall_score,
@@ -75,8 +77,10 @@ class AuditResult:
                 "strengths": self.strengths,
                 "improvements": self.improvements,
             },
-            "scores": {p.name: {"score": p.score, "max": p.max_score, "weight": p.weight}
-                      for p in self.parameter_scores},
+            "scores": {
+                p.name: {"score": p.score, "max": p.max_score, "weight": p.weight}
+                for p in self.parameter_scores
+            },
         }
 
     @property
@@ -125,10 +129,12 @@ class AuditResult:
 
         # Add compliance and quality subscores if available
         if self.compliance_score > 0 or self.quality_score > 0:
-            lines.extend([
-                "## 📊 Score Breakdown",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 📊 Score Breakdown",
+                    "",
+                ]
+            )
             if self.compliance_score > 0:
                 lines.append(f"- **Compliance Score:** {self.compliance_score:.1f}%")
             if self.quality_score > 0:
@@ -136,10 +142,12 @@ class AuditResult:
             lines.append("")
 
         # Parameter scores section
-        lines.extend([
-            "## 📋 Detailed Parameter Scores",
-            "",
-        ])
+        lines.extend(
+            [
+                "## 📋 Detailed Parameter Scores",
+                "",
+            ]
+        )
 
         for param in self.parameter_scores:
             param_percentage = (param.score / param.max_score * 100) if param.max_score > 0 else 0
@@ -157,53 +165,65 @@ class AuditResult:
             # Format parameter name (capitalize and replace underscores)
             param_name = param.name.replace("_", " ").title()
 
-            lines.extend([
-                f"### {param_emoji} {param_name}: {param.score:.1f}/{param.max_score:.0f} ({param_percentage:.0f}%)",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {param_emoji} {param_name}: {param.score:.1f}/{param.max_score:.0f} ({param_percentage:.0f}%)",
+                    "",
+                ]
+            )
 
             if param.feedback:
-                lines.extend([
-                    f"**Feedback:** {param.feedback}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"**Feedback:** {param.feedback}",
+                        "",
+                    ]
+                )
 
         # Strengths section
         if self.strengths:
-            lines.extend([
-                "## ✨ Key Strengths",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## ✨ Key Strengths",
+                    "",
+                ]
+            )
             for strength in self.strengths:
                 lines.append(f"- {strength}")
             lines.append("")
 
         # Improvements section
         if self.improvements:
-            lines.extend([
-                "## 🎯 Areas for Improvement",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 🎯 Areas for Improvement",
+                    "",
+                ]
+            )
             for improvement in self.improvements:
                 lines.append(f"- {improvement}")
             lines.append("")
 
         # Summary section
         if self.summary:
-            lines.extend([
-                "## 📝 Summary",
-                "",
-                self.summary,
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 📝 Summary",
+                    "",
+                    self.summary,
+                    "",
+                ]
+            )
 
         # Footer with encouragement
-        lines.extend([
-            "---",
-            "",
-            "_This report is generated to help you improve your communication skills._",
-            "_Focus on the areas for improvement while building on your strengths._",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "_This report is generated to help you improve your communication skills._",
+                "_Focus on the areas for improvement while building on your strengths._",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -212,22 +232,72 @@ class AuditResult:
 # Each parameter scored 0-10, weighted by importance
 # Total weighted max = 100 (when all weights sum to 10.0)
 DEFAULT_PARAMETERS = [
-    {"name": "greeting", "max_score": 10, "weight": 0.7, "description": "Proper greeting and introduction"},
-    {"name": "active_listening", "max_score": 10, "weight": 1.1, "description": "Demonstrates active listening skills"},
-    {"name": "problem_identification", "max_score": 10, "weight": 1.1, "description": "Correctly identifies customer issue"},
-    {"name": "solution_provided", "max_score": 10, "weight": 1.5, "description": "Provides appropriate solution"},
-    {"name": "product_knowledge", "max_score": 10, "weight": 1.1, "description": "Demonstrates product knowledge"},
-    {"name": "communication_clarity", "max_score": 10, "weight": 0.8, "description": "Clear and professional communication"},
-    {"name": "empathy", "max_score": 10, "weight": 0.8, "description": "Shows empathy and understanding"},
-    {"name": "call_control", "max_score": 10, "weight": 0.7, "description": "Maintains control of conversation"},
-    {"name": "closing", "max_score": 10, "weight": 0.7, "description": "Proper call closing and next steps"},
-    {"name": "compliance", "max_score": 10, "weight": 1.5, "description": "Follows required compliance scripts"},
+    {
+        "name": "greeting",
+        "max_score": 10,
+        "weight": 0.7,
+        "description": "Proper greeting and introduction",
+    },
+    {
+        "name": "active_listening",
+        "max_score": 10,
+        "weight": 1.1,
+        "description": "Demonstrates active listening skills",
+    },
+    {
+        "name": "problem_identification",
+        "max_score": 10,
+        "weight": 1.1,
+        "description": "Correctly identifies customer issue",
+    },
+    {
+        "name": "solution_provided",
+        "max_score": 10,
+        "weight": 1.5,
+        "description": "Provides appropriate solution",
+    },
+    {
+        "name": "product_knowledge",
+        "max_score": 10,
+        "weight": 1.1,
+        "description": "Demonstrates product knowledge",
+    },
+    {
+        "name": "communication_clarity",
+        "max_score": 10,
+        "weight": 0.8,
+        "description": "Clear and professional communication",
+    },
+    {
+        "name": "empathy",
+        "max_score": 10,
+        "weight": 0.8,
+        "description": "Shows empathy and understanding",
+    },
+    {
+        "name": "call_control",
+        "max_score": 10,
+        "weight": 0.7,
+        "description": "Maintains control of conversation",
+    },
+    {
+        "name": "closing",
+        "max_score": 10,
+        "weight": 0.7,
+        "description": "Proper call closing and next steps",
+    },
+    {
+        "name": "compliance",
+        "max_score": 10,
+        "weight": 1.5,
+        "description": "Follows required compliance scripts",
+    },
 ]
 # Total weights: 0.7+1.1+1.1+1.5+1.1+0.8+0.8+0.7+0.7+1.5 = 10.0
 # Total weighted max score: 10 * 10.0 = 100
 
 
-def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]:
+def create_audit_json_schema(parameters: list[dict[str, Any]]) -> dict[str, Any]:
     """Create JSON schema for audit results based on parameters.
 
     This schema is used for constrained generation to guarantee valid JSON output.
@@ -296,7 +366,7 @@ def create_audit_json_schema(parameters: List[Dict[str, Any]]) -> Dict[str, Any]
     return schema
 
 
-def create_single_shot_audit_prompt(parameters: List[Dict[str, Any]]) -> str:
+def create_single_shot_audit_prompt(parameters: list[dict[str, Any]]) -> str:
     """Create single-shot audit prompt for powerful API models (GPT-4, Claude, etc.).
 
     Args:
@@ -375,7 +445,9 @@ Write a detailed analysis covering what the agent did well and what needs improv
 Focus on observable behaviors, not assumptions. This analysis will be used to score the call accurately."""
 
 
-def create_audit_prompt(parameters: List[Dict[str, Any]], analysis: str, model_name: str = "phi-3.5-mini") -> str:
+def create_audit_prompt(
+    parameters: list[dict[str, Any]], analysis: str, model_name: str = "phi-3.5-mini"
+) -> str:
     """Create universal audit prompt that works with all local LLMs.
 
     Args:
@@ -399,15 +471,17 @@ def create_audit_prompt(parameters: List[Dict[str, Any]], analysis: str, model_n
         max_score = p.get("max_score", 10)
         # Good professional service = 70-85% of max (7-8.5 out of 10)
         example_score = round(max_score * 0.8, 1)  # 8 out of 10 as baseline
-        example_scores[p['name']] = {
+        example_scores[p["name"]] = {
             "score": example_score,
-            "feedback": f"Professional performance with minor areas for improvement"
+            "feedback": "Professional performance with minor areas for improvement",
         }
 
     # Format example scores as JSON string
     example_scores_json = []
     for name, data in example_scores.items():
-        example_scores_json.append(f'    "{name}": {{"score": {data["score"]}, "feedback": "{data["feedback"]}"}}')
+        example_scores_json.append(
+            f'    "{name}": {{"score": {data["score"]}, "feedback": "{data["feedback"]}"}}'
+        )
     example_scores_str = ",\n".join(example_scores_json)
 
     return f"""You are a call quality auditor. Based on the analysis below, score each parameter.
@@ -476,7 +550,7 @@ class AuditWorker(BaseWorker):
     def __init__(
         self,
         merge_result: MergeResult,
-        parameters: Optional[List[Dict[str, Any]]] = None,
+        parameters: list[dict[str, Any]] | None = None,
         parent=None,
     ):
         """Initialize audit worker.
@@ -489,7 +563,7 @@ class AuditWorker(BaseWorker):
         super().__init__(parent)
         self._merge_result = merge_result
         self._parameters = parameters or DEFAULT_PARAMETERS
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     def do_work(self) -> AuditResult:
         """Perform quality audit."""
@@ -520,7 +594,7 @@ class AuditWorker(BaseWorker):
 
         Uses Chain-of-Thought (CoT) for local models, single-shot for API models.
         """
-        from localmind.llm import create_provider, LLMConfig
+        from localmind.llm import create_provider
 
         self.report_progress(20, "Loading LLM provider...")
 
@@ -546,7 +620,7 @@ class AuditWorker(BaseWorker):
             self.report_progress(30, "Analyzing transcript...")
 
             # Get model name
-            model_name = getattr(provider, '_model', 'phi-3.5-mini')
+            model_name = getattr(provider, "_model", "phi-3.5-mini")
             transcript = self._merge_result.merged_text
 
             # Truncate long transcripts to fit context window
@@ -559,7 +633,7 @@ class AuditWorker(BaseWorker):
 
                 begin = transcript[:part_size]
                 middle_start = (len(transcript) - part_size) // 2
-                middle = transcript[middle_start:middle_start + part_size]
+                middle = transcript[middle_start : middle_start + part_size]
                 end = transcript[-part_size:]
 
                 transcript = (
@@ -625,13 +699,15 @@ class AuditWorker(BaseWorker):
                 max_score = param.get("max_score", 10)
                 weight = param.get("weight", 1.0)
 
-                parameter_scores.append(ParameterScore(
-                    name=name,
-                    score=float(score_data.get("score", 0)),
-                    max_score=float(max_score),
-                    weight=float(weight),
-                    feedback=score_data.get("feedback", ""),
-                ))
+                parameter_scores.append(
+                    ParameterScore(
+                        name=name,
+                        score=float(score_data.get("score", 0)),
+                        max_score=float(max_score),
+                        weight=float(weight),
+                        feedback=score_data.get("feedback", ""),
+                    )
+                )
 
             # Calculate overall scores using weighted system
             # Each score is multiplied by its weight, then summed
@@ -640,8 +716,15 @@ class AuditWorker(BaseWorker):
 
             # Calculate compliance and quality subscores
             compliance_params = ["greeting", "closing", "compliance"]
-            quality_params = ["active_listening", "problem_identification", "solution_provided",
-                            "product_knowledge", "communication_clarity", "empathy", "call_control"]
+            quality_params = [
+                "active_listening",
+                "problem_identification",
+                "solution_provided",
+                "product_knowledge",
+                "communication_clarity",
+                "empathy",
+                "call_control",
+            ]
 
             compliance_score = self._calculate_subscore(parameter_scores, compliance_params)
             quality_score = self._calculate_subscore(parameter_scores, quality_params)
@@ -669,7 +752,7 @@ class AuditWorker(BaseWorker):
             self.report_progress(30, "Analyzing transcript...")
 
             # Get model name
-            model_name = getattr(provider, '_model', 'gpt-4')
+            getattr(provider, "_model", "gpt-4")
             transcript = self._merge_result.merged_text
 
             # Truncate long transcripts to fit context window
@@ -681,7 +764,7 @@ class AuditWorker(BaseWorker):
 
                 begin = transcript[:part_size]
                 middle_start = (len(transcript) - part_size) // 2
-                middle = transcript[middle_start:middle_start + part_size]
+                middle = transcript[middle_start : middle_start + part_size]
                 end = transcript[-part_size:]
 
                 transcript = (
@@ -728,13 +811,15 @@ class AuditWorker(BaseWorker):
                 max_score = param.get("max_score", 10)
                 weight = param.get("weight", 1.0)
 
-                parameter_scores.append(ParameterScore(
-                    name=name,
-                    score=float(score_data.get("score", 0)),
-                    max_score=float(max_score),
-                    weight=float(weight),
-                    feedback=score_data.get("feedback", ""),
-                ))
+                parameter_scores.append(
+                    ParameterScore(
+                        name=name,
+                        score=float(score_data.get("score", 0)),
+                        max_score=float(max_score),
+                        weight=float(weight),
+                        feedback=score_data.get("feedback", ""),
+                    )
+                )
 
             # Calculate overall scores using weighted system
             total_score = sum(p.score * p.weight for p in parameter_scores)
@@ -742,8 +827,15 @@ class AuditWorker(BaseWorker):
 
             # Calculate compliance and quality subscores
             compliance_params = ["greeting", "closing", "compliance"]
-            quality_params = ["active_listening", "problem_identification", "solution_provided",
-                            "product_knowledge", "communication_clarity", "empathy", "call_control"]
+            quality_params = [
+                "active_listening",
+                "problem_identification",
+                "solution_provided",
+                "product_knowledge",
+                "communication_clarity",
+                "empathy",
+                "call_control",
+            ]
 
             compliance_score = self._calculate_subscore(parameter_scores, compliance_params)
             quality_score = self._calculate_subscore(parameter_scores, quality_params)
@@ -765,8 +857,8 @@ class AuditWorker(BaseWorker):
 
     def _calculate_subscore(
         self,
-        scores: List[ParameterScore],
-        param_names: List[str],
+        scores: list[ParameterScore],
+        param_names: list[str],
     ) -> float:
         """Calculate subscore for a group of parameters."""
         relevant = [s for s in scores if s.name in param_names]

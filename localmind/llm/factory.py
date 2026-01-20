@@ -4,19 +4,17 @@ LocalMind LLM Provider Factory
 Factory for creating LLM providers based on configuration.
 """
 
-from typing import Optional
-
-from localmind.config import get_settings, LLMProviderType
-from localmind.llm.base import BaseLLMProvider
-from localmind.llm.openai_provider import OpenAIProvider
+from localmind.config import LLMProviderType, get_settings
 from localmind.llm.anthropic_provider import AnthropicProvider
+from localmind.llm.base import BaseLLMProvider
 from localmind.llm.local_provider import LocalProvider
+from localmind.llm.openai_provider import OpenAIProvider
 
 
 def create_provider(
-    provider_type: Optional[LLMProviderType] = None,
-    model: Optional[str] = None,
-    api_key: Optional[str] = None,
+    provider_type: LLMProviderType | None = None,
+    model: str | None = None,
+    api_key: str | None = None,
 ) -> BaseLLMProvider:
     """Create an LLM provider based on configuration.
 
@@ -61,7 +59,7 @@ def get_default_provider() -> BaseLLMProvider:
 
 
 async def get_initialized_provider(
-    provider_type: Optional[LLMProviderType] = None,
+    provider_type: LLMProviderType | None = None,
 ) -> BaseLLMProvider:
     """Get an initialized LLM provider.
 

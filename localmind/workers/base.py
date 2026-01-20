@@ -4,14 +4,15 @@ LocalMind Base Worker
 Base class for background worker threads using Qt's QThread.
 """
 
-from typing import Optional, Any
 from enum import Enum, auto
+from typing import Any
 
-from PySide6.QtCore import QThread, Signal, QMutex, QWaitCondition
+from PySide6.QtCore import QMutex, QThread, QWaitCondition, Signal
 
 
 class WorkerState(Enum):
     """Worker state enumeration."""
+
     IDLE = auto()
     RUNNING = auto()
     PAUSED = auto()
@@ -51,7 +52,7 @@ class BaseWorker(QThread):
         self._should_stop = False
         self._is_paused = False
         self._result: Any = None
-        self._error_message: Optional[str] = None
+        self._error_message: str | None = None
 
     @property
     def state(self) -> WorkerState:
@@ -64,7 +65,7 @@ class BaseWorker(QThread):
         return self._result
 
     @property
-    def error_message(self) -> Optional[str]:
+    def error_message(self) -> str | None:
         """Get error message if any."""
         return self._error_message
 

@@ -4,10 +4,15 @@ LocalMind Anthropic Provider
 Anthropic API implementation of the LLM provider.
 """
 
-from typing import Optional, List, Dict, Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from localmind.llm.base import (
-    BaseLLMProvider, LLMMessage, LLMResponse, LLMConfig, LLMRole,
+    BaseLLMProvider,
+    LLMConfig,
+    LLMMessage,
+    LLMResponse,
+    LLMRole,
 )
 
 
@@ -17,8 +22,8 @@ class AnthropicProvider(BaseLLMProvider):
     def __init__(
         self,
         model: str = "claude-sonnet-4-20250514",
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ):
         """Initialize Anthropic provider.
 
@@ -49,7 +54,7 @@ class AnthropicProvider(BaseLLMProvider):
                 "Anthropic package not installed. Install with: pip install anthropic"
             )
 
-        kwargs: Dict[str, Any] = {}
+        kwargs: dict[str, Any] = {}
         if self._api_key:
             kwargs["api_key"] = self._api_key
         if self._base_url:
@@ -60,8 +65,8 @@ class AnthropicProvider(BaseLLMProvider):
 
     async def generate(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> LLMResponse:
         """Generate a response using Anthropic API."""
         if not self._is_initialized:
@@ -81,7 +86,7 @@ class AnthropicProvider(BaseLLMProvider):
                 conversation_messages.append(msg.to_dict())
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self._model,
             "messages": conversation_messages,
             "max_tokens": config.max_tokens,
@@ -117,8 +122,8 @@ class AnthropicProvider(BaseLLMProvider):
 
     async def generate_stream(
         self,
-        messages: List[LLMMessage],
-        config: Optional[LLMConfig] = None,
+        messages: list[LLMMessage],
+        config: LLMConfig | None = None,
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response using Anthropic API."""
         if not self._is_initialized:
@@ -138,7 +143,7 @@ class AnthropicProvider(BaseLLMProvider):
                 conversation_messages.append(msg.to_dict())
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self._model,
             "messages": conversation_messages,
             "max_tokens": config.max_tokens,

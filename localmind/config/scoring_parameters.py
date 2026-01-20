@@ -5,14 +5,15 @@ Manages scoring parameters with profiles for different use cases.
 """
 
 import json
-from pathlib import Path
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 
 class ParameterCategory(Enum):
     """Categories for scoring parameters."""
+
     COMPLIANCE = "compliance"
     QUALITY = "quality"
     COMMUNICATION = "communication"
@@ -22,6 +23,7 @@ class ParameterCategory(Enum):
 @dataclass
 class ScoringParameter:
     """A single scoring parameter."""
+
     name: str
     display_name: str
     description: str
@@ -30,7 +32,7 @@ class ScoringParameter:
     category: ParameterCategory = ParameterCategory.QUALITY
     enabled: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -43,7 +45,7 @@ class ScoringParameter:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ScoringParameter":
+    def from_dict(cls, data: dict[str, Any]) -> "ScoringParameter":
         """Create from dictionary."""
         category = data.get("category", "quality")
         if isinstance(category, str):
@@ -63,13 +65,14 @@ class ScoringParameter:
 @dataclass
 class ScoringProfile:
     """A complete scoring profile with multiple parameters."""
+
     name: str
     description: str = ""
-    parameters: List[ScoringParameter] = field(default_factory=list)
+    parameters: list[ScoringParameter] = field(default_factory=list)
     created_at: str = ""
     modified_at: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -80,11 +83,9 @@ class ScoringProfile:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ScoringProfile":
+    def from_dict(cls, data: dict[str, Any]) -> "ScoringProfile":
         """Create from dictionary."""
-        parameters = [
-            ScoringParameter.from_dict(p) for p in data.get("parameters", [])
-        ]
+        parameters = [ScoringParameter.from_dict(p) for p in data.get("parameters", [])]
         return cls(
             name=data["name"],
             description=data.get("description", ""),
@@ -93,7 +94,7 @@ class ScoringProfile:
             modified_at=data.get("modified_at", ""),
         )
 
-    def get_enabled_parameters(self) -> List[ScoringParameter]:
+    def get_enabled_parameters(self) -> list[ScoringParameter]:
         """Get only enabled parameters."""
         return [p for p in self.parameters if p.enabled]
 
@@ -212,6 +213,7 @@ DEFAULT_PARAMETERS = [
 def get_default_profile() -> ScoringProfile:
     """Get the default scoring profile."""
     from datetime import datetime
+
     now = datetime.now().isoformat()
 
     return ScoringProfile(
@@ -226,7 +228,7 @@ def get_default_profile() -> ScoringProfile:
 class ScoringProfileManager:
     """Manages scoring profiles with persistence."""
 
-    def __init__(self, profiles_dir: Optional[Path] = None):
+    def __init__(self, profiles_dir: Path | None = None):
         """Initialize profile manager.
 
         Args:
@@ -234,11 +236,12 @@ class ScoringProfileManager:
         """
         if profiles_dir is None:
             from localmind.config import get_settings_manager
+
             profiles_dir = get_settings_manager().config_dir / "profiles"
 
         self._profiles_dir = profiles_dir
         self._profiles_dir.mkdir(parents=True, exist_ok=True)
-        self._current_profile: Optional[ScoringProfile] = None
+        self._current_profile: ScoringProfile | None = None
 
         # Ensure default profile exists
         self._ensure_default_profile()
@@ -250,7 +253,7 @@ class ScoringProfileManager:
             profile = get_default_profile()
             self.save_profile(profile)
 
-    def list_profiles(self) -> List[str]:
+    def list_profiles(self) -> list[str]:
         """List all available profile names."""
         profiles = []
         for path in self._profiles_dir.glob("*.json"):
@@ -270,7 +273,7 @@ class ScoringProfileManager:
         if not path.exists():
             raise FileNotFoundError(f"Profile not found: {name}")
 
-        with open(path, "r") as f:
+        with open(path) as f:
             data = json.load(f)
 
         self._current_profile = ScoringProfile.from_dict(data)
@@ -283,6 +286,7 @@ class ScoringProfileManager:
             profile: Profile to save.
         """
         from datetime import datetime
+
         profile.modified_at = datetime.now().isoformat()
 
         path = self._profiles_dir / f"{profile.name.lower().replace(' ', '_')}.json"
@@ -317,6 +321,7 @@ class ScoringProfileManager:
         source = self.load_profile(source_name)
 
         from datetime import datetime
+
         now = datetime.now().isoformat()
 
         new_profile = ScoringProfile(
@@ -350,7 +355,7 @@ class ScoringProfileManager:
         Returns:
             Imported profile.
         """
-        with open(import_path, "r") as f:
+        with open(import_path) as f:
             data = json.load(f)
 
         profile = ScoringProfile.from_dict(data)
@@ -371,7 +376,7 @@ class ScoringProfileManager:
 
 
 # Global profile manager instance
-_profile_manager: Optional[ScoringProfileManager] = None
+_profile_manager: ScoringProfileManager | None = None
 
 
 def get_profile_manager() -> ScoringProfileManager:

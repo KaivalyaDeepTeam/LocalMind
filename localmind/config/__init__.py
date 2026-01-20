@@ -1,20 +1,20 @@
 """LocalMind configuration management."""
 
+from localmind.config.scoring_parameters import (
+    ParameterCategory,
+    ScoringParameter,
+    ScoringProfile,
+    ScoringProfileManager,
+    get_default_profile,
+    get_profile_manager,
+)
 from localmind.config.settings import (
+    LLMProviderType,
+    SettingsManager,
+    UserSettings,
     get_settings,
     get_settings_manager,
     save_settings,
-    UserSettings,
-    LLMProviderType,
-    SettingsManager,
-)
-from localmind.config.scoring_parameters import (
-    ScoringParameter,
-    ScoringProfile,
-    ParameterCategory,
-    ScoringProfileManager,
-    get_profile_manager,
-    get_default_profile,
 )
 
 __all__ = [

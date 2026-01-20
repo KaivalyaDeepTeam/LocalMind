@@ -4,15 +4,21 @@ LocalMind Mode Selector
 Modern toggle for Online/Offline mode with provider selection.
 """
 
-from typing import Optional
 from enum import Enum
 
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QComboBox, QStackedWidget, QLineEdit, QCheckBox,
-)
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class ProcessingMode(Enum):
@@ -25,7 +31,7 @@ class ModeToggle(QFrame):
 
     mode_changed = Signal(ProcessingMode)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._mode = ProcessingMode.OFFLINE  # Default to offline mode
         self._setup_ui()
@@ -96,7 +102,11 @@ class ProviderSelector(QFrame):
             "icon": "[O]",  # OpenAI
         },
         "Anthropic": {
-            "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
+            "models": [
+                "claude-3-5-sonnet-20241022",
+                "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229",
+            ],
             "default": "claude-3-5-sonnet-20241022",
             "icon": "[A]",  # Anthropic
         },
@@ -107,7 +117,7 @@ class ProviderSelector(QFrame):
         },
     }
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -267,7 +277,7 @@ class OfflineSettings(QFrame):
         ("large-v3", "Large V3 (2.9 GB) - Best"),
     ]
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 
@@ -349,14 +359,18 @@ class OfflineSettings(QFrame):
             self.tr("Apply Audio Preprocessing (Volume leveling, noise reduction)")
         )
         self._preprocessing_checkbox.setObjectName("preprocessingCheckbox")
-        self._preprocessing_checkbox.setChecked(True)  # Default ON - recommended for call recordings
+        self._preprocessing_checkbox.setChecked(
+            True
+        )  # Default ON - recommended for call recordings
         self._preprocessing_checkbox.setToolTip(
-            self.tr("Recommended for call recordings:\n"
-                    "• Volume leveling (even out quiet/loud speakers)\n"
-                    "• Noise reduction and filtering\n"
-                    "• Telephone bandwidth optimization\n"
-                    "• Dynamic range compression\n\n"
-                    "Improves transcription quality for all languages.")
+            self.tr(
+                "Recommended for call recordings:\n"
+                "• Volume leveling (even out quiet/loud speakers)\n"
+                "• Noise reduction and filtering\n"
+                "• Telephone bandwidth optimization\n"
+                "• Dynamic range compression\n\n"
+                "Improves transcription quality for all languages."
+            )
         )
         self._preprocessing_checkbox.stateChanged.connect(lambda: self.settings_changed.emit())
         layout.addWidget(self._preprocessing_checkbox)
@@ -417,7 +431,7 @@ class ModeSelector(QWidget):
     mode_changed = Signal(ProcessingMode)
     settings_changed = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
 

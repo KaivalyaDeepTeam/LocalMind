@@ -9,8 +9,8 @@ Run this script to test various edge cases:
 - Empty results
 """
 
-import sys
 import json
+import sys
 import tempfile
 from pathlib import Path
 
@@ -28,25 +28,17 @@ def test_json_export_basic():
         "duration": 123.45,
         "transcript": "Hello, how can I help you?",
         "segments": [
-            {
-                "start": 0.0,
-                "end": 5.2,
-                "speaker": "Agent",
-                "text": "Hello, how can I help you?"
-            }
+            {"start": 0.0, "end": 5.2, "speaker": "Agent", "text": "Hello, how can I help you?"}
         ],
-        "audit": {
-            "overall_score": 85.5,
-            "parameter_scores": []
-        }
+        "audit": {"overall_score": 85.5, "parameter_scores": []},
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(test_data, f, indent=2, ensure_ascii=False)
         filepath = f.name
 
     # Verify file exists and can be read
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         loaded_data = json.load(f)
 
     assert loaded_data == test_data, "Data mismatch!"
@@ -69,31 +61,26 @@ def test_json_export_unicode():
                 "start": 0.0,
                 "end": 3.5,
                 "speaker": "Agent",
-                "text": "नमस्ते, मैं आपकी कैसे मदद कर सकता हूं?"
+                "text": "नमस्ते, मैं आपकी कैसे मदद कर सकता हूं?",
             },
             {
                 "start": 3.5,
                 "end": 7.0,
                 "speaker": "Customer",
-                "text": "مرحبا، أحتاج مساعدة"  # Arabic
+                "text": "مرحبا، أحتاج مساعدة",  # Arabic
             },
-            {
-                "start": 7.0,
-                "end": 10.0,
-                "speaker": "Agent",
-                "text": "Привет, как дела?"  # Russian
-            }
-        ]
+            {"start": 7.0, "end": 10.0, "speaker": "Agent", "text": "Привет, как дела?"},  # Russian
+        ],
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(test_data, f, indent=2, ensure_ascii=False)
         filepath = f.name
 
     # Verify file exists and can be read with UTF-8
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
-        loaded_data = json.loads(content)
+        json.loads(content)
 
     # Check Hindi text preserved
     assert "नमस्ते" in content, "Hindi text not preserved!"
@@ -122,12 +109,12 @@ def test_txt_export_basic():
 
     expected_content = "".join(transcript_parts)
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
         f.write(expected_content)
         filepath = f.name
 
     # Verify file exists and can be read
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     assert "Transcript: test_call.wav" in content, "Header missing!"
@@ -153,12 +140,12 @@ def test_txt_export_unicode():
 
     expected_content = "".join(transcript_parts)
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
         f.write(expected_content)
         filepath = f.name
 
     # Verify file exists and can be read with UTF-8
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     # Check all Unicode scripts preserved
@@ -185,7 +172,7 @@ def test_auto_create_directory():
 
         # Write test data
         test_data = {"test": "data"}
-        with open(nested_path, 'w', encoding='utf-8') as f:
+        with open(nested_path, "w", encoding="utf-8") as f:
             json.dump(test_data, f)
 
         # Verify file exists
@@ -200,17 +187,17 @@ def test_auto_add_extension():
     with tempfile.TemporaryDirectory() as tmpdir:
         # Test .json auto-add
         json_path = str(Path(tmpdir) / "test_file")
-        if not json_path.endswith('.json'):
-            json_path += '.json'
-        assert json_path.endswith('.json'), "JSON extension not added!"
+        if not json_path.endswith(".json"):
+            json_path += ".json"
+        assert json_path.endswith(".json"), "JSON extension not added!"
 
         # Test .txt auto-add
         txt_path = str(Path(tmpdir) / "test_file")
-        if not txt_path.endswith('.txt'):
-            txt_path += '.txt'
-        assert txt_path.endswith('.txt'), "TXT extension not added!"
+        if not txt_path.endswith(".txt"):
+            txt_path += ".txt"
+        assert txt_path.endswith(".txt"), "TXT extension not added!"
 
-        print(f"   ✓ Auto-add extension works")
+        print("   ✓ Auto-add extension works")
         print(f"      JSON: {json_path}")
         print(f"      TXT:  {txt_path}")
 
@@ -245,7 +232,7 @@ def test_empty_segment_skip():
     assert result.count("[5.0s") == 0, "Empty segment not skipped!"
     assert result.count("[6.0s") == 0, "Whitespace segment not skipped!"
 
-    print(f"   ✓ Empty segment skip works (2 out of 4 segments kept)")
+    print("   ✓ Empty segment skip works (2 out of 4 segments kept)")
 
 
 def test_data_validation():
@@ -266,10 +253,7 @@ def test_data_validation():
         print("   ✓ Missing transcript data detected correctly")
 
     # Test valid data
-    results = {
-        "transcript": "Hello world",
-        "segments": [{"text": "Hello"}]
-    }
+    results = {"transcript": "Hello world", "segments": [{"text": "Hello"}]}
     has_segments = "segments" in results and results["segments"]
     has_transcript = "transcript" in results and results["transcript"]
 
@@ -313,6 +297,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

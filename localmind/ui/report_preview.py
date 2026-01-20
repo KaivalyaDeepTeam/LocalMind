@@ -4,17 +4,26 @@ LocalMind Report Preview Dialog
 Preview and export PDF audit reports.
 """
 
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any
 
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QLabel, QCheckBox, QGroupBox,
-    QDialogButtonBox, QFileDialog, QMessageBox,
-    QTextBrowser, QSplitter, QProgressBar,
-)
-from PySide6.QtCore import Qt, Signal, Slot, QThread
+from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSplitter,
+    QTextBrowser,
+    QVBoxLayout,
+    QWidget,
+)
 
 from localmind.reports.pdf_generator import PDFReportGenerator, ReportOptions
 
@@ -28,7 +37,7 @@ class PDFGenerationWorker(QThread):
     def __init__(
         self,
         generator: PDFReportGenerator,
-        audit_result: Dict[str, Any],
+        audit_result: dict[str, Any],
         output_path: str,
         file_name: str,
         parent=None,
@@ -60,16 +69,16 @@ class ReportPreviewDialog(QDialog):
 
     def __init__(
         self,
-        audit_result: Dict[str, Any],
+        audit_result: dict[str, Any],
         file_name: str = "audio_file",
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ):
         super().__init__(parent)
         self._audit_result = audit_result
         self._file_name = file_name
         self._options = ReportOptions()
-        self._generator: Optional[PDFReportGenerator] = None
-        self._worker: Optional[PDFGenerationWorker] = None
+        self._generator: PDFReportGenerator | None = None
+        self._worker: PDFGenerationWorker | None = None
 
         self._setup_ui()
         self._check_dependencies()
@@ -264,18 +273,17 @@ class ReportPreviewDialog(QDialog):
         """Export to PDF."""
         if not self._generator.can_generate():
             QMessageBox.warning(
-                self, "Cannot Export",
+                self,
+                "Cannot Export",
                 "PDF export requires Jinja2 and WeasyPrint.\n\n"
-                "Install with: pip install jinja2 weasyprint"
+                "Install with: pip install jinja2 weasyprint",
             )
             return
 
         # Get output path
         default_name = f"{Path(self._file_name).stem}_report.pdf"
         filepath, _ = QFileDialog.getSaveFileName(
-            self, "Export PDF Report",
-            str(Path.home() / default_name),
-            "PDF Files (*.pdf)"
+            self, "Export PDF Report", str(Path.home() / default_name), "PDF Files (*.pdf)"
         )
 
         if not filepath:
@@ -319,13 +327,15 @@ class ReportPreviewDialog(QDialog):
 
             # Ask to open
             result = QMessageBox.question(
-                self, "Export Complete",
+                self,
+                "Export Complete",
                 f"PDF exported successfully!\n\n{message}\n\nOpen the file?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if result == QMessageBox.StandardButton.Yes:
                 import subprocess
                 import sys
+
                 if sys.platform == "darwin":
                     subprocess.run(["open", message])
                 elif sys.platform == "win32":

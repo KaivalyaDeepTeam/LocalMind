@@ -6,9 +6,9 @@ Includes RTL (Right-to-Left) support for Arabic and other RTL languages.
 """
 
 from pathlib import Path
-from typing import Optional, Dict, Set
+from typing import Dict, Optional, Set
 
-from PySide6.QtCore import QTranslator, QLocale, QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, QLocale, Qt, QTranslator
 from PySide6.QtWidgets import QApplication
 
 
@@ -16,7 +16,7 @@ class TranslationManager:
     """Manages application translations using Qt's i18n system."""
 
     # Supported languages with native names
-    LANGUAGES: Dict[str, str] = {
+    LANGUAGES: dict[str, str] = {
         "en": "English",
         "ru": "Русский",
         "es": "Español",
@@ -25,10 +25,10 @@ class TranslationManager:
     }
 
     # Languages that require Right-to-Left layout
-    RTL_LANGUAGES: Set[str] = {"ar", "he", "fa", "ur"}
+    RTL_LANGUAGES: set[str] = {"ar", "he", "fa", "ur"}
 
     def __init__(self):
-        self._translator: Optional[QTranslator] = None
+        self._translator: QTranslator | None = None
         self._current_language: str = "en"
         self._translations_dir = Path(__file__).parent / "translations"
 
@@ -38,7 +38,7 @@ class TranslationManager:
         return self._current_language
 
     @classmethod
-    def get_available_languages(cls) -> Dict[str, str]:
+    def get_available_languages(cls) -> dict[str, str]:
         """Get dictionary of available languages {code: native_name}."""
         return cls.LANGUAGES.copy()
 
@@ -138,7 +138,7 @@ class TranslationManager:
 
 
 # Global translation manager instance
-_translation_manager: Optional[TranslationManager] = None
+_translation_manager: TranslationManager | None = None
 
 
 def get_translation_manager() -> TranslationManager:

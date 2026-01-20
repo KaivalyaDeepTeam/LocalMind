@@ -14,6 +14,7 @@ from pathlib import Path
 # Add localmind to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+
 def test_model_download(model_id: str, variant_name: str):
     """Test downloading and loading a model."""
     print(f"\n{'='*70}")
@@ -28,18 +29,18 @@ def test_model_download(model_id: str, variant_name: str):
         if torch.cuda.is_available():
             device = "cuda:0"
             torch_dtype = torch.float16
-            print(f"✓ Using CUDA GPU")
+            print("✓ Using CUDA GPU")
         elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
             device = "mps"
             torch_dtype = torch.float16
-            print(f"✓ Using Apple Silicon GPU (MPS)")
+            print("✓ Using Apple Silicon GPU (MPS)")
         else:
             device = "cpu"
             torch_dtype = torch.float32
-            print(f"✓ Using CPU")
+            print("✓ Using CPU")
 
-        print(f"\n1. Downloading model from Hugging Face...")
-        print(f"   This may take a few minutes on first run...")
+        print("\n1. Downloading model from Hugging Face...")
+        print("   This may take a few minutes on first run...")
 
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
             model_id,
@@ -47,22 +48,22 @@ def test_model_download(model_id: str, variant_name: str):
             low_cpu_mem_usage=True,
             use_safetensors=True,
         )
-        print(f"   ✓ Model downloaded and loaded")
+        print("   ✓ Model downloaded and loaded")
 
         print(f"\n2. Moving model to {device}...")
         model.to(device)
-        print(f"   ✓ Model moved to device")
+        print("   ✓ Model moved to device")
 
-        print(f"\n3. Loading processor...")
+        print("\n3. Loading processor...")
         processor = AutoProcessor.from_pretrained(model_id)
-        print(f"   ✓ Processor loaded")
+        print("   ✓ Processor loaded")
 
-        print(f"\n4. Verifying model configuration...")
+        print("\n4. Verifying model configuration...")
         config = model.config
         print(f"   - Model type: {config.model_type}")
         print(f"   - Vocab size: {config.vocab_size}")
         print(f"   - Max length: {config.max_length}")
-        print(f"   ✓ Model configuration verified")
+        print("   ✓ Model configuration verified")
 
         # Clean up
         del model
@@ -75,20 +76,21 @@ def test_model_download(model_id: str, variant_name: str):
 
     except ImportError as e:
         print(f"\n❌ Missing dependencies: {e}")
-        print(f"   Install with: pip install transformers torch")
+        print("   Install with: pip install transformers torch")
         return False
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def main():
     """Test both Hindi models."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Hindi Model Download & Verification Test")
-    print("="*70)
+    print("=" * 70)
 
     models_to_test = [
         ("Oriserve/Whisper-Hindi2Hinglish-Apex", "Apex (Fast, Noisy Audio)"),
@@ -102,9 +104,9 @@ def main():
         results.append((variant_name, success))
 
     # Summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Test Summary")
-    print("="*70)
+    print("=" * 70)
 
     for variant_name, success in results:
         status = "✅ PASSED" if success else "❌ FAILED"

@@ -1,11 +1,11 @@
 """LocalMind utilities."""
 
 from .error_handler import (
+    ErrorContext,
     ErrorHandler,
     ErrorInfo,
-    ErrorSeverity,
     ErrorMessages,
-    ErrorContext,
+    ErrorSeverity,
     get_error_handler,
     safe_call,
 )

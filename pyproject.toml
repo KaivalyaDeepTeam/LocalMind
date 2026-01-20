@@ -135,8 +135,13 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "E722",  # bare except (used intentionally for robust error handling in UI)
     "B008",  # do not perform function calls in argument defaults
+    "B904",  # raise from within except (too strict for our use case)
     "C901",  # too complex
+    "F401",  # unused imports (many are intentional for try/except availability checks)
+    "UP035", # deprecated typing imports (Dict, List, etc.) - gradual migration
+    "UP006", # use builtin types instead of typing module - gradual migration
 ]
 
 [tool.pytest.ini_options]

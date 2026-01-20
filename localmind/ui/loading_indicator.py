@@ -4,22 +4,25 @@ LocalMind Loading Indicator
 Animated loading spinner for use during operations.
 """
 
-from typing import Optional
-
-from PySide6.QtWidgets import (
-    QWidget, QLabel, QHBoxLayout, QVBoxLayout, QFrame,
-    QPushButton, QSizePolicy,
-)
 from PySide6.QtCore import (
-    Qt, QTimer, QPropertyAnimation, QEasingCurve, Property, Signal,
+    Qt,
+    QTimer,
 )
-from PySide6.QtGui import QPainter, QColor, QPen, QFont
+from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class SpinnerWidget(QWidget):
     """Animated spinner widget."""
 
-    def __init__(self, size: int = 20, parent: Optional[QWidget] = None):
+    def __init__(self, size: int = 20, parent: QWidget | None = None):
         super().__init__(parent)
         self._size = size
         self._angle = 0
@@ -56,8 +59,8 @@ class SpinnerWidget(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         # Calculate center and radius
-        center = self.rect().center()
-        radius = (self._size - 4) / 2
+        self.rect().center()
+        (self._size - 4) / 2
 
         # Draw arc segments with varying opacity
         pen = QPen(self._color)
@@ -84,7 +87,7 @@ class SpinnerWidget(QWidget):
 class LoadingButton(QPushButton):
     """Button with built-in loading state."""
 
-    def __init__(self, text: str, parent: Optional[QWidget] = None):
+    def __init__(self, text: str, parent: QWidget | None = None):
         super().__init__(text, parent)
         self._original_text = text
         self._loading = False
@@ -93,7 +96,7 @@ class LoadingButton(QPushButton):
         self._spinner = SpinnerWidget(16, self)
         self._spinner.hide()
 
-    def set_loading(self, loading: bool, text: Optional[str] = None) -> None:
+    def set_loading(self, loading: bool, text: str | None = None) -> None:
         """Set the loading state."""
         self._loading = loading
 
@@ -131,7 +134,7 @@ class LoadingButton(QPushButton):
 class LoadingOverlay(QFrame):
     """Loading overlay with spinner and message."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
         self.hide()
@@ -180,7 +183,7 @@ class LoadingOverlay(QFrame):
 class InlineLoadingIndicator(QWidget):
     """Inline loading indicator with text."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._setup_ui()
         self.hide()

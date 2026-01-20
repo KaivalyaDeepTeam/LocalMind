@@ -5,21 +5,21 @@ Centralized error handling for consistent user feedback and logging.
 """
 
 import logging
-import sys
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Callable, Any
+from typing import Any, Optional
 
-from PySide6.QtWidgets import QMessageBox, QWidget
 from PySide6.QtCore import QObject, Signal
-
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):
     """Error severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -29,11 +29,12 @@ class ErrorSeverity(Enum):
 @dataclass
 class ErrorInfo:
     """Container for error information."""
+
     title: str
     message: str
     severity: ErrorSeverity
-    details: Optional[str] = None
-    exception: Optional[Exception] = None
+    details: str | None = None
+    exception: Exception | None = None
 
 
 class ErrorHandler(QObject):
@@ -55,7 +56,7 @@ class ErrorHandler(QObject):
 
         super().__init__()
         self._initialized = True
-        self._parent_widget: Optional[QWidget] = None
+        self._parent_widget: QWidget | None = None
         self._setup_logging()
 
     def _setup_logging(self):
@@ -73,7 +74,7 @@ class ErrorHandler(QObject):
         self,
         error: Exception,
         title: str = "Error",
-        message: Optional[str] = None,
+        message: str | None = None,
         severity: ErrorSeverity = ErrorSeverity.ERROR,
         show_dialog: bool = True,
     ) -> ErrorInfo:
@@ -180,7 +181,7 @@ def safe_call(
     func: Callable,
     *args,
     error_title: str = "Error",
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
     show_dialog: bool = True,
     default_return: Any = None,
     **kwargs,
@@ -218,7 +219,7 @@ class ErrorContext:
     def __init__(
         self,
         title: str = "Error",
-        message: Optional[str] = None,
+        message: str | None = None,
         show_dialog: bool = True,
         severity: ErrorSeverity = ErrorSeverity.ERROR,
         reraise: bool = False,
@@ -228,7 +229,7 @@ class ErrorContext:
         self.show_dialog = show_dialog
         self.severity = severity
         self.reraise = reraise
-        self.error_info: Optional[ErrorInfo] = None
+        self.error_info: ErrorInfo | None = None
 
     def __enter__(self):
         return self

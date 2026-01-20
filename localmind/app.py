@@ -5,16 +5,15 @@ This is the main entry point for the LocalMind application.
 """
 
 import sys
-from pathlib import Path
 
+from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt, QCoreApplication
 
 from localmind import __app_name__, __version__
-from localmind.main_window import MainWindow
-from localmind.config.settings import get_settings_manager, get_settings
-from localmind.ui.theme_manager import init_theme_manager
+from localmind.config.settings import get_settings, get_settings_manager
 from localmind.i18n import init_translations
+from localmind.main_window import MainWindow
+from localmind.ui.theme_manager import init_theme_manager
 
 
 def setup_application() -> QApplication:
@@ -63,8 +62,7 @@ def main() -> int:
         screen = app.primaryScreen().geometry()
         window.resize(1200, 800)
         window.move(
-            (screen.width() - window.width()) // 2,
-            (screen.height() - window.height()) // 2
+            (screen.width() - window.width()) // 2, (screen.height() - window.height()) // 2
         )
 
     window.show()
