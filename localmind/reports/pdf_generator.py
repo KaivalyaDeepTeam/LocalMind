@@ -97,6 +97,30 @@ def get_rating_text(percentage: float) -> str:
         return "Needs Improvement"
 
 
+def get_score_class(percentage: float) -> str:
+    """Get CSS class name based on score percentage."""
+    if percentage >= 80:
+        return "score-excellent"
+    elif percentage >= 60:
+        return "score-good"
+    elif percentage >= 40:
+        return "score-average"
+    else:
+        return "score-poor"
+
+
+def get_bar_class(percentage: float) -> str:
+    """Get CSS class name for progress bar based on percentage."""
+    if percentage >= 80:
+        return "bar-excellent"
+    elif percentage >= 60:
+        return "bar-good"
+    elif percentage >= 40:
+        return "bar-average"
+    else:
+        return "bar-poor"
+
+
 @dataclass
 class ReportOptions:
     """Options for PDF report generation."""
