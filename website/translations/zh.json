@@ -298,7 +298,7 @@
   },
   "download_details": {
     "macos_desc": "macOS 12及以上 (Intel和Apple Silicon)",
-    "macos_size": "约300 MB (+ 首次运行时下载1.5 GB模型)",
+    "macos_size": "约800 MB (+ 首次运行时下载1.5 GB模型)",
     "windows_desc": "Windows 10及以上 (64位)",
     "linux_desc": "Ubuntu 22.04及以上 / AppImage",
     "system_req_heading": "系统要求",

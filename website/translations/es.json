@@ -298,7 +298,7 @@
   },
   "download_details": {
     "macos_desc": "macOS 12+ (Intel y Apple Silicon)",
-    "macos_size": "~300 MB (+ modelo de 1.5 GB en primera ejecución)",
+    "macos_size": "~800 MB (+ modelo de 1.5 GB en primera ejecución)",
     "windows_desc": "Windows 10+ (64 bits)",
     "linux_desc": "Ubuntu 22.04+ / AppImage",
     "system_req_heading": "Requisitos del Sistema",
