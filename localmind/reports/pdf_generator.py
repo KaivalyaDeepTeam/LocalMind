@@ -327,7 +327,7 @@ class PDFReportGenerator:
         self._options = options or ReportOptions()
         self._styles = self._create_styles() if HAS_REPORTLAB else {}
 
-    def _create_styles(self) -> dict[str, ParagraphStyle]:
+    def _create_styles(self) -> dict[str, Any]:
         """Create custom paragraph styles."""
         if not HAS_REPORTLAB:
             return {}
