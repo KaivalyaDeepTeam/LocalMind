@@ -62,11 +62,17 @@ jobs:
           sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libcairo2 xvfb libegl1 libxkbcommon0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
           # Install secret service for keyring
           sudo apt-get install -y gnome-keyring dbus-x11
+          # Install ffmpeg for whisper
+          sudo apt-get install -y ffmpeg
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake
+          brew install cmake ffmpeg
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y
 
       - name: Install dependencies
         run: |
@@ -121,11 +127,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libcairo2 xvfb libegl1 libxkbcommon0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
           sudo apt-get install -y gnome-keyring dbus-x11
+          sudo apt-get install -y ffmpeg
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake
+          brew install cmake ffmpeg
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y
 
       - name: Install dependencies
         run: |
