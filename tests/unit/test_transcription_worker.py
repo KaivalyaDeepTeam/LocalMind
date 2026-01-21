@@ -549,7 +549,7 @@ class TestTranscriptionWorkerTranscribe:
 
         audio = np.zeros(16000 * 10, dtype=np.float32)
 
-        result = worker._transcribe(audio, 16000)
+        worker._transcribe(audio, 16000)  # Result not needed, checking call_args
 
         # Verify language was passed to transcribe
         call_args = mock_model.transcribe.call_args
@@ -728,7 +728,7 @@ class TestDualChannelWorkerTranscription:
         with patch.dict("sys.modules", {"whisper": mock_whisper}):
             with patch("whisper.pad_or_trim", mock_whisper.pad_or_trim):
                 audio = np.zeros(16000 * 10, dtype=np.float32)
-                result = worker._transcribe_channel(audio, "Agent")
+                worker._transcribe_channel(audio, "Agent")  # Result not needed
 
         # Verify language was passed
         call_args = mock_model.transcribe.call_args

@@ -8,8 +8,6 @@ import logging
 import os
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
@@ -24,6 +22,8 @@ from PySide6.QtWidgets import (
 )
 
 from localmind.config import get_settings, save_settings
+
+logger = logging.getLogger(__name__)
 
 
 def get_file_size_str(filepath: str) -> str:

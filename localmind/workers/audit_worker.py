@@ -9,10 +9,10 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-logger = logging.getLogger(__name__)
-
 from localmind.workers.base import BaseWorker
 from localmind.workers.merge_worker import MergeResult
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

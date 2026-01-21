@@ -264,7 +264,7 @@ class TestAnthropicProviderErrors:
             LLMMessage(role=LLMRole.USER, content="Hello"),
         ]
 
-        result = await anthropic_provider.generate(messages)
+        _ = await anthropic_provider.generate(messages)
 
         # Verify system message was passed correctly
         call_kwargs = mock_client.messages.create.call_args.kwargs

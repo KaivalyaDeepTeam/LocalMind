@@ -271,7 +271,7 @@ class TestExportIntegration:
         # Verify file
         assert export_path.exists()
 
-        with open(export_path, "r", encoding="utf-8") as f:
+        with open(export_path, encoding="utf-8") as f:
             loaded = json.load(f)
 
         assert loaded["overall_score"] == 77.5
@@ -321,7 +321,7 @@ class TestExportIntegration:
             json.dump(result_dict, f, indent=2, ensure_ascii=False)
 
         # Verify Unicode is preserved
-        with open(export_path, "r", encoding="utf-8") as f:
+        with open(export_path, encoding="utf-8") as f:
             content = f.read()
 
         assert "नमस्ते" in content  # Hindi

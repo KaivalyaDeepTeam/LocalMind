@@ -501,5 +501,5 @@ class TestEdgeCases:
         audio = np.array([0.5, np.nan, 0.5], dtype=np.float32)
 
         # This might produce NaN - test for awareness
-        result = rms_normalize(audio)
+        _ = rms_normalize(audio)  # noqa: F841 - test runs without crash
         # Implementation should ideally handle this

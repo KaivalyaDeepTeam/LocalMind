@@ -552,7 +552,7 @@ class TestHindiSTTWorkerTranscribe:
         mock_processor.return_value = MagicMock(
             input_features=MagicMock(to=MagicMock(return_value=MagicMock()))
         )
-        mock_processor.batch_decode.return_value = [f"Chunk text"]
+        mock_processor.batch_decode.return_value = ["Chunk text"]
 
         worker._model = mock_model
         worker._processor = mock_processor
@@ -569,7 +569,7 @@ class TestHindiSTTWorkerTranscribe:
 
         with patch("librosa.load", mock_librosa.load):
             with patch("torch.no_grad", mock_torch.no_grad):
-                result = worker._transcribe()
+                worker._transcribe()  # Result not needed, checking call_count
 
         # Should have processed multiple chunks
         assert call_count[0] > 1
