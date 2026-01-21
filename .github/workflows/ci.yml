@@ -135,10 +135,10 @@ jobs:
       - name: Verify all imports work
         run: |
           python -c "from localmind.main_window import MainWindow; print('MainWindow: OK')"
-          python -c "from localmind.config import Settings; print('Settings: OK')"
+          python -c "from localmind.config import get_settings, UserSettings; print('Settings: OK')"
           python -c "from localmind.ui.theme_manager import ThemeManager; print('ThemeManager: OK')"
           python -c "from localmind.workers.transcription_worker import TranscriptionWorker; print('TranscriptionWorker: OK')"
-          python -c "from localmind.llm.factory import create_llm_provider; print('LLM Factory: OK')"
+          python -c "from localmind.llm.factory import create_provider; print('LLM Factory: OK')"
           python -c "import keyring; print(f'Keyring backend: {keyring.get_keyring()}')"
 
       - name: Run application smoke test
