@@ -41,7 +41,7 @@ class ThemeManager(QObject):
         import sys
 
         # Check if running as PyInstaller bundle
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             # Running in PyInstaller bundle
             bundle_dir = Path(sys._MEIPASS) / "localmind" / "resources" / "styles"
             if bundle_dir.exists():
