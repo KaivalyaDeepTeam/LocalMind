@@ -288,7 +288,7 @@ class TestExportIntegration:
 
         assert export_path.exists()
 
-        content = export_path.read_text()
+        content = export_path.read_text(encoding="utf-8")
         assert "Call Quality Audit Report" in content
         assert "77.5" in content
         assert "Professional tone" in content

@@ -247,6 +247,7 @@ class TestKeyringStorage:
     def test_settings_keyring_functions(self):
         """Test LocalMind's keyring wrapper functions."""
         import keyring
+
         from localmind.config import get_api_key, set_api_key
 
         # Skip if no real keyring backend available
