@@ -1,11 +1,17 @@
 # LocalMind Roadmap
 
+> **Note:** This roadmap outlines proposed improvements and is subject to change based on community feedback and priorities.
+
 ## Current Release: v1.2.1
 
 **Status:** Stable
+**Release Date:** January 19, 2026
+
+**Highlights:**
 - Cross-platform support (Windows, macOS, Linux)
-- Full CI/CD pipeline with 818 tests
-- Security hardening complete (keyring, input validation, no shell injection)
+- Full CI/CD pipeline with 818 tests across 3 OS and 3 Python versions
+- Security hardening (keyring API storage, input validation)
+- PDF export with quality scoring
 
 ---
 
@@ -105,6 +111,7 @@
 - [ ] Video tutorials for common workflows
 
 ### Infrastructure
+- [ ] Sync pyproject.toml version with GitHub releases
 - [ ] Automated release notes generation
 - [ ] Nightly builds for testing
 - [ ] Performance benchmarking in CI
