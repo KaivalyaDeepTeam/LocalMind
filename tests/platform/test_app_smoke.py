@@ -286,10 +286,10 @@ class TestPlatformSpecificStartup:
     @pytest.mark.skipif(sys.platform != "win32", reason="Windows only")
     def test_windows_specific_setup(self, qapp):
         """Test Windows-specific application setup."""
+        import os
+
         # Windows should have os.startfile available
-        assert hasattr(
-            __builtins__["os"] if isinstance(__builtins__, dict) else __builtins__, "startfile"
-        ) or hasattr(__import__("os"), "startfile")
+        assert hasattr(os, "startfile")
 
     @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux only")
     def test_linux_specific_setup(self, qapp):
