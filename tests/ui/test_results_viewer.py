@@ -438,8 +438,9 @@ class TestJsonSyntaxHighlighter:
 
     def test_json_highlighter_creates(self, qapp):
         """Test JsonSyntaxHighlighter can be created."""
-        from localmind.ui.results_viewer import JsonSyntaxHighlighter
         from PySide6.QtGui import QTextDocument
+
+        from localmind.ui.results_viewer import JsonSyntaxHighlighter
 
         doc = QTextDocument()
         highlighter = JsonSyntaxHighlighter(doc)
@@ -447,8 +448,9 @@ class TestJsonSyntaxHighlighter:
 
     def test_json_highlighter_has_patterns(self, qapp):
         """Test JsonSyntaxHighlighter has patterns defined."""
-        from localmind.ui.results_viewer import JsonSyntaxHighlighter
         from PySide6.QtGui import QTextDocument
+
+        from localmind.ui.results_viewer import JsonSyntaxHighlighter
 
         doc = QTextDocument()
         highlighter = JsonSyntaxHighlighter(doc)
@@ -456,8 +458,9 @@ class TestJsonSyntaxHighlighter:
 
     def test_json_highlighter_key_format(self, qapp):
         """Test JSON key format is purple and bold."""
-        from localmind.ui.results_viewer import JsonSyntaxHighlighter
         from PySide6.QtGui import QColor, QFont, QTextDocument
+
+        from localmind.ui.results_viewer import JsonSyntaxHighlighter
 
         doc = QTextDocument()
         highlighter = JsonSyntaxHighlighter(doc)
@@ -490,7 +493,9 @@ class TestResultsViewer:
         viewer = ResultsViewer()
         # When widget isn't shown, check visibility flag via property
         # _update_visibility(has_results=False) sets _empty_state visible and _tabs hidden
-        assert viewer._empty_state.isVisibleTo(viewer) is True or not viewer._tabs.isVisibleTo(viewer)
+        assert viewer._empty_state.isVisibleTo(viewer) is True or not viewer._tabs.isVisibleTo(
+            viewer
+        )
 
     def test_results_viewer_tabs_hidden_initially(self, qapp):
         """Test tabs visibility is set correctly initially."""

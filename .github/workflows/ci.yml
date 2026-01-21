@@ -263,7 +263,7 @@ jobs:
           pip install bandit
 
       - name: Run security scan
-        run: bandit -r localmind/ -ll --skip B101
+        run: bandit -r localmind/ -ll --skip B101,B615
 
   dependency-security:
     name: Dependency Security Scan

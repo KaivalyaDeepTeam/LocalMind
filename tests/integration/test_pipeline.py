@@ -239,7 +239,12 @@ class TestConfigIntegration:
 
     def test_settings_persistence(self, temp_dir, monkeypatch):
         """Test settings are persisted correctly."""
-        from localmind.config import SettingsManager, UserSettings, get_openai_api_key, set_openai_api_key
+        from localmind.config import (
+            SettingsManager,
+            UserSettings,
+            get_openai_api_key,
+            set_openai_api_key,
+        )
 
         # Mock the config directory to use temp_dir
         def mock_get_config_dir():
@@ -263,6 +268,7 @@ class TestConfigIntegration:
             mock_keyring_storage.pop(f"{service}:{key}", None)
 
         import keyring
+
         monkeypatch.setattr(keyring, "get_password", mock_get_password)
         monkeypatch.setattr(keyring, "set_password", mock_set_password)
         monkeypatch.setattr(keyring, "delete_password", mock_delete_password)

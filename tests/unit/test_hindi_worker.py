@@ -313,9 +313,7 @@ class TestHindiWorkerFlashAttention:
 
     def test_dual_channel_flash_attention(self, qapp):
         """Test dual-channel Flash Attention option."""
-        worker = DualChannelHindiSTTWorker(
-            audio_path="/test.wav", use_flash_attention=True
-        )
+        worker = DualChannelHindiSTTWorker(audio_path="/test.wav", use_flash_attention=True)
         assert worker._use_flash_attention is True
 
 
@@ -377,9 +375,7 @@ class TestHindiSTTWorkerModelLoading:
 
     def test_load_model_mps_device_no_flash_attention(self, qapp):
         """Test model loading with MPS device (flash attention disabled)."""
-        worker = HindiSTTWorker(
-            audio_path="/test.wav", use_gpu=True, use_flash_attention=True
-        )
+        worker = HindiSTTWorker(audio_path="/test.wav", use_gpu=True, use_flash_attention=True)
 
         mock_torch = MagicMock()
         mock_torch.cuda.is_available.return_value = False
@@ -445,6 +441,7 @@ class TestHindiSTTWorkerTranscribe:
 
         audio_path = temp_dir / "test.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -491,6 +488,7 @@ class TestHindiSTTWorkerTranscribe:
 
         audio_path = temp_dir / "test.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -613,6 +611,7 @@ class TestDualChannelHindiSTTWorkerChannelLoading:
 
         audio_path = temp_dir / "test_stereo.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(2)
             wav.setsampwidth(2)
@@ -646,6 +645,7 @@ class TestDualChannelHindiSTTWorkerChannelLoading:
 
         audio_path = temp_dir / "test_mono.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -678,6 +678,7 @@ class TestDualChannelHindiSTTWorkerTranscription:
         # Create a temp audio file
         audio_path = temp_dir / "test_channel.wav"
         import soundfile as sf
+
         sf.write(str(audio_path), np.zeros(16000, dtype=np.float32), 16000)
 
         worker = DualChannelHindiSTTWorker(audio_path="/test.wav")
@@ -711,6 +712,7 @@ class TestDualChannelHindiSTTWorkerTranscription:
         # Create a longer audio file to generate multiple chunks
         audio_path = temp_dir / "test_long.wav"
         import soundfile as sf
+
         sf.write(str(audio_path), np.zeros(16000 * 60, dtype=np.float32), 16000)  # 60 seconds
 
         worker = DualChannelHindiSTTWorker(audio_path="/test.wav")

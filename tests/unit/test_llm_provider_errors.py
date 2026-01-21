@@ -317,9 +317,7 @@ class TestLocalProviderErrors:
     def test_local_provider_model_not_downloaded(self, local_provider, tmp_path):
         """Test is_model_downloaded returns False for missing model."""
         # Point to non-existent directory
-        with patch(
-            "localmind.llm.local_provider.get_models_directory", return_value=tmp_path
-        ):
+        with patch("localmind.llm.local_provider.get_models_directory", return_value=tmp_path):
             assert local_provider.is_model_downloaded() is False
 
     def test_local_provider_custom_model_path(self, tmp_path):
@@ -341,9 +339,7 @@ class TestLocalProviderErrors:
         model_file = tmp_path / "Phi-3.5-mini-instruct-Q4_K_M.gguf"
         model_file.touch()
 
-        with patch(
-            "localmind.llm.local_provider.get_models_directory", return_value=tmp_path
-        ):
+        with patch("localmind.llm.local_provider.get_models_directory", return_value=tmp_path):
             with patch.dict("sys.modules", {"llama_cpp": None}):
                 with pytest.raises(ImportError, match="llama-cpp-python not installed"):
                     await local_provider.initialize()
@@ -351,9 +347,7 @@ class TestLocalProviderErrors:
     @pytest.mark.asyncio
     async def test_local_model_file_not_found(self, local_provider, tmp_path):
         """Test FileNotFoundError when model file doesn't exist."""
-        with patch(
-            "localmind.llm.local_provider.get_models_directory", return_value=tmp_path
-        ):
+        with patch("localmind.llm.local_provider.get_models_directory", return_value=tmp_path):
             # Mock failed download
             with patch.object(
                 local_provider, "download_model", side_effect=Exception("Download failed")
@@ -389,9 +383,7 @@ class TestLocalProviderErrors:
     @pytest.mark.asyncio
     async def test_local_download_huggingface_import_error(self, local_provider, tmp_path):
         """Test huggingface_hub import error during download."""
-        with patch(
-            "localmind.llm.local_provider.get_models_directory", return_value=tmp_path
-        ):
+        with patch("localmind.llm.local_provider.get_models_directory", return_value=tmp_path):
             with patch.dict("sys.modules", {"huggingface_hub": None}):
                 with pytest.raises(ImportError, match="huggingface_hub not installed"):
                     await local_provider.download_model()
@@ -482,9 +474,7 @@ class TestJSONModeErrors:
 
         mock_llm = MagicMock()
         mock_response = {
-            "choices": [
-                {"message": {"content": '{"score": 8.5}'}, "finish_reason": "stop"}
-            ],
+            "choices": [{"message": {"content": '{"score": 8.5}'}, "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 10, "completion_tokens": 5},
         }
         mock_llm.create_chat_completion = MagicMock(return_value=mock_response)
@@ -626,9 +616,7 @@ class TestStreamingErrors:
         provider = OpenAIProvider(model="gpt-4", api_key="test-key")
 
         mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=Exception("Stream error")
-        )
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("Stream error"))
 
         provider._client = mock_client
         provider._is_initialized = True

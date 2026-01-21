@@ -105,9 +105,7 @@ class TestApplyDynamicRangeCompression:
         original_range = np.max(np.abs(audio)) - np.min(np.abs(audio[audio != 0]))
 
         compressed = apply_dynamic_range_compression(audio, threshold=-20.0, ratio=4.0, sr=sr)
-        compressed_range = np.max(np.abs(compressed)) - np.min(
-            np.abs(compressed[compressed != 0])
-        )
+        compressed_range = np.max(np.abs(compressed)) - np.min(np.abs(compressed[compressed != 0]))
 
         # Compressed range should be smaller (or at least not larger)
         assert compressed_range <= original_range * 1.1  # Allow small tolerance

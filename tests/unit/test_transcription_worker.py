@@ -400,6 +400,7 @@ class TestTranscriptionWorkerAudioLoading:
         """Test audio loading with preprocessing enabled."""
         audio_path = temp_dir / "test.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -428,6 +429,7 @@ class TestTranscriptionWorkerAudioLoading:
         audio_path = temp_dir / "test.wav"
         # Create a minimal WAV file
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -457,6 +459,7 @@ class TestTranscriptionWorkerAudioLoading:
         """Test audio loading without preprocessing."""
         audio_path = temp_dir / "test.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
@@ -630,6 +633,7 @@ class TestDualChannelWorkerChannelLoading:
         """Test loading stereo audio channels."""
         audio_path = temp_dir / "test_stereo.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(2)  # Stereo
             wav.setsampwidth(2)
@@ -659,6 +663,7 @@ class TestDualChannelWorkerChannelLoading:
         """Test loading mono audio duplicates to both channels."""
         audio_path = temp_dir / "test_mono.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(1)  # Mono
             wav.setsampwidth(2)
@@ -692,9 +697,7 @@ class TestDualChannelWorkerTranscription:
         mock_model = MagicMock()
         mock_model.transcribe.return_value = {
             "text": "Hello from agent",
-            "segments": [
-                {"start": 0.0, "end": 2.0, "text": "Hello from agent"}
-            ],
+            "segments": [{"start": 0.0, "end": 2.0, "text": "Hello from agent"}],
             "language": "en",
         }
         mock_whisper.pad_or_trim.return_value = np.zeros(16000 * 30)
@@ -739,6 +742,7 @@ class TestDualChannelWorkerDoWork:
         """Test do_work correctly merges segments from both channels."""
         audio_path = temp_dir / "test.wav"
         import wave
+
         with wave.open(str(audio_path), "w") as wav:
             wav.setnchannels(2)
             wav.setsampwidth(2)

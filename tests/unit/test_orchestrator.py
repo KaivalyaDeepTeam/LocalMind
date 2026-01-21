@@ -268,9 +268,7 @@ class TestProcessingOrchestratorWorkerSelection:
         orchestrator._audio_path = audio_file
 
         with patch.object(orchestrator, "_check_if_stereo", return_value=False):
-            with patch(
-                "localmind.workers.orchestrator.TranscriptionWorker"
-            ) as mock_worker:
+            with patch("localmind.workers.orchestrator.TranscriptionWorker") as mock_worker:
                 mock_instance = MagicMock()
                 mock_worker.return_value = mock_instance
 
@@ -330,9 +328,7 @@ class TestProcessingOrchestratorWorkerSelection:
         orchestrator._audio_path = audio_file
 
         with patch.object(orchestrator, "_check_if_stereo", return_value=True):
-            with patch(
-                "localmind.workers.orchestrator.DualChannelHindiSTTWorker"
-            ) as mock_worker:
+            with patch("localmind.workers.orchestrator.DualChannelHindiSTTWorker") as mock_worker:
                 mock_instance = MagicMock()
                 mock_worker.return_value = mock_instance
 
@@ -433,9 +429,7 @@ class TestProcessingOrchestratorStageTransitions:
         completed_signal = []
         processing_complete_signal = []
         orchestrator.stage_completed.connect(lambda s: completed_signal.append(s))
-        orchestrator.processing_complete.connect(
-            lambda r: processing_complete_signal.append(r)
-        )
+        orchestrator.processing_complete.connect(lambda r: processing_complete_signal.append(r))
 
         audit_result = AuditResult(overall_score=80.0, max_score=100.0)
 
@@ -485,9 +479,7 @@ class TestProcessingOrchestratorSignals:
         orchestrator.stage_started.connect(lambda s: started_signal.append(s))
 
         with patch.object(orchestrator, "_check_if_stereo", return_value=False):
-            with patch(
-                "localmind.workers.orchestrator.TranscriptionWorker"
-            ) as mock_worker:
+            with patch("localmind.workers.orchestrator.TranscriptionWorker") as mock_worker:
                 mock_instance = MagicMock()
                 mock_worker.return_value = mock_instance
 
@@ -504,14 +496,10 @@ class TestProcessingOrchestratorSignals:
         orchestrator._audio_path = audio_file
 
         progress_signals = []
-        orchestrator.stage_progress.connect(
-            lambda s, p, m: progress_signals.append((s, p, m))
-        )
+        orchestrator.stage_progress.connect(lambda s, p, m: progress_signals.append((s, p, m)))
 
         with patch.object(orchestrator, "_check_if_stereo", return_value=False):
-            with patch(
-                "localmind.workers.orchestrator.TranscriptionWorker"
-            ) as mock_worker:
+            with patch("localmind.workers.orchestrator.TranscriptionWorker") as mock_worker:
                 mock_instance = MagicMock()
                 mock_worker.return_value = mock_instance
 

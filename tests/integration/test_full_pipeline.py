@@ -73,16 +73,60 @@ class TestDataFlowIntegration:
     def sample_audit_result(self):
         """Create a sample audit result."""
         scores = [
-            ParameterScore(name="greeting", score=8.5, max_score=10.0, weight=0.7, feedback="Good greeting"),
-            ParameterScore(name="active_listening", score=8.0, max_score=10.0, weight=1.1, feedback="Shows engagement"),
-            ParameterScore(name="problem_identification", score=7.5, max_score=10.0, weight=1.1, feedback="Identified issue"),
-            ParameterScore(name="solution_provided", score=7.0, max_score=10.0, weight=1.5, feedback="Adequate solution"),
-            ParameterScore(name="product_knowledge", score=8.0, max_score=10.0, weight=1.1, feedback="Good knowledge"),
-            ParameterScore(name="communication_clarity", score=8.5, max_score=10.0, weight=0.8, feedback="Clear"),
-            ParameterScore(name="empathy", score=7.5, max_score=10.0, weight=0.8, feedback="Shows care"),
-            ParameterScore(name="call_control", score=8.0, max_score=10.0, weight=0.7, feedback="Good control"),
-            ParameterScore(name="closing", score=7.0, max_score=10.0, weight=0.7, feedback="Proper closing"),
-            ParameterScore(name="compliance", score=8.5, max_score=10.0, weight=1.5, feedback="Followed scripts"),
+            ParameterScore(
+                name="greeting", score=8.5, max_score=10.0, weight=0.7, feedback="Good greeting"
+            ),
+            ParameterScore(
+                name="active_listening",
+                score=8.0,
+                max_score=10.0,
+                weight=1.1,
+                feedback="Shows engagement",
+            ),
+            ParameterScore(
+                name="problem_identification",
+                score=7.5,
+                max_score=10.0,
+                weight=1.1,
+                feedback="Identified issue",
+            ),
+            ParameterScore(
+                name="solution_provided",
+                score=7.0,
+                max_score=10.0,
+                weight=1.5,
+                feedback="Adequate solution",
+            ),
+            ParameterScore(
+                name="product_knowledge",
+                score=8.0,
+                max_score=10.0,
+                weight=1.1,
+                feedback="Good knowledge",
+            ),
+            ParameterScore(
+                name="communication_clarity",
+                score=8.5,
+                max_score=10.0,
+                weight=0.8,
+                feedback="Clear",
+            ),
+            ParameterScore(
+                name="empathy", score=7.5, max_score=10.0, weight=0.8, feedback="Shows care"
+            ),
+            ParameterScore(
+                name="call_control", score=8.0, max_score=10.0, weight=0.7, feedback="Good control"
+            ),
+            ParameterScore(
+                name="closing", score=7.0, max_score=10.0, weight=0.7, feedback="Proper closing"
+            ),
+            ParameterScore(
+                name="compliance",
+                score=8.5,
+                max_score=10.0,
+                weight=1.5,
+                feedback="Followed scripts",
+            ),
         ]
         return AuditResult(
             overall_score=78.0,
@@ -198,7 +242,9 @@ class TestExportIntegration:
         """Create a complete audit result for export testing."""
         scores = [
             ParameterScore(name="greeting", score=8.0, max_score=10.0, weight=1.0, feedback="Good"),
-            ParameterScore(name="closing", score=7.5, max_score=10.0, weight=1.0, feedback="Adequate"),
+            ParameterScore(
+                name="closing", score=7.5, max_score=10.0, weight=1.0, feedback="Adequate"
+            ),
         ]
         return AuditResult(
             overall_score=77.5,

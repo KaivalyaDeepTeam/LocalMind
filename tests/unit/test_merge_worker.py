@@ -379,9 +379,7 @@ class TestMergeWorkerTimestampHandling:
             text="Test",
             segments=[
                 TranscriptionSegment(start=0.0, end=2.0, text="Agent text", speaker="Agent"),
-                TranscriptionSegment(
-                    start=2.5, end=4.5, text="Customer text", speaker="Customer"
-                ),
+                TranscriptionSegment(start=2.5, end=4.5, text="Customer text", speaker="Customer"),
             ],
             channels=2,
         )
@@ -427,9 +425,7 @@ class TestMergeWorkerEdgeCases:
         transcription = TranscriptionResult(
             text="Single segment",
             segments=[
-                TranscriptionSegment(
-                    start=0.0, end=2.0, text="Single segment", speaker="Agent"
-                ),
+                TranscriptionSegment(start=0.0, end=2.0, text="Single segment", speaker="Agent"),
             ],
             channels=2,
         )

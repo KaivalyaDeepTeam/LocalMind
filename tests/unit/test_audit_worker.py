@@ -20,7 +20,7 @@ from localmind.workers.audit_worker import (
     create_cot_analysis_prompt,
     create_single_shot_audit_prompt,
 )
-from localmind.workers.merge_worker import MergeResult, MergedSegment
+from localmind.workers.merge_worker import MergedSegment, MergeResult
 
 
 class TestParameterScore:
@@ -114,9 +114,7 @@ class TestAuditResult:
     def test_audit_result_to_dict(self):
         """Test to_dict conversion."""
         scores = [
-            ParameterScore(
-                name="greeting", score=8.0, max_score=10.0, weight=1.0, feedback="Good"
-            )
+            ParameterScore(name="greeting", score=8.0, max_score=10.0, weight=1.0, feedback="Good")
         ]
         result = AuditResult(
             overall_score=80.0,
@@ -298,9 +296,7 @@ class TestAuditWorkerDoWork:
         ]
 
         # Compliance params: greeting, closing, compliance
-        compliance_score = worker._calculate_subscore(
-            scores, ["greeting", "closing", "compliance"]
-        )
+        compliance_score = worker._calculate_subscore(scores, ["greeting", "closing", "compliance"])
         expected = ((8.0 + 6.0 + 9.0) / (10.0 + 10.0 + 10.0)) * 100
         assert compliance_score == expected
 

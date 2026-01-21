@@ -254,9 +254,7 @@ def mock_whisper_model():
     model.transcribe.return_value = {
         "text": "Hello, this is a test transcription.",
         "language": "en",
-        "segments": [
-            {"start": 0.0, "end": 2.5, "text": "Hello, this is a test transcription."}
-        ],
+        "segments": [{"start": 0.0, "end": 2.5, "text": "Hello, this is a test transcription."}],
     }
     return model
 
@@ -304,9 +302,24 @@ def sample_scoring_parameters() -> list:
     """Sample scoring parameters for audit testing."""
     return [
         {"name": "greeting", "max_score": 10, "weight": 1.0, "description": "Proper greeting"},
-        {"name": "active_listening", "max_score": 10, "weight": 1.5, "description": "Shows engagement"},
-        {"name": "problem_identification", "max_score": 10, "weight": 1.5, "description": "Identifies issue"},
-        {"name": "solution_provided", "max_score": 10, "weight": 2.0, "description": "Provides solution"},
+        {
+            "name": "active_listening",
+            "max_score": 10,
+            "weight": 1.5,
+            "description": "Shows engagement",
+        },
+        {
+            "name": "problem_identification",
+            "max_score": 10,
+            "weight": 1.5,
+            "description": "Identifies issue",
+        },
+        {
+            "name": "solution_provided",
+            "max_score": 10,
+            "weight": 2.0,
+            "description": "Provides solution",
+        },
         {"name": "closing", "max_score": 10, "weight": 1.0, "description": "Proper closing"},
     ]
 
@@ -455,8 +468,9 @@ def mock_librosa():
 
     Returns a mock with load() configured for testing.
     """
-    import numpy as np
     from unittest.mock import MagicMock, patch
+
+    import numpy as np
 
     mock = MagicMock()
 

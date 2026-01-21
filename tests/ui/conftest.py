@@ -4,8 +4,9 @@ UI Test Configuration
 Fixtures specific to UI component testing.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture

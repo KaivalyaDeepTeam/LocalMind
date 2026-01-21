@@ -587,9 +587,7 @@ class AuditWorker(BaseWorker):
             # Check required fields
             missing = required_fields - set(param.keys())
             if missing:
-                raise ValueError(
-                    f"Parameter {i} missing required fields: {missing}"
-                )
+                raise ValueError(f"Parameter {i} missing required fields: {missing}")
 
             # Validate weight
             weight = param.get("weight", 1.0)
@@ -608,9 +606,7 @@ class AuditWorker(BaseWorker):
             # Validate name is non-empty string
             name = param.get("name", "")
             if not isinstance(name, str) or not name.strip():
-                raise ValueError(
-                    f"Parameter {i} name must be a non-empty string"
-                )
+                raise ValueError(f"Parameter {i} name must be a non-empty string")
 
         logger.debug(f"Validated {len(parameters)} scoring parameters")
 

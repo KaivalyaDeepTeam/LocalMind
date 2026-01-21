@@ -383,9 +383,7 @@ class TestSubprocessSafety:
 
         # This should work on all platforms
         if sys.platform == "win32":
-            result = subprocess.run(
-                ["cmd", "/c", "echo", "test"], capture_output=True, text=True
-            )
+            result = subprocess.run(["cmd", "/c", "echo", "test"], capture_output=True, text=True)
         else:
             result = subprocess.run(["echo", "test"], capture_output=True, text=True)
 

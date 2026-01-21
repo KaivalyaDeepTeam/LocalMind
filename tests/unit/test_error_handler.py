@@ -166,9 +166,7 @@ class TestErrorHandlerHandleError:
         exc = ValueError("Original error")
 
         with patch.object(handler, "_show_error_dialog"):
-            result = handler.handle_error(
-                exc, message="Custom user message", show_dialog=False
-            )
+            result = handler.handle_error(exc, message="Custom user message", show_dialog=False)
 
         assert result.message == "Custom user message"
 
@@ -286,9 +284,7 @@ class TestErrorHandlerHandleWarning:
         handler = ErrorHandler()
 
         with patch.object(handler, "_show_warning_dialog"):
-            result = handler.handle_warning(
-                "Message", title="Custom Warning", show_dialog=False
-            )
+            result = handler.handle_warning("Message", title="Custom Warning", show_dialog=False)
 
         assert result.title == "Custom Warning"
 
@@ -353,9 +349,7 @@ class TestSafeCall:
         def failing_func():
             raise ValueError("Intentional failure")
 
-        result = safe_call(
-            failing_func, default_return="default_value", show_dialog=False
-        )
+        result = safe_call(failing_func, default_return="default_value", show_dialog=False)
         assert result == "default_value"
 
     def test_safe_call_exception_returns_none_by_default(self, qapp):

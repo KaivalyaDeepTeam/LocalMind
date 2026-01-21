@@ -215,9 +215,7 @@ class BaseLLMProvider(ABC):
                 logger.debug("JSON response validated against schema successfully")
             except jsonschema.ValidationError as e:
                 logger.warning(f"JSON schema validation failed: {e.message}")
-                raise ValueError(
-                    f"JSON response does not match expected schema: {e.message}"
-                )
+                raise ValueError(f"JSON response does not match expected schema: {e.message}")
             except ImportError:
                 logger.warning("jsonschema not installed, skipping schema validation")
 
