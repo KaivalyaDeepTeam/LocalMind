@@ -19,7 +19,7 @@ IS_LINUX = sys.platform.startswith('linux')
 
 # App info
 APP_NAME = 'LocalMind'
-APP_VERSION = '1.0.0'
+APP_VERSION = '1.2.2'
 APP_BUNDLE_ID = 'com.localmind.app'
 
 # Icon paths
@@ -30,10 +30,45 @@ elif IS_WINDOWS:
 else:
     ICON_FILE = None
 
+# Find llama_cpp shared libraries
+def get_llama_cpp_binaries():
+    """Find and return llama_cpp shared libraries for bundling."""
+    binaries = []
+    try:
+        import llama_cpp
+        llama_cpp_path = Path(llama_cpp.__file__).parent
+        lib_path = llama_cpp_path / 'lib'
+        if lib_path.exists():
+            # Get all shared libraries
+            if IS_MACOS:
+                libs = list(lib_path.glob('*.dylib'))
+            elif IS_WINDOWS:
+                libs = list(lib_path.glob('*.dll'))
+            else:
+                libs = list(lib_path.glob('*.so*'))
+
+            for lib in libs:
+                binaries.append((str(lib), 'llama_cpp/lib'))
+
+        # Also check for .so files directly in llama_cpp directory
+        if IS_LINUX or IS_MACOS:
+            for so_file in llama_cpp_path.glob('*.so'):
+                binaries.append((str(so_file), 'llama_cpp'))
+    except ImportError:
+        print("Warning: llama_cpp not found, skipping llama binaries")
+
+    return binaries
+
+llama_binaries = get_llama_cpp_binaries()
+
 # Data files to include
 datas = [
     # Report templates
     (str(PROJECT_ROOT / 'localmind' / 'reports' / 'templates'), 'localmind/reports/templates'),
+    # Theme stylesheets (QSS)
+    (str(PROJECT_ROOT / 'localmind' / 'resources' / 'styles'), 'localmind/resources/styles'),
+    # Images and icons
+    (str(PROJECT_ROOT / 'localmind' / 'resources' / 'images'), 'localmind/resources/images'),
 ]
 
 # Hidden imports that PyInstaller might miss
@@ -91,7 +126,7 @@ block_cipher = None
 a = Analysis(
     [str(PROJECT_ROOT / 'localmind' / 'app.py')],
     pathex=[str(PROJECT_ROOT)],
-    binaries=[],
+    binaries=llama_binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],

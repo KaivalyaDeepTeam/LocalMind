@@ -38,6 +38,15 @@ class ThemeManager(QObject):
 
     def _find_styles_dir(self) -> Path:
         """Find the styles directory."""
+        import sys
+
+        # Check if running as PyInstaller bundle
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            # Running in PyInstaller bundle
+            bundle_dir = Path(sys._MEIPASS) / "localmind" / "resources" / "styles"
+            if bundle_dir.exists():
+                return bundle_dir
+
         # Try relative to this file
         current_dir = Path(__file__).parent.parent / "resources" / "styles"
         if current_dir.exists():
