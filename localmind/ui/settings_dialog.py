@@ -27,8 +27,12 @@ from PySide6.QtWidgets import (
 from localmind.config import (
     LLMProviderType,
     UserSettings,
+    get_anthropic_api_key,
+    get_openai_api_key,
     get_settings,
     save_settings,
+    set_anthropic_api_key,
+    set_openai_api_key,
 )
 from localmind.llm.local_provider import LOCAL_MODELS, LocalProvider
 from localmind.ui.loading_indicator import LoadingButton
@@ -145,9 +149,9 @@ class LLMSettingsTab(QWidget):
         if index >= 0:
             self._provider_combo.setCurrentIndex(index)
 
-        # Set API keys
-        self._openai_key.setText(self._settings.llm.openai_api_key or "")
-        self._anthropic_key.setText(self._settings.llm.anthropic_api_key or "")
+        # Set API keys from secure storage
+        self._openai_key.setText(get_openai_api_key())
+        self._anthropic_key.setText(get_anthropic_api_key())
 
         # Set models
         openai_idx = self._openai_model.findData(self._settings.llm.openai_model)
@@ -168,8 +172,9 @@ class LLMSettingsTab(QWidget):
     def save_settings(self) -> None:
         """Save settings from UI."""
         self._settings.llm.provider = self._provider_combo.currentData()
-        self._settings.llm.openai_api_key = self._openai_key.text() or None
-        self._settings.llm.anthropic_api_key = self._anthropic_key.text() or None
+        # Store API keys in secure storage (keyring), not in settings file
+        set_openai_api_key(self._openai_key.text() or "")
+        set_anthropic_api_key(self._anthropic_key.text() or "")
         self._settings.llm.openai_model = self._openai_model.currentData()
         self._settings.llm.anthropic_model = self._anthropic_model.currentData()
         self._settings.llm.local_model = self._local_model_combo.currentData()

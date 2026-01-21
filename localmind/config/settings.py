@@ -6,11 +6,17 @@ LLM provider selection, and application settings.
 """
 
 import json
+import logging
 import os
 import platform
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+# Keyring service name for secure API key storage
+KEYRING_SERVICE = "LocalMind"
 
 
 class LLMProviderType(str, Enum):
@@ -147,6 +153,96 @@ class UserSettings:
         return settings
 
 
+# =============================================================================
+# Secure API Key Storage
+# =============================================================================
+
+
+def get_api_key(key_name: str) -> str:
+    """Get API key from secure storage (keyring).
+
+    Args:
+        key_name: Name of the key ("openai_api_key" or "anthropic_api_key")
+
+    Returns:
+        The API key or empty string if not found
+    """
+    try:
+        import keyring
+
+        value = keyring.get_password(KEYRING_SERVICE, key_name)
+        return value or ""
+    except Exception as e:
+        logger.warning(f"Failed to retrieve API key from keyring: {e}")
+        return ""
+
+
+def set_api_key(key_name: str, value: str) -> bool:
+    """Store API key in secure storage (keyring).
+
+    Args:
+        key_name: Name of the key ("openai_api_key" or "anthropic_api_key")
+        value: The API key value
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        import keyring
+
+        if value:
+            keyring.set_password(KEYRING_SERVICE, key_name, value)
+        else:
+            # Delete key if value is empty
+            try:
+                keyring.delete_password(KEYRING_SERVICE, key_name)
+            except keyring.errors.PasswordDeleteError:
+                pass  # Key didn't exist, that's fine
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to store API key in keyring: {e}")
+        return False
+
+
+def delete_api_key(key_name: str) -> bool:
+    """Delete API key from secure storage.
+
+    Args:
+        key_name: Name of the key to delete
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        import keyring
+
+        keyring.delete_password(KEYRING_SERVICE, key_name)
+        return True
+    except Exception as e:
+        logger.debug(f"Failed to delete API key from keyring (may not exist): {e}")
+        return False
+
+
+def get_openai_api_key() -> str:
+    """Get OpenAI API key from secure storage."""
+    return get_api_key("openai_api_key")
+
+
+def set_openai_api_key(value: str) -> bool:
+    """Store OpenAI API key in secure storage."""
+    return set_api_key("openai_api_key", value)
+
+
+def get_anthropic_api_key() -> str:
+    """Get Anthropic API key from secure storage."""
+    return get_api_key("anthropic_api_key")
+
+
+def set_anthropic_api_key(value: str) -> bool:
+    """Store Anthropic API key in secure storage."""
+    return set_api_key("anthropic_api_key", value)
+
+
 class SettingsManager:
     """Manages loading and saving of user settings."""
 
@@ -216,13 +312,34 @@ class SettingsManager:
     def load(self) -> UserSettings:
         """Load settings from disk."""
         settings = UserSettings()
+        needs_save = False
 
         if self._config_file.exists():
             try:
                 with open(self._config_file, encoding="utf-8") as f:
-                    settings = UserSettings.from_dict(json.load(f))
-            except Exception:
-                pass
+                    data = json.load(f)
+                    settings = UserSettings.from_dict(data)
+
+                    # Migrate plaintext API keys to keyring (one-time migration)
+                    if "llm" in data:
+                        llm_data = data["llm"]
+                        if llm_data.get("openai_api_key"):
+                            set_openai_api_key(llm_data["openai_api_key"])
+                            settings.llm.openai_api_key = ""  # Clear from memory
+                            needs_save = True
+                            logger.info("Migrated OpenAI API key to secure storage")
+                        if llm_data.get("anthropic_api_key"):
+                            set_anthropic_api_key(llm_data["anthropic_api_key"])
+                            settings.llm.anthropic_api_key = ""  # Clear from memory
+                            needs_save = True
+                            logger.info("Migrated Anthropic API key to secure storage")
+            except Exception as e:
+                logger.warning(f"Failed to load settings: {e}")
+
+        # Save to remove plaintext keys from file after migration
+        if needs_save:
+            self._settings = settings
+            self.save()
 
         return settings
 

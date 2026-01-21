@@ -4,11 +4,17 @@ LocalMind LLM Base Provider
 Abstract base class for LLM providers with unified interface.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
+# Default maximum JSON response size (1 MB)
+DEFAULT_MAX_JSON_SIZE = 1_000_000
 
 
 class LLMRole(Enum):
@@ -137,15 +143,23 @@ class BaseLLMProvider(ABC):
         self,
         messages: list[LLMMessage],
         config: LLMConfig | None = None,
+        schema: dict[str, Any] | None = None,
+        max_json_size: int = DEFAULT_MAX_JSON_SIZE,
     ) -> dict[str, Any]:
-        """Generate a JSON response from the LLM.
+        """Generate a JSON response from the LLM with optional validation.
 
         Args:
             messages: List of conversation messages.
             config: Generation configuration.
+            schema: Optional JSON schema for validating the response.
+            max_json_size: Maximum allowed JSON response size in bytes (default 1MB).
+                          Set to 0 to disable size checking.
 
         Returns:
-            Parsed JSON response.
+            Parsed and optionally validated JSON response.
+
+        Raises:
+            ValueError: If JSON is invalid, too large, or doesn't match schema.
         """
         import json
 
@@ -168,17 +182,46 @@ class BaseLLMProvider(ABC):
 
         content = content.strip()
 
+        # Check size limit before parsing to prevent memory exhaustion
+        if max_json_size > 0 and len(content.encode("utf-8")) > max_json_size:
+            logger.warning(
+                f"JSON response size ({len(content.encode('utf-8'))} bytes) "
+                f"exceeds limit ({max_json_size} bytes)"
+            )
+            raise ValueError(
+                f"JSON response exceeds maximum allowed size of {max_json_size} bytes. "
+                f"Actual size: {len(content.encode('utf-8'))} bytes."
+            )
+
         # Try to parse JSON
         try:
-            return json.loads(content)
+            parsed = json.loads(content)
         except json.JSONDecodeError as e:
             # Better error message showing what the LLM actually returned
             preview = content[:200] if content else "(empty response)"
+            logger.warning(f"Invalid JSON from LLM: {e}")
             raise ValueError(
                 f"LLM did not return valid JSON. Error: {e}\n"
                 f"Response preview: {preview}\n"
                 f"Make sure the model supports JSON mode and the prompt is clear."
             )
+
+        # Validate against schema if provided
+        if schema is not None:
+            try:
+                import jsonschema
+
+                jsonschema.validate(parsed, schema)
+                logger.debug("JSON response validated against schema successfully")
+            except jsonschema.ValidationError as e:
+                logger.warning(f"JSON schema validation failed: {e.message}")
+                raise ValueError(
+                    f"JSON response does not match expected schema: {e.message}"
+                )
+            except ImportError:
+                logger.warning("jsonschema not installed, skipping schema validation")
+
+        return parsed
 
     def create_system_message(self, content: str) -> LLMMessage:
         """Create a system message."""

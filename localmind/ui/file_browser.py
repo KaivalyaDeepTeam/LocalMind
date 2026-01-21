@@ -4,8 +4,11 @@ LocalMind File Browser Panel
 Commercial-quality audio file selector with drag-and-drop support.
 """
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
@@ -35,7 +38,8 @@ def get_file_size_str(filepath: str) -> str:
             return f"{size / (1024 * 1024):.1f} MB"
         else:
             return f"{size / (1024 * 1024 * 1024):.1f} GB"
-    except:
+    except (OSError, FileNotFoundError, PermissionError) as e:
+        logger.warning(f"Failed to get file size for {filepath}: {e}")
         return ""
 
 
@@ -352,8 +356,9 @@ class FileBrowserPanel(QWidget):
             settings = get_settings()
             self._recent_files = list(settings.app.recent_files)[:5]
             self._update_recent_ui()
-        except:
-            pass
+        except (OSError, AttributeError, TypeError, ValueError) as e:
+            logger.warning(f"Failed to load recent files from settings: {e}")
+            self._recent_files = []
 
     def _save_recent_files(self) -> None:
         """Save recent files to settings."""
@@ -361,8 +366,8 @@ class FileBrowserPanel(QWidget):
             settings = get_settings()
             settings.app.recent_files = self._recent_files[:5]
             save_settings(settings)
-        except:
-            pass
+        except (OSError, AttributeError, TypeError, ValueError) as e:
+            logger.warning(f"Failed to save recent files to settings: {e}")
 
     def select_file(self, filepath: str) -> None:
         """Programmatically select a file."""

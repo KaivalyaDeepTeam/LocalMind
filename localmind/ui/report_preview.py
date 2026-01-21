@@ -333,13 +333,14 @@ class ReportPreviewDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if result == QMessageBox.StandardButton.Yes:
+                import os
                 import subprocess
                 import sys
 
                 if sys.platform == "darwin":
                     subprocess.run(["open", message])
                 elif sys.platform == "win32":
-                    subprocess.run(["start", "", message], shell=True)
+                    os.startfile(message)  # Safe native API, no shell injection risk
                 else:
                     subprocess.run(["xdg-open", message])
         else:

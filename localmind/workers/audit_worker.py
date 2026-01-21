@@ -5,8 +5,11 @@ Background worker for quality auditing using LLM.
 """
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from localmind.workers.base import BaseWorker
 from localmind.workers.merge_worker import MergeResult
@@ -559,11 +562,57 @@ class AuditWorker(BaseWorker):
             merge_result: Merged transcript result.
             parameters: Scoring parameters (uses defaults if None).
             parent: Parent QObject.
+
+        Raises:
+            ValueError: If parameters fail validation.
         """
         super().__init__(parent)
         self._merge_result = merge_result
         self._parameters = parameters or DEFAULT_PARAMETERS
+        self._validate_parameters(self._parameters)
         self._loop: asyncio.AbstractEventLoop | None = None
+
+    def _validate_parameters(self, parameters: list[dict[str, Any]]) -> None:
+        """Validate scoring parameters.
+
+        Args:
+            parameters: List of parameter dictionaries.
+
+        Raises:
+            ValueError: If any parameter fails validation.
+        """
+        required_fields = {"name", "weight", "max_score"}
+
+        for i, param in enumerate(parameters):
+            # Check required fields
+            missing = required_fields - set(param.keys())
+            if missing:
+                raise ValueError(
+                    f"Parameter {i} missing required fields: {missing}"
+                )
+
+            # Validate weight
+            weight = param.get("weight", 1.0)
+            if not isinstance(weight, (int, float)) or weight <= 0 or weight > 10:
+                raise ValueError(
+                    f"Parameter '{param.get('name', i)}' weight must be > 0 and <= 10, got: {weight}"
+                )
+
+            # Validate max_score
+            max_score = param.get("max_score", 10)
+            if not isinstance(max_score, (int, float)) or max_score <= 0:
+                raise ValueError(
+                    f"Parameter '{param.get('name', i)}' max_score must be positive, got: {max_score}"
+                )
+
+            # Validate name is non-empty string
+            name = param.get("name", "")
+            if not isinstance(name, str) or not name.strip():
+                raise ValueError(
+                    f"Parameter {i} name must be a non-empty string"
+                )
+
+        logger.debug(f"Validated {len(parameters)} scoring parameters")
 
     def do_work(self) -> AuditResult:
         """Perform quality audit."""

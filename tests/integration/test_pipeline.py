@@ -239,7 +239,7 @@ class TestConfigIntegration:
 
     def test_settings_persistence(self, temp_dir, monkeypatch):
         """Test settings are persisted correctly."""
-        from localmind.config import SettingsManager, UserSettings
+        from localmind.config import SettingsManager, UserSettings, get_openai_api_key, set_openai_api_key
 
         # Mock the config directory to use temp_dir
         def mock_get_config_dir():
@@ -250,10 +250,29 @@ class TestConfigIntegration:
             staticmethod(mock_get_config_dir),
         )
 
+        # Mock keyring for testing (use in-memory storage)
+        mock_keyring_storage = {}
+
+        def mock_get_password(service, key):
+            return mock_keyring_storage.get(f"{service}:{key}")
+
+        def mock_set_password(service, key, value):
+            mock_keyring_storage[f"{service}:{key}"] = value
+
+        def mock_delete_password(service, key):
+            mock_keyring_storage.pop(f"{service}:{key}", None)
+
+        import keyring
+        monkeypatch.setattr(keyring, "get_password", mock_get_password)
+        monkeypatch.setattr(keyring, "set_password", mock_set_password)
+        monkeypatch.setattr(keyring, "delete_password", mock_delete_password)
+
+        # Store API key in secure storage
+        set_openai_api_key("test-key-123")
+
         # Create and save settings
         manager = SettingsManager()
         settings = UserSettings()
-        settings.llm.openai_api_key = "test-key-123"
         settings.app.theme = "dark"
 
         manager.save(settings)
@@ -262,7 +281,9 @@ class TestConfigIntegration:
         manager2 = SettingsManager()
         loaded = manager2.load()
 
-        assert loaded.llm.openai_api_key == "test-key-123"
+        # API keys are now in secure storage, not in settings
+        assert loaded.llm.openai_api_key == ""  # Empty in settings
+        assert get_openai_api_key() == "test-key-123"  # Retrieved from keyring
         assert loaded.app.theme == "dark"
 
     def test_scoring_profile_persistence(self, temp_dir):

@@ -4,7 +4,12 @@ LocalMind LLM Provider Factory
 Factory for creating LLM providers based on configuration.
 """
 
-from localmind.config import LLMProviderType, get_settings
+from localmind.config import (
+    LLMProviderType,
+    get_anthropic_api_key,
+    get_openai_api_key,
+    get_settings,
+)
 from localmind.llm.anthropic_provider import AnthropicProvider
 from localmind.llm.base import BaseLLMProvider
 from localmind.llm.local_provider import LocalProvider
@@ -34,12 +39,12 @@ def create_provider(
     if provider_type == LLMProviderType.OPENAI:
         return OpenAIProvider(
             model=model or settings.llm.openai_model,
-            api_key=api_key or settings.llm.openai_api_key,
+            api_key=api_key or get_openai_api_key(),  # Get from secure storage
         )
     elif provider_type == LLMProviderType.ANTHROPIC:
         return AnthropicProvider(
             model=model or settings.llm.anthropic_model,
-            api_key=api_key or settings.llm.anthropic_api_key,
+            api_key=api_key or get_anthropic_api_key(),  # Get from secure storage
         )
     elif provider_type == LLMProviderType.LOCAL:
         return LocalProvider(
