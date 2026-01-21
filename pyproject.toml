@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "localmind"
-version = "1.2.1"
+version = "1.2.3"
 description = "Free, open-source AI for local audio transcription and quality auditing"
 readme = "README.md"
 license = {text = "MIT"}

@@ -19,7 +19,7 @@ IS_LINUX = sys.platform.startswith('linux')
 
 # App info
 APP_NAME = 'LocalMind'
-APP_VERSION = '1.2.2'
+APP_VERSION = '1.2.3'
 APP_BUNDLE_ID = 'com.localmind.app'
 
 # Icon paths
