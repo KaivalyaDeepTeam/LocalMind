@@ -30,7 +30,20 @@ class TranslationManager:
     def __init__(self):
         self._translator: QTranslator | None = None
         self._current_language: str = "en"
-        self._translations_dir = Path(__file__).parent / "translations"
+        self._translations_dir = self._find_translations_dir()
+
+    def _find_translations_dir(self) -> Path:
+        """Find the translations directory, handling PyInstaller bundle."""
+        import sys
+
+        # Check if running as PyInstaller bundle
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            bundle_dir = Path(sys._MEIPASS) / "localmind" / "i18n" / "translations"
+            if bundle_dir.exists():
+                return bundle_dir
+
+        # Default: relative to this file
+        return Path(__file__).parent / "translations"
 
     @property
     def current_language(self) -> str:

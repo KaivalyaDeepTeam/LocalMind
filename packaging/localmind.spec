@@ -69,6 +69,8 @@ datas = [
     (str(PROJECT_ROOT / 'localmind' / 'resources' / 'styles'), 'localmind/resources/styles'),
     # Images and icons
     (str(PROJECT_ROOT / 'localmind' / 'resources' / 'images'), 'localmind/resources/images'),
+    # Translations (i18n)
+    (str(PROJECT_ROOT / 'localmind' / 'i18n' / 'translations'), 'localmind/i18n/translations'),
 ]
 
 # Hidden imports that PyInstaller might miss
@@ -85,9 +87,11 @@ hiddenimports = [
 
     # Audio processing
     'librosa',
+    'librosa.util',
     'soundfile',
     'scipy',
     'scipy.signal',
+    'scipy.fft',
 
     # ML
     'torch',
@@ -104,9 +108,15 @@ hiddenimports = [
     # Whisper
     'whisper',
 
+    # Security & validation
+    'keyring',
+    'keyring.backends',
+    'jsonschema',
+
     # Utilities
     'numpy',
     'rich',
+    'dotenv',
 ]
 
 # Exclude unnecessary modules to reduce size
